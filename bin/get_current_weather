@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+# @describe Get the current weather in a given location.
+# @option --location! The city and state, e.g. San Francisco, CA
+
+main() {
+    curl "https://wttr.in/$(echo "$argc_location" | sed 's/ /+/g')?format=4&M"
+}
+
+eval "$(argc --argc-eval "$0" "$@")"
