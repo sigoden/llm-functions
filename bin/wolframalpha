@@ -2,11 +2,22 @@
 set -e
 
 # @describe Get an answer to a question using Wolfram Alpha. Input should the the query in English.
-# @meta require-tools tungsten
+# Use it to answer user questions that require computation, detailed facts, data analysis, or complex queries.
+# This ensures accurate and precise answers.
 # @option --query! The query to search for.
+# @env WOLFRAM_API_KEY! The API key used to connect to WolframAlpha
+
 
 main() {
-    tungsten 2>/dev/null "$argc_query"
+  local curl_args=(
+    -sSf -G
+    --data-urlencode "output=JSON"
+    --data-urlencode "format=plaintext"
+    --data-urlencode "input=$argc_query"
+    --data-urlencode "appid=$WOLFRAM_API_KEY"
+    "https://api.wolframalpha.com/v2/query"
+  )
+  curl "${curl_args[@]}" | jq -r '.queryresult.pods[] | select(.subpods[0].plaintext != "") | .title, .subpods[0].plaintext'
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
