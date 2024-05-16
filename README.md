@@ -71,6 +71,18 @@ main() {
 eval "$(argc --argc-eval "$0" "$@")"
 ```
 
+The relationship between flags/options and parameters in function declarations is as follows:
+
+```sh
+# @flag --boolean                   Parameter `{"type": "boolean"}`
+# @option --string                  Parameter `{"type": "string"}`
+# @option --string-enum[foo|bar]    Parameter `{"type": "string", "enum": ["foo", "bar"]}`
+# @option --integer <INT>           Parameter `{"type": "integer"}`
+# @option --number <NUM>            Parameter `{"type": "number"}`
+# @option --array* <VALUE>          Parameter `{"type": "array", "items": {"type":"string"}}`
+# @option --scalar-required!        Use `!` to mark a scalar parameter as required.
+# @option --array-required+         Use `+` to mark a array parameter as required
+```
 
 **After creating your function, don't forget to rebuild the function declarations.**
 

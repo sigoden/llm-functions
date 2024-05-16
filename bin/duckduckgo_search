@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Use this function to search DuckDuckGo for a query.
+# @describe Takes in a query string and returns search result.
+# Use it to answer user questions that require dates, facts, real-time information, or news.
+# This ensures accurate and up-to-date answers.
 # @meta require-tools ddgr
+# @env DDG_MAX_RESULTS=5 The max results to return.
 # @option --query! The query to search for.
-# @option --max-results=5  The number of returned results.
 
 main() {
-    ddgr --num $argc_max_results --json "$argc_query" | \
-    jq -r '.[] | "**[\(.title)](\(.url))**\n\(.abstract)\n"'
+    ddgr -n $DDG_MAX_RESULTS --json "$argc_query" | \
+    jq -r '. as $input | 
+reduce range(0; length) as $i ([]; . + [ $input[$i] | .index = $i ]) |
+.[] | "### \(.index+1). \u001b]8;;\(.url)\u001b\\\(.title)\u001b]8;;\u001b\\\n\(.abstract)\n"
+'
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

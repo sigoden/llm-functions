@@ -45,7 +45,34 @@ build-declarations-json() {
 # @cmd Build declaration for a single function
 # @arg func![`_choice_func`] The function name
 build-func-declaration() {
-    argc --argc-export bin/$1 | \
+    argc --argc-export bin/$1 | _parse_declaration
+}
+
+# @cmd Build shims for the functions
+# Because Windows OS can't run bash scripts directly, we need to make a shim for each function
+#
+# @flag --clear Clear the shims
+build-win-shims() {
+    funcs=($(_choice_func))
+    for func in "${funcs[@]}"; do
+        echo "Shim bin/${func}.cmd"
+        _win_shim > "bin/${func}.cmd"
+    done
+}
+
+# @cmd Install this repo to aichat functions_dir
+install() {
+    functions_dir="$(aichat --info | grep functions_dir | awk '{print $2}')"
+    if [[ ! -e "$functions_dir" ]]; then
+        ln -s "$(pwd)" "$functions_dir" 
+        echo "$functions_dir symlinked"
+    else
+        echo "$functions_dir already exists"
+    fi
+}
+
+
+_parse_declaration() {
     jq -r '
     def parse_description(flag_option):
         if flag_option.describe == "" then
@@ -87,30 +114,6 @@ build-func-declaration() {
         parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
     }'
 }
-
-# @cmd Build shims for the functions
-# Because Windows OS can't run bash scripts directly, we need to make a shim for each function
-#
-# @flag --clear Clear the shims
-build-win-shims() {
-    funcs=($(_choice_func))
-    for func in "${funcs[@]}"; do
-        echo "Shim bin/${func}.cmd"
-        _win_shim > "bin/${func}.cmd"
-    done
-}
-
-# @cmd Install this repo to aichat functions_dir
-install() {
-    functions_dir="$(aichat --info | grep functions_dir | awk '{print $2}')"
-    if [[ ! -e "$functions_dir" ]]; then
-        ln -s "$(pwd)" "$functions_dir" 
-        echo "$functions_dir symlinked"
-    else
-        echo "$functions_dir already exists"
-    fi
-}
-
 
 _win_shim() {
     cat <<-'EOF'
