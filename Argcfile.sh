@@ -71,6 +71,12 @@ install() {
     fi
 }
 
+# @cmd Show versions of required tools for bug reports.
+version() {
+    argc --argc-version
+    jq --version
+    curl --version | head -n 1
+}
 
 _parse_declaration() {
     jq -r '
