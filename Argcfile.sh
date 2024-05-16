@@ -11,11 +11,21 @@ call() {
     "./bin/$argc_func" "${argc_args[@]}"
 }
 
+# @cmd Build all artifacts
+build() {
+    if [[ -f functions.txt ]]; then
+        argc build-declarations-json
+    fi
+    if [[ "$OS" = "Windows_NT" ]]; then
+        argc build-win-shims
+    fi
+}
+
 # @cmd Build declarations for specific functions
 # @option --output=functions.json <FILE> Specify a file path to save the function declarations
 # @option --names-file=functions.txt Specify a file containing function names
 # @arg funcs*[`_choice_func`] The function names
-build-declarations() {
+build-declarations-json() {
     if [[ "${#argc_funcs[@]}" -gt 0 ]]; then
         names=("${argc_funcs[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
@@ -29,9 +39,10 @@ build-declarations() {
         result+=("$(build-func-declaration "$name")")
     done
     echo "["$(IFS=,; echo "${result[*]}")"]"  | jq '.' > "$argc_output"
+    echo "Build $argc_output"
 }
 
-# @cmd
+# @cmd Build declaration for a single function
 # @arg func![`_choice_func`] The function name
 build-func-declaration() {
     argc --argc-export bin/$1 | \
@@ -77,8 +88,45 @@ build-func-declaration() {
     }'
 }
 
+# @cmd Build shims for the functions
+# Because Windows OS can't run bash scripts directly, we need to make a shim for each function
+#
+# @flag --clear Clear the shims
+build-win-shims() {
+    funcs=($(_choice_func))
+    for func in "${funcs[@]}"; do
+        echo "Shim bin/${func}.cmd"
+        _win_shim > "bin/${func}.cmd"
+    done
+}
+
+# @cmd Install this repo to aichat functions_dir
+install() {
+    functions_dir="$(aichat --info | grep functions_dir | awk '{print $2}')"
+    if [[ ! -e "$functions_dir" ]]; then
+        ln -s "$(pwd)" "$functions_dir" 
+        echo "$functions_dir symlinked"
+    else
+        echo "$functions_dir already exists"
+    fi
+}
+
+
+_win_shim() {
+    cat <<-'EOF'
+@echo off
+setlocal
+
+set "script_dir=%~dp0"
+set "script_name=%~n0"
+for /f "delims=" %%a in ('argc --argc-shell-path') do set "_bash_prog=%%a"
+
+"%_bash_prog%" --noprofile --norc "%script_dir%\%script_name%" %*
+EOF
+}
+
 _choice_func() {
-    ls -1 bin 
+    ls -1 bin | grep -v '\.cmd'
 }
 
 _choice_func_args() {

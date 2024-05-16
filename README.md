@@ -1,4 +1,4 @@
-# LLM Functions: Extend LLM with functions written in Bash.
+# LLM Functions
 
 This project allows you to enhance large language models (LLMs) with custom functions written in Bash. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
 
@@ -31,15 +31,17 @@ Replace `<function_names>...` with the actual names of your functions. Go to the
 > 💡 You can also create  a `./functions.txt` file with each function name on a new line, Once done, simply run `argc build-declarations` without specifying the function names to automatically use the ones listed in.
 
 
-**3. Configure your aichat application:**
+**3. Configure your AIChat:**
 
 Symlink this repo directory to aichat **functions_dir**:
 
 ```sh
 ln -s "$(pwd)" "$(aichat --info | grep functions_dir | awk '{print $2}')"
+# OR
+argc install
 ```
 
-Then, add the following settings to your AIChat configuration file:
+Don't forget to add the following config to your AIChat `config.yaml` file:
 
 ```yaml
 function_calling: true
@@ -49,21 +51,17 @@ AIChat will automatically load `functions.json` and execute functions located in
 
 **4. Start using your functions:**
 
-Now you can interact with your LLM using natural language prompts that trigger your defined functions. For example:
+Now you can interact with your LLM using natural language prompts that trigger your defined functions.
 
-```
-$ aichat -r "%function%" What's the weather in London?
-Call Function: get_current_weather --location=London
-London: ☀️   🌡️+18°C 🌬️↑4.7m/s
-```
+![demo](https://github.com/sigoden/aichat/assets/4012553/9a5df031-530a-4679-acdd-c8f0c45d2bf7)
+
 
 ## Writing Your Own Functions
 
-Create a new Bash script in the `./bin` directory with the name of your function (e.g., `get-current-weather`). Use the following structure within the script:
+Create a new Bash script in the `./bin` directory with the name of your function (e.g., `get_current_weather`) Follow the structure demonstrated in existing examples. For instance:
 
 ```sh
 # @describe Get the current weather in a given location.
-# @env TOMORROW_API_KEY! The tomorrow.io api key
 # @option --location! The city and state, e.g. San Francisco, CA
 
 main() {
@@ -73,8 +71,8 @@ main() {
 eval "$(argc --argc-eval "$0" "$@")"
 ```
 
-After creating your function, don't forget to rebuild the function declarations (step 2) to include it in your LLM's capabilities.
 
+**After creating your function, don't forget to rebuild the function declarations.**
 
 ## License
 
