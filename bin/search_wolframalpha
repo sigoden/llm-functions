@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Get an answer to a question using Wolfram Alpha. Input should the the query in English.
+# @describe Get an answer to a question using Wolfram Alpha. Input should the query in English.
 # Use it to answer user questions that require computation, detailed facts, data analysis, or complex queries.
 # This ensures accurate and precise answers.
 # @option --query! The query to search for.
