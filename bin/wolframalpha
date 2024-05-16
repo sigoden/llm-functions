@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -e
+
+# @describe Get an answer to a question using Wolfram Alpha. Input should the the query in English.
+# @meta require-tools tungsten
+# @option --query! The query to search for.
+
+main() {
+    tungsten 2>/dev/null "$argc_query"
+}
+
+eval "$(argc --argc-eval "$0" "$@")"
