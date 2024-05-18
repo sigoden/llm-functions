@@ -3,7 +3,6 @@ set -e
 
 # @meta dotenv
 
-
 # @cmd Call the function
 # @arg func![`_choice_func`] The function name
 # @arg args~[?`_choice_func_args`] The function args
