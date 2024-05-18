@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Executes a shell command and returns the output.
+# @describe Executes a shell command. This tool does not return data to LLM.
 # @option --shell-command~ "Shell command to execute, such as `ls -la`"
 
 main() {
