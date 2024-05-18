@@ -62,6 +62,9 @@ build-win-shims() {
 # @cmd Install this repo to aichat functions_dir
 install() {
     functions_dir="$(aichat --info | grep functions_dir | awk '{print $2}')"
+    if [[ -z "$functions_dir" ]]; then
+        _die "error: your aichat version don't support function calling"
+    fi
     if [[ ! -e "$functions_dir" ]]; then
         ln -s "$(pwd)" "$functions_dir" 
         echo "$functions_dir symlinked"
