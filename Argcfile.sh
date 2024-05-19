@@ -85,7 +85,6 @@ build-bin() {
 # @option --names-file=functions.txt Path to a file containing function filenames, one per line.
 # @arg funcs*[`_choice_func`] The function filenames
 build-declarations-json() {
-    set +e
     if [[ "${#argc_funcs[@]}" -gt 0 ]]; then
         names=("${argc_funcs[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
@@ -104,13 +103,10 @@ build-declarations-json() {
             not_found_funcs+=("$name")
             continue;
         fi
-        json_data="$("build-single-declaration" "$name")"
-        status=$?
-        if [ $status -eq 0 ]; then
-            json_list+=("$json_data")
-        else
+        json_data="$("build-single-declaration" "$name")" || {
             build_failed_funcs+=("$name")
-        fi
+        }
+        json_list+=("$json_data")
     done
     if [[ -n "$not_found_funcs" ]]; then
         _die "error: not found functions: ${not_found_funcs[*]}"
@@ -139,26 +135,19 @@ build-single-declaration() {
 # @cmd List functions that can be put into functions.txt
 # Examples:
 #      argc --list-functions > functions.txt
-#      argc --list-functions --write
 #      argc --list-functions search_duckduckgo.sh >> functions.txt
-# @flag -w --write Output to functions.txt
 # @arg funcs*[`_choice_func`] The function filenames, list all available functions if not provided
 list-functions() {
-    if [[ -n "$argc_write" ]]; then
-        _choice_func > functions.txt
-        echo "Write functions.txt"
-    else
-        _choice_func
-    fi
+    _choice_func
 }
 
 # @cmd Test the project
-# @meta require-tools node,python,ruby
 test() {
-    names_file=functions.txt.test
-    argc list-functions > "$names_file"
-    argc build --names-file "$names_file"
+    func_names_file=functions.txt.test
+    argc list-functions > "$func_names_file"
+    argc build --names-file "$func_names_file"
     argc test-call-functions
+    rm -rf "$func_names_file"
 }
 
 
@@ -170,17 +159,23 @@ test-call-functions() {
     "./bin/may_execute_command$ext" --command 'echo "bash works"'
     argc call may_execute_command.sh --command 'echo "bash works"'
 
-    export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'
-    "./bin/may_execute_js_code$ext"
-    argc call may_execute_js_code.js 
+    if command -v node &> /dev/null; then
+        export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'
+        "./bin/may_execute_js_code$ext"
+        argc call may_execute_js_code.js 
+    fi
 
-    export LLM_FUNCTION_DATA='{"code":"print(\"python works\")"}' 
-    "./bin/may_execute_py_code$ext"
-    argc call may_execute_py_code.py
+    if command -v python &> /dev/null; then
+        export LLM_FUNCTION_DATA='{"code":"print(\"python works\")"}' 
+        "./bin/may_execute_py_code$ext"
+        argc call may_execute_py_code.py
+    fi
 
-    export LLM_FUNCTION_DATA='{"code":"puts \"ruby works\""}' 
-    "./bin/may_execute_rb_code$ext"
-    argc call may_execute_rb_code.rb
+    if command -v ruby &> /dev/null; then
+        export LLM_FUNCTION_DATA='{"code":"puts \"ruby works\""}' 
+        "./bin/may_execute_rb_code$ext"
+        argc call may_execute_rb_code.rb
+    fi
 }
 
 # @cmd Install this repo to aichat functions_dir
@@ -298,7 +293,10 @@ _is_win() {
 _choice_func() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
-        ls -1 $lang  | grep "\.$lang$"
+        cmd="${item#*:}"
+        if command -v "$cmd" &> /dev/null; then
+            ls -1 $lang  | grep "\.$lang$"
+        fi
     done
 }
 
