@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'pathname'
+
+def load_module
+  func_name = ARGV[0]
+  func_name += '.rb' unless func_name.end_with?('.rb')
+  func_path = File.expand_path("../rb/#{func_name}", __dir__)
+
+  begin
+    return require_relative func_path
+  rescue LoadError
+    puts "Invalid ruby function: #{func_name}"
+    exit 1
+  end
+end
+
+if ENV["LLM_FUNCTION_DECLARATE"]
+  declarate = load_module.method(:declarate)
+  puts JSON.pretty_generate(declarate.call)
+else
+  begin
+    data = JSON.parse(ENV["LLM_FUNCTION_DATA"])
+  rescue JSON::ParserError
+    puts "Invalid LLM_FUNCTION_DATA"
+    exit 1
+  end
+  run = load_module.method(:run)
+  run.call(data)
+end

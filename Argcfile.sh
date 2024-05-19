@@ -3,60 +3,147 @@ set -e
 
 # @meta dotenv
 
+BIN_DIR="${BIN_DIR:-bin}"
+
+LANG_CMDS=( \
+    "sh:bash" \
+    "js:node" \
+    "py:python" \
+    "rb:ruby" \
+)
+
 # @cmd Call the function
 # @arg func![`_choice_func`] The function name
 # @arg args~[?`_choice_func_args`] The function args
 call() {
-    "./bin/$argc_func" "${argc_args[@]}"
+    basename="${argc_func%.*}"
+    lang="${argc_func##*.}"
+    func_path="./$lang/$basename.$lang"
+    if [[ ! -e "$func_path" ]]; then
+        _die "error: not found $argc_func"
+    fi
+    if [[ "$lang" == "sh" ]]; then
+        "$func_path" "${argc_args[@]}"
+    else
+       "$(_lang_to_cmd "$lang")" "./cmd/cmd.$lang" "$argc_func"
+    fi
 }
 
-# @cmd Build all artifacts
+# @cmd Build the project
 build() {
-    if [[ -f functions.txt ]]; then
-        argc build-declarations-json
-    fi
-    if [[ "$OS" = "Windows_NT" ]]; then
-        argc build-win-shims
-    fi
+    argc build-declarations-json
+    argc build-bin
 }
 
-# @cmd Build declarations for specific functions
-# @option --output=functions.json <FILE> Specify a file path to save the function declarations
-# @option --names-file=functions.txt Specify a file containing function names
-# @arg funcs*[`_choice_func`] The function names
+# @cmd Build bin dir 
+build-bin() {
+    if [[ ! -f functions.txt ]]; then
+        _die 'no found functions.txt'
+    fi
+    mkdir -p "$BIN_DIR"
+    names=($(cat functions.txt))
+    invalid_names=()
+    for name in "${names[@]}"; do
+        basename="${name%.*}"
+        lang="${name##*.}"
+        func_file="$lang/$name"
+        if [[  -f "$func_file" ]]; then
+            if [[ "$OS" = "Windows_NT" ]]; then
+                bin_file="$BIN_DIR/$basename.cmd" 
+                if [[ "$lang" == sh ]]; then
+                    _build_win_sh > "$bin_file"
+                else
+                    _build_win_lang $lang "$(_lang_to_cmd "$lang")"  > "$bin_file"
+                fi
+            else
+                bin_file="$BIN_DIR/$basename" 
+                if [[ "$lang" == sh ]]; then
+                    ln -rs "$func_file" "$bin_file"
+                else
+                    ln -rs "cmd/cmd.$lang" "$bin_file"
+                fi
+            fi
+        else
+            invalid_names+=("$name")
+        fi
+    done
+    if [[ -n "$invalid_names" ]]; then
+        _die "error: missing following functions: ${invalid_names[*]}"
+    fi
+    echo "Build bin"
+}
+
+# @cmd Build declarations.json
+# @option --output=functions.json <FILE> Path to a json file to save function declarations
+# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
+# This file specifies which function files to process. 
+# Example:
+#   get_current_weather.sh
+#   get_current_weather.js
+# @arg funcs*[`_choice_func`] The function filenames
 build-declarations-json() {
+    set +e
     if [[ "${#argc_funcs[@]}" -gt 0 ]]; then
         names=("${argc_funcs[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: no specific function"
+        _die "error: no target functions"
     fi
-    result=()
+    json_list=()
+    invalid_names=()
     for name in "${names[@]}"; do
-        result+=("$(build-func-declaration "$name")")
+        lang="${name##*.}"
+        json_data="$("build-single-declaration" "$name")"
+        status=$?
+        if [ $status -eq 0 ]; then
+            json_list+=("$json_data")
+        else
+            invalid_names+=("$name")
+        fi
     done
-    echo "["$(IFS=,; echo "${result[*]}")"]"  | jq '.' > "$argc_output"
+    if [[ -n "$invalid_names" ]]; then
+        _die "error: unable to build declaration for: ${invalid_names[*]}"
+    fi
     echo "Build $argc_output"
+    echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.' > "$argc_output"
 }
 
-# @cmd Build declaration for a single function
+
+# @cmd Build single declaration
 # @arg func![`_choice_func`] The function name
-build-func-declaration() {
-    argc --argc-export bin/$1 | _parse_declaration
+build-single-declaration() {
+    func="$1"
+    lang="${func##*.}"
+    cmd="$(_lang_to_cmd "$lang")"
+    if [[ "$lang" == sh ]]; then
+        argc --argc-export "$lang/$func" | _parse_argc_declaration
+    else
+        LLM_FUNCTION_DECLARATE=1 "$cmd" "cmd/cmd.$lang" "$func"
+    fi
 }
 
-# @cmd Build shims for the functions
-# Because Windows OS can't run bash scripts directly, we need to make a shim for each function
-#
-# @flag --clear Clear the shims
-build-win-shims() {
-    funcs=($(_choice_func))
-    for func in "${funcs[@]}"; do
-        echo "Shim bin/${func}.cmd"
-        _win_shim > "bin/${func}.cmd"
-    done
+# @cmd List functions that can be put into functions.txt
+# Examples:
+#      argc --list-functions > functions.txt
+#      argc --list-functions --write
+#      argc --list-functions search_duckduckgo.sh >> functions.txt
+# @flag -w --write Output to functions.txt
+# @arg funcs*[`_choice_func`] The function filenames, list all available functions if not provided
+list-functions() {
+    if [[ -n "$argc_write" ]]; then
+        _choice_func > functions.txt
+        echo "Write functions.txt"
+    else
+        _choice_func
+    fi
+}
+
+# @cmd Clean build artifacts
+clean() {
+    rm -rf functions.json
+    rm -rf bin
 }
 
 # @cmd Install this repo to aichat functions_dir
@@ -80,7 +167,7 @@ version() {
     curl --version | head -n 1
 }
 
-_parse_declaration() {
+_parse_argc_declaration() {
     jq -r '
     def parse_description(flag_option):
         if flag_option.describe == "" then
@@ -123,26 +210,58 @@ _parse_declaration() {
     }'
 }
 
-_win_shim() {
+_lang_to_cmd() {
+    match_lang="$1"
+    for item in "${LANG_CMDS[@]}"; do
+        lang="${item%:*}"
+        if [[ "$lang" == "$match_lang" ]]; then
+            echo "${item#*:}"
+        fi
+    done
+}
+
+_build_win_sh() {
     cat <<-'EOF'
 @echo off
 setlocal
 
-set "script_dir=%~dp0"
+set "bin_dir=%~dp0"
+for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
+set "script_name=%script_name%.sh"
 for /f "delims=" %%a in ('argc --argc-shell-path') do set "_bash_prog=%%a"
 
-"%_bash_prog%" --noprofile --norc "%script_dir%\%script_name%" %*
+"%_bash_prog%" --noprofile --norc "%script_dir%sh\%script_name%" %*
+EOF
+}
+
+_build_win_lang() {
+    lang="$1"
+    cmd="$2"
+    cat <<-EOF
+@echo off
+setlocal
+
+set "bin_dir=%~dp0"
+for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
+set "script_name=%~n0"
+
+$cmd "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
 EOF
 }
 
 _choice_func() {
-    ls -1 bin | grep -v '\.cmd'
+    for item in "${LANG_CMDS[@]}"; do
+        lang="${item%:*}"
+        ls -1 $lang  | grep "\.$lang$"
+    done
 }
 
 _choice_func_args() {
     args=( "${argc__positionals[@]}" )
-    argc --argc-compgen generic "bin/${args[0]}" "${args[@]}"
+    if [[ "${args[0]}" == *.sh ]]; then
+        argc --argc-compgen generic "sh/${args[0]}" "${args[@]}"
+    fi
 }
 
 _die() {
