@@ -2,7 +2,12 @@
 
 function loadModule() {
   const path = require("path");
-  let func_name = process.argv[2];
+  let func_name = process.argv[1];
+  if (func_name.endsWith("cmd.js")) {
+    func_name = process.argv[2]
+  } else {
+    func_name = path.basename(func_name)
+  }
   if (!func_name.endsWith(".js")) {
     func_name += '.js'
   }

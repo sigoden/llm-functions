@@ -3,7 +3,7 @@ set -e
 
 # @meta dotenv
 
-BIN_DIR="${BIN_DIR:-bin}"
+BIN_DIR=bin
 
 LANG_CMDS=( \
     "sh:bash" \
@@ -41,6 +41,7 @@ build-bin() {
         _die 'no found functions.txt'
     fi
     mkdir -p "$BIN_DIR"
+    rm -rf "$BIN_DIR"/*
     names=($(cat functions.txt))
     invalid_names=()
     for name in "${names[@]}"; do
@@ -92,19 +93,28 @@ build-declarations-json() {
         _die "error: no target functions"
     fi
     json_list=()
-    invalid_names=()
+    not_found_funcs=()
+    build_failed_funcs=()
     for name in "${names[@]}"; do
         lang="${name##*.}"
+        func_file="$lang/$name"
+        if [[ ! -f "$func_file" ]]; then
+            not_found_funcs+=("$name")
+            continue;
+        fi
         json_data="$("build-single-declaration" "$name")"
         status=$?
         if [ $status -eq 0 ]; then
             json_list+=("$json_data")
         else
-            invalid_names+=("$name")
+            build_failed_funcs+=("$name")
         fi
     done
-    if [[ -n "$invalid_names" ]]; then
-        _die "error: unable to build declaration for: ${invalid_names[*]}"
+    if [[ -n "$not_found_funcs" ]]; then
+        _die "error: not found functions: ${not_found_funcs[*]}"
+    fi
+    if [[ -n "$build_failed_funcs" ]]; then
+        _die "error: invalid functions: ${build_failed_funcs[*]}"
     fi
     echo "Build $argc_output"
     echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.' > "$argc_output"

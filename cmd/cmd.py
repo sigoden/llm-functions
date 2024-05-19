@@ -17,7 +17,12 @@ def load_module(func_name):
         print(f"Invalid py function: {func_name}")
         sys.exit(1)
 
-func_name = sys.argv[1] if len(sys.argv) > 1 else None
+func_name = sys.argv[0]
+if func_name.endswith("cmd.py"):
+    func_name = sys.argv[1]
+else:
+    func_name = os.path.basename(func_name)
+
 if not func_name.endswith(".py"):
     func_name += ".py"
 

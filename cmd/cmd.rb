@@ -4,7 +4,12 @@ require 'json'
 require 'pathname'
 
 def load_module
-  func_name = ARGV[0]
+  if __FILE__.end_with?("cmd.rb")
+    func_name = ARGV[0]
+  else
+    func_name = Pathname.new(__FILE__).basename.to_s
+  end
+
   func_name += '.rb' unless func_name.end_with?('.rb')
   func_path = File.expand_path("../rb/#{func_name}", __dir__)
 
