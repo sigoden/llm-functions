@@ -153,7 +153,7 @@ list-functions() {
 }
 
 # @cmd Test the project
-# @meta require-tools
+# @meta require-tools node,python,ruby
 test() {
     names_file=functions.txt.test
     argc list-functions > "$names_file"
@@ -167,7 +167,7 @@ test-call-functions() {
     if _is_win; then
         ext=".cmd"
     fi
-    ./bin/may_execute_command --command 'echo "bash works"'
+    "./bin/may_execute_command$ext" --command 'echo "bash works"'
     argc call may_execute_command.sh --command 'echo "bash works"'
 
     export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'

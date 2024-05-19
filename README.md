@@ -1,4 +1,4 @@
-# LLM Functions: Write function callings in in Bash/Js/Python/Ruby.
+# LLM Functions
 
 This project allows you to enhance large language models (LLMs) with custom functions written in Bash/Js/Python/Ruby. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
 
