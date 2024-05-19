@@ -55,7 +55,7 @@ build-bin() {
         lang="${name##*.}"
         func_file="$lang/$name"
         if [[  -f "$func_file" ]]; then
-            if [[ "$OS" = "Windows_NT" ]]; then
+            if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
                 if [[ "$lang" == sh ]]; then
                     _build_win_sh > "$bin_file"
@@ -164,19 +164,22 @@ test() {
 
 # @cmd Test call functions
 test-call-functions() {
+    if _is_win; then
+        ext=".cmd"
+    fi
     ./bin/may_execute_command --command 'echo "bash works"'
     argc call may_execute_command.sh --command 'echo "bash works"'
 
     export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'
-    ./bin/may_execute_js_code
+    "./bin/may_execute_js_code$ext"
     argc call may_execute_js_code.js 
 
     export LLM_FUNCTION_DATA='{"code":"print(\"python works\")"}' 
-    ./bin/may_execute_py_code
+    "./bin/may_execute_py_code$ext"
     argc call may_execute_py_code.py
 
     export LLM_FUNCTION_DATA='{"code":"puts \"ruby works\""}' 
-    ./bin/may_execute_rb_code
+    "./bin/may_execute_rb_code$ext"
     argc call may_execute_rb_code.rb
 }
 
@@ -282,6 +285,14 @@ set "script_name=%~n0"
 
 $cmd "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
 EOF
+}
+
+_is_win() {
+    if [[ "$OS" == "Windows_NT" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 _choice_func() {
