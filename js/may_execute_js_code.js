@@ -1,4 +1,4 @@
-function declarate() {
+exports.declarate = function declarate() {
   return {
     "name": "may_execute_js_code",
     "description": "Runs the javascript code in node.js.",
@@ -17,9 +17,6 @@ function declarate() {
   }
 }
 
-function run(data) {
+exports.execute = function execute(data) {
   eval(data.code)
 }
-
-exports.declarate = declarate;
-exports.run = run;

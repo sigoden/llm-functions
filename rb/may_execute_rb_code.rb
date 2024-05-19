@@ -17,6 +17,6 @@ def declarate
   }
 end
 
-def run(data)
+def execute(data)
   eval(data["code"])
 end

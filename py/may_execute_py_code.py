@@ -17,13 +17,5 @@ def declarate():
   }
 
 
-def run(data):
+def execute(data):
   exec(data["code"])
-
-# For compatibility with module.exports 
-class Module:
-  pass
-
-module = Module()
-module.declarate = declarate
-module.run = run

@@ -108,16 +108,16 @@ The relationship between comment tags and parameters in function declarations is
 Create a new javascript (.e.g. `may_execute_command.js`) in the [./js](./js/) directory. 
 
 ```js
-function declarate() {
+exports.declarate = function declarate() {
   return {
     "name": "may_execute_js_code",
-    "description": "Runs the js code.",
+    "description": "Runs the javascript code in node.js.",
     "parameters": {
       "type": "object",
       "properties": {
         "code": {
           "type": "string",
-          "description": "js code to execute, such as `console.log(\"hello world\")`"
+          "description": "Javascript code to execute, such as `console.log(\"hello world\")`"
         }
       },
       "required": [
@@ -127,12 +127,10 @@ function declarate() {
   }
 }
 
-function run(data) {
+exports.execute = function execute(data) {
   eval(data.code)
 }
 
-exports.declarate = declarate;
-exports.run = run;
 ```
 
 ### Python
@@ -159,16 +157,8 @@ def declarate():
   }
 
 
-def run(data):
+def execute(data):
   exec(data["code"])
-
-# For compatibility with module.exports 
-class Module:
-  pass
-
-module = Module()
-module.declarate = declarate
-module.run = run
 ```
 
 ### Ruby
@@ -195,7 +185,7 @@ def declarate
   }
 end
 
-def run(data)
+def execute(data)
   eval(data["code"])
 end
 ```

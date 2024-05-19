@@ -9,7 +9,7 @@ def load_module(func_name):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     func_path = os.path.join(base_dir, f"../py/{func_name}")
     if os.path.exists(func_path):
-        spec = importlib.util.spec_from_file_location("module.name", func_path)
+        spec = importlib.util.spec_from_file_location(func_name, func_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
@@ -39,5 +39,5 @@ else:
         sys.exit(1)
 
     module = load_module(func_name)
-    run = getattr(module, 'run')
-    run(data)
+    execute = getattr(module, 'execute')
+    execute(data)

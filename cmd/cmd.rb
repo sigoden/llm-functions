@@ -31,6 +31,6 @@ else
     puts "Invalid LLM_FUNCTION_DATA"
     exit 1
   end
-  run = load_module.method(:run)
-  run.call(data)
+  execute = load_module.method(:execute)
+  execute.call(data)
 end

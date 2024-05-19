@@ -31,6 +31,6 @@ if (process.env["LLM_FUNCTION_DECLARATE"]) {
     console.log("Invalid LLM_FUNCTION_DATA")
     process.exit(1)
   }
-  const { run } = loadModule();
-  run(data)
+  const { execute } = loadModule();
+  execute(data)
 }
