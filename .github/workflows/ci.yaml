@@ -37,7 +37,8 @@ jobs:
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
-      ruby-version: '3.3'
+      with:
+        ruby-version: '3.3'
 
     - name: Run Test
       run: argc test
