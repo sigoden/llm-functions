@@ -5,7 +5,7 @@ set -e
 # @option --command~ Command to execute, such as `ls -la`
 
 main() {
-    eval $argc_shell_command
+    eval "$argc_command"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

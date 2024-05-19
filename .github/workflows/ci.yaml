@@ -29,5 +29,14 @@ jobs:
     - name: Check versions
       run: argc version
 
-    - name: Check scripts
-      run: argc build
+    - name: Setup Python
+      uses: actions/setup-python@v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+
+    - name: Run Test
+      run: argc test

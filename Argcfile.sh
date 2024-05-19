@@ -30,19 +30,25 @@ call() {
 }
 
 # @cmd Build the project
+# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
+# This file specifies which function files to build. 
+# Example:
+#   get_current_weather.sh
+#   may_execute_js_code.js
 build() {
-    argc build-declarations-json
-    argc build-bin
+    argc build-declarations-json --names-file "${argc_names_file}"
+    argc build-bin --names-file "${argc_names_file}"
 }
 
 # @cmd Build bin dir 
+# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
 build-bin() {
-    if [[ ! -f functions.txt ]]; then
-        _die 'no found functions.txt'
+    if [[ ! -f "$argc_names_file" ]]; then
+        _die "no found "$argc_names_file""
     fi
     mkdir -p "$BIN_DIR"
     rm -rf "$BIN_DIR"/*
-    names=($(cat functions.txt))
+    names=($(cat "$argc_names_file"))
     invalid_names=()
     for name in "${names[@]}"; do
         basename="${name%.*}"
@@ -77,10 +83,6 @@ build-bin() {
 # @cmd Build declarations.json
 # @option --output=functions.json <FILE> Path to a json file to save function declarations
 # @option --names-file=functions.txt Path to a file containing function filenames, one per line.
-# This file specifies which function files to process. 
-# Example:
-#   get_current_weather.sh
-#   get_current_weather.js
 # @arg funcs*[`_choice_func`] The function filenames
 build-declarations-json() {
     set +e
@@ -90,7 +92,7 @@ build-declarations-json() {
         names=($(cat "$argc_names_file"))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: no target functions"
+        _die "error: no function for building declarations.json"
     fi
     json_list=()
     not_found_funcs=()
@@ -150,10 +152,32 @@ list-functions() {
     fi
 }
 
-# @cmd Clean build artifacts
-clean() {
-    rm -rf functions.json
-    rm -rf bin
+# @cmd Test the project
+# @meta require-tools
+test() {
+    names_file=functions.txt.test
+    argc list-functions > "$names_file"
+    argc build --names-file "$names_file"
+    argc test-call-functions
+}
+
+
+# @cmd Test call functions
+test-call-functions() {
+    ./bin/may_execute_command --command 'echo "bash works"'
+    argc call may_execute_command.sh --command 'echo "bash works"'
+
+    export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'
+    ./bin/may_execute_js_code
+    argc call may_execute_js_code.js 
+
+    export LLM_FUNCTION_DATA='{"code":"print(\"python works\")"}' 
+    ./bin/may_execute_py_code
+    argc call may_execute_py_code.py
+
+    export LLM_FUNCTION_DATA='{"code":"puts \"ruby works\""}' 
+    ./bin/may_execute_rb_code
+    argc call may_execute_rb_code.rb
 }
 
 # @cmd Install this repo to aichat functions_dir
