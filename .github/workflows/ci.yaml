@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: extractions/setup-crate@v1
       with:
@@ -37,6 +37,7 @@ jobs:
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
+      ruby-version: '3.3'
 
     - name: Run Test
       run: argc test
