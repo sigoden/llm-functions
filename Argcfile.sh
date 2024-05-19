@@ -65,9 +65,9 @@ build-bin() {
             else
                 bin_file="$BIN_DIR/$basename" 
                 if [[ "$lang" == sh ]]; then
-                    ln -rs "$func_file" "$bin_file"
+                    ln -s "$PWD/$func_file" "$bin_file"
                 else
-                    ln -rs "cmd/cmd.$lang" "$bin_file"
+                    ln -s "$PWD/cmd/cmd.$lang" "$bin_file"
                 fi
             fi
         else
