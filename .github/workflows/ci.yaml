@@ -16,10 +16,14 @@ jobs:
   all:
     name: All
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: extractions/setup-crate@v1
       with:
@@ -29,5 +33,18 @@ jobs:
     - name: Check versions
       run: argc version
 
-    - name: Check scripts
-      run: argc build
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' 
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+
+    - name: Run Test
+      run: argc test

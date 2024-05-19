@@ -1,5 +1,8 @@
 /tmp
 /functions.txt
+/functions.txt.test
 /functions.json
+/bin
 /.env
 *.cmd
+__pycache__
