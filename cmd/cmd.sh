@@ -2,16 +2,19 @@
 set -e
 
 if [[ "$0" == *cmd.sh ]]; then
-    FUNC_NAME="$1"
+    FUNC_FILE="$1"
+    FUNC_DATA="$2"
 else
-    FUNC_NAME="$(basename "$0")"
+    FUNC_FILE="$(basename "$0")"
+    FUNC_DATA="$1"
 fi
-if [[ "$FUNC_NAME" != *'.sh' ]]; then
-    FUNC_NAME="$FUNC_NAME.sh"
+if [[ "$FUNC_FILE" != *'.sh' ]]; then
+    FUNC_FILE="$FUNC_FILE.sh"
 fi
 
 PROJECT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
-FUNC_FILE="$PROJECT_DIR/sh/$FUNC_NAME"
+FUNC_FILE="$PROJECT_DIR/sh/$FUNC_FILE"
+
 if [[ "$OS" == "Windows_NT" ]]; then
     FUNC_FILE="$(cygpath -w "$FUNC_FILE")"
 fi
@@ -59,11 +62,14 @@ if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
         parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
     }'
 else
-    while IFS= read -r line; do
-        ARGS+=("$line")
-    done <<< "$(
-        echo "$LLM_FUNCTION_DATA" | \
-        jq -r '
+    if [[ -z "$FUNC_DATA" ]]; then
+        echo "No json data"
+        exit 1
+    fi
+
+    data="$(
+        echo "$FUNC_DATA" | \
+        jq -b -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
         if .value | type == "array" then
@@ -72,8 +78,13 @@ else
             if .value then "--\($key)" else "" end
         else
             "--\($key)\n\(.value)"
-        end' | \
-        tr -d '\r'
-    )"
+        end'
+    )" || {
+        echo "Invalid json data"
+        exit 1
+    }
+    while IFS= read -r line; do
+        ARGS+=("$line")
+    done <<< "$data"
     "$FUNC_FILE" "${ARGS[@]}"
 fi

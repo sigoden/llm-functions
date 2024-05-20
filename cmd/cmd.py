@@ -5,39 +5,50 @@ import json
 import sys
 import importlib.util
 
-def load_module(func_name):
+def parse_argv():
+    func_file = sys.argv[0]
+    func_data = None
+
+    if func_file.endswith("cmd.py"):
+        func_file = sys.argv[1] if len(sys.argv) > 1 else None
+        func_data = sys.argv[2] if len(sys.argv) > 2 else None
+    else:
+        func_file = os.path.basename(func_file)
+        func_data = sys.argv[1] if len(sys.argv) > 1 else None
+
+    if not func_file.endswith(".py"):
+        func_file += ".py"
+
+    return func_file, func_data
+
+def load_func(func_file):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    func_path = os.path.join(base_dir, f"../py/{func_name}")
+    func_path = os.path.join(base_dir, f"../py/{func_file}")
     if os.path.exists(func_path):
-        spec = importlib.util.spec_from_file_location(func_name, func_path)
+        spec = importlib.util.spec_from_file_location(func_file, func_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
     else:
-        print(f"Invalid py function: {func_name}")
+        print(f"Invalid function: {func_file}")
         sys.exit(1)
 
-func_name = sys.argv[0]
-if func_name.endswith("cmd.py"):
-    func_name = sys.argv[1]
-else:
-    func_name = os.path.basename(func_name)
-
-if not func_name.endswith(".py"):
-    func_name += ".py"
+func_file, func_data = parse_argv()
 
 if os.getenv("LLM_FUNCTION_ACTION") == "declarate":
-    module = load_module(func_name)
-    declarate = getattr(module, 'declarate')
-    print(json.dumps(declarate(), indent=2))
+    module = load_func(func_file)
+    print(json.dumps(module.declarate(), indent=2))
 else:
-    data = None
-    try:
-        data = json.loads(os.getenv("LLM_FUNCTION_DATA"))
-    except (json.JSONDecodeError, TypeError):
-        print("Invalid LLM_FUNCTION_DATA")
+    if not func_data:
+        print("No json data")
         sys.exit(1)
 
-    module = load_module(func_name)
-    execute = getattr(module, 'execute')
-    execute(data)
+    args = None
+    try:
+        args = json.loads(func_data)
+    except (json.JSONDecodeError, TypeError):
+        print("Invalid json data")
+        sys.exit(1)
+
+    module = load_func(func_file)
+    module.execute(args)

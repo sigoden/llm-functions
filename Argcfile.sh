@@ -19,7 +19,7 @@ call() {
     if _is_win; then
         ext=".cmd"
     fi
-    LLM_FUNCTION_DATA="$argc_json" "$BIN_DIR/$argc_cmd$ext" 
+    "$BIN_DIR/$argc_cmd$ext" "$argc_json"
 }
 
 # @cmd Build the project
@@ -149,7 +149,10 @@ test-call-functions() {
         IFS='#' read -r lang func data <<<"${test_case}"
         cmd="$(_lang_to_cmd "$lang")"
         if command -v "$cmd" &> /dev/null; then
-            LLM_FUNCTION_DATA="$data" "$BIN_DIR/$func$ext"
+            "$BIN_DIR/$func$ext" "$data"
+            if ! _is_win; then
+                "$cmd" "cmd/cmd.$lang" "$func" "$data"
+            fi
         fi
     done
 }

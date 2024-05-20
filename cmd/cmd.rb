@@ -3,34 +3,52 @@
 require 'json'
 require 'pathname'
 
-def load_module
-  if __FILE__.end_with?("cmd.rb")
-    func_name = ARGV[0]
+def parse_argv
+  func_file = __FILE__
+    func_data = nil
+
+  if func_file.end_with?("cmd.rb")
+    func_file = ARGV[0]
+    func_data = ARGV[1]
   else
-    func_name = Pathname.new(__FILE__).basename.to_s
+    func_file = File.basename(func_file)
+    func_data = ARGV[0]
   end
 
-  func_name += '.rb' unless func_name.end_with?('.rb')
-  func_path = File.expand_path("../rb/#{func_name}", __dir__)
+  func_file += '.rb' unless func_file.end_with?(".rb")
+
+  [func_file, func_data]
+end
+
+def load_func(func_file)
+  func_path = File.expand_path("../rb/#{func_file}", __dir__)
 
   begin
-    return require_relative func_path
+    require func_path
   rescue LoadError
-    puts "Invalid ruby function: #{func_name}"
+    puts "Invalid function: #{func_file}"
     exit 1
   end
 end
 
+func_file, func_data = parse_argv
+
 if ENV["LLM_FUNCTION_ACTION"] == "declarate"
-  declarate = load_module.method(:declarate)
-  puts JSON.pretty_generate(declarate.call)
+  load_func(func_file)
+  puts JSON.pretty_generate(declarate)
 else
-  begin
-    data = JSON.parse(ENV["LLM_FUNCTION_DATA"])
-  rescue JSON::ParserError
-    puts "Invalid LLM_FUNCTION_DATA"
+  if func_data.nil?
+    puts "No json data"
     exit 1
   end
-  execute = load_module.method(:execute)
-  execute.call(data)
+
+  begin
+    args = JSON.parse(func_data)
+  rescue JSON::ParserError
+    puts "Invalid json data"
+    exit 1
+  end
+
+  load_func(func_file)
+  execute(args)
 end
