@@ -21,7 +21,7 @@ def load_module
   end
 end
 
-if ENV["LLM_FUNCTION_DECLARATE"]
+if ENV["LLM_FUNCTION_ACTION"] == "declarate"
   declarate = load_module.method(:declarate)
   puts JSON.pretty_generate(declarate.call)
 else

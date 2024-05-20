@@ -20,7 +20,7 @@ function loadModule() {
   }
 }
 
-if (process.env["LLM_FUNCTION_DECLARATE"]) {
+if (process.env["LLM_FUNCTION_ACTION"] == "declarate") {
   const { declarate } = loadModule();
   console.log(JSON.stringify(declarate(), null, 2))
 } else {

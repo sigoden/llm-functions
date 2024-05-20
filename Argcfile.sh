@@ -13,20 +13,13 @@ LANG_CMDS=( \
 )
 
 # @cmd Call the function
-# @arg func![`_choice_func`] The function name
-# @arg args~[?`_choice_func_args`] The function args
+# @arg cmd![`_choice_cmd`] The function command
+# @arg json The json data
 call() {
-    basename="${argc_func%.*}"
-    lang="${argc_func##*.}"
-    func_path="./$lang/$basename.$lang"
-    if [[ ! -e "$func_path" ]]; then
-        _die "error: not found $argc_func"
+    if _is_win; then
+        ext=".cmd"
     fi
-    if [[ "$lang" == "sh" ]]; then
-        "$func_path" "${argc_args[@]}"
-    else
-       "$(_lang_to_cmd "$lang")" "./cmd/cmd.$lang" "$argc_func"
-    fi
+    LLM_FUNCTION_DATA="$argc_json" "$BIN_DIR/$argc_cmd$ext" 
 }
 
 # @cmd Build the project
@@ -49,7 +42,7 @@ build-bin() {
     mkdir -p "$BIN_DIR"
     rm -rf "$BIN_DIR"/*
     names=($(cat "$argc_names_file"))
-    invalid_names=()
+    not_found_funcs=()
     for name in "${names[@]}"; do
         basename="${name%.*}"
         lang="${name##*.}"
@@ -57,27 +50,21 @@ build-bin() {
         if [[  -f "$func_file" ]]; then
             if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
-                if [[ "$lang" == sh ]]; then
-                    _build_win_sh > "$bin_file"
-                else
-                    _build_win_lang $lang "$(_lang_to_cmd "$lang")"  > "$bin_file"
-                fi
+                _build_win_shim $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
-                if [[ "$lang" == sh ]]; then
-                    ln -s "$PWD/$func_file" "$bin_file"
-                else
-                    ln -s "$PWD/cmd/cmd.$lang" "$bin_file"
-                fi
+                ln -s "$PWD/cmd/cmd.$lang" "$bin_file"
             fi
         else
-            invalid_names+=("$name")
+            not_found_funcs+=("$name")
         fi
     done
-    if [[ -n "$invalid_names" ]]; then
-        _die "error: missing following functions: ${invalid_names[*]}"
+    if [[ -n "$not_found_funcs" ]]; then
+        _die "error: not founds functions: ${not_found_funcs[*]}"
     fi
-    echo "Build bin"
+    for name in "$BIN_DIR"/*; do
+        echo "Build $name"
+    done
 }
 
 # @cmd Build declarations.json
@@ -125,11 +112,7 @@ build-single-declaration() {
     func="$1"
     lang="${func##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    if [[ "$lang" == sh ]]; then
-        argc --argc-export "$lang/$func" | _parse_argc_declaration
-    else
-        LLM_FUNCTION_DECLARATE=1 "$cmd" "cmd/cmd.$lang" "$func"
-    fi
+    LLM_FUNCTION_ACTION=declarate "$cmd" "cmd/cmd.$lang" "$func"
 }
 
 # @cmd List functions that can be put into functions.txt
@@ -150,32 +133,25 @@ test() {
     rm -rf "$func_names_file"
 }
 
-
 # @cmd Test call functions
 test-call-functions() {
     if _is_win; then
         ext=".cmd"
     fi
-    "./bin/may_execute_command$ext" --command 'echo "bash works"'
-    argc call may_execute_command.sh --command 'echo "bash works"'
+    test_cases=( \
+        'sh#may_execute_command#{"command":"echo \"bash function ok\""}' \
+        'js#may_execute_js_code#{"code":"console.log(\"javascript function ok\")"}' \
+        'py#may_execute_py_code#{"code":"print(\"python funtion ok\")"}' \
+        'rb#may_execute_rb_code#{"code":"puts \"ruby funtion ok\""}'  \
+    )
 
-    if command -v node &> /dev/null; then
-        export LLM_FUNCTION_DATA='{"code":"console.log(\"javascript works\")"}'
-        "./bin/may_execute_js_code$ext"
-        argc call may_execute_js_code.js 
-    fi
-
-    if command -v python &> /dev/null; then
-        export LLM_FUNCTION_DATA='{"code":"print(\"python works\")"}' 
-        "./bin/may_execute_py_code$ext"
-        argc call may_execute_py_code.py
-    fi
-
-    if command -v ruby &> /dev/null; then
-        export LLM_FUNCTION_DATA='{"code":"puts \"ruby works\""}' 
-        "./bin/may_execute_rb_code$ext"
-        argc call may_execute_rb_code.rb
-    fi
+    for test_case in "${test_cases[@]}"; do
+        IFS='#' read -r lang func data <<<"${test_case}"
+        cmd="$(_lang_to_cmd "$lang")"
+        if command -v "$cmd" &> /dev/null; then
+            LLM_FUNCTION_DATA="$data" "$BIN_DIR/$func$ext"
+        fi
+    done
 }
 
 # @cmd Install this repo to aichat functions_dir
@@ -199,49 +175,6 @@ version() {
     curl --version | head -n 1
 }
 
-_parse_argc_declaration() {
-    jq -r '
-    def parse_description(flag_option):
-        if flag_option.describe == "" then
-            {}
-        else
-            { "description": flag_option.describe }
-        end;
-
-    def parse_enum(flag_option):
-        if flag_option.choice.type == "Values" then
-            { "enum": flag_option.choice.data }
-        else
-            {}
-        end;
-
-    def parse_property(flag_option):
-        [
-            { condition: (flag_option.flag == true), result: { type: "boolean" } },
-            { condition: (flag_option.multiple_occurs == true), result: { type: "array", items: { type: "string" } } },
-            { condition: (flag_option.notations[0] == "INT"), result: { type: "integer" } },
-            { condition: (flag_option.notations[0] == "NUM"), result: { type: "number" } },
-            { condition: true, result: { type: "string" } } ]
-        | map(select(.condition) | .result) | first 
-        | (. + parse_description(flag_option))
-        | (. + parse_enum(flag_option))
-        ;
-
-
-    def parse_parameter(flag_options):
-        {
-            type: "object",
-            properties: (reduce flag_options[] as $item ({}; . + { ($item.id | sub("-"; "_"; "g")): parse_property($item) })),
-            required: [flag_options[] | select(.required == true) | .id],
-        };
-
-    {
-        name: (.name | sub("-"; "_"; "g")),
-        description: .describe,
-        parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
-    }'
-}
-
 _lang_to_cmd() {
     match_lang="$1"
     for item in "${LANG_CMDS[@]}"; do
@@ -252,24 +185,14 @@ _lang_to_cmd() {
     done
 }
 
-_build_win_sh() {
-    cat <<-'EOF'
-@echo off
-setlocal
-
-set "bin_dir=%~dp0"
-for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
-set "script_name=%~n0"
-set "script_name=%script_name%.sh"
-for /f "delims=" %%a in ('argc --argc-shell-path') do set "_bash_prog=%%a"
-
-"%_bash_prog%" --noprofile --norc "%script_dir%sh\%script_name%" %*
-EOF
-}
-
-_build_win_lang() {
+_build_win_shim() {
     lang="$1"
-    cmd="$2"
+    cmd="$(_lang_to_cmd "$lang")"
+    if [[ "$lang" == "sh" ]]; then
+        run="\"$(cygpath -w "$(which $cmd)")\" --noprofile --norc"
+    else
+        run="\"$(cygpath -w "$(which $cmd)")\""
+    fi
     cat <<-EOF
 @echo off
 setlocal
@@ -278,7 +201,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$cmd "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
+$run "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
 EOF
 }
 
@@ -300,11 +223,8 @@ _choice_func() {
     done
 }
 
-_choice_func_args() {
-    args=( "${argc__positionals[@]}" )
-    if [[ "${args[0]}" == *.sh ]]; then
-        argc --argc-compgen generic "sh/${args[0]}" "${args[@]}"
-    fi
+_choice_cmd() {
+    ls -1 "$BIN_DIR" | sed -e 's/\.cmd$//'
 }
 
 _die() {

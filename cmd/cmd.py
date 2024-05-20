@@ -26,7 +26,7 @@ else:
 if not func_name.endswith(".py"):
     func_name += ".py"
 
-if os.getenv("LLM_FUNCTION_DECLARATE"):
+if os.getenv("LLM_FUNCTION_ACTION") == "declarate":
     module = load_module(func_name)
     declarate = getattr(module, 'declarate')
     print(json.dumps(declarate(), indent=2))
