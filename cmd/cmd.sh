@@ -12,6 +12,9 @@ fi
 
 PROJECT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
 FUNC_FILE="$PROJECT_DIR/sh/$FUNC_NAME"
+if [[ "$OS" == "Windows_NT" ]]; then
+    FUNC_FILE="$(cygpath -w "$FUNC_FILE")"
+fi
 
 if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
     argc --argc-export "$FUNC_FILE" | \
@@ -56,7 +59,9 @@ if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
         parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
     }'
 else
-    readarray -t ARGS <<< "$(
+    while IFS= read -r line; do
+        ARGS+=("$line")
+    done <<< "$(
         echo "$LLM_FUNCTION_DATA" | \
         jq -r '
         to_entries | .[] | 
@@ -67,7 +72,8 @@ else
             if .value then "--\($key)" else "" end
         else
             "--\($key)\n\(.value)"
-        end' \
+        end' | \
+        tr -d '\r'
     )"
-   "$FUNC_FILE" "${ARGS[@]}"
+    "$FUNC_FILE" "${ARGS[@]}"
 fi
