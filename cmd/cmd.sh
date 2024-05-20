@@ -69,7 +69,7 @@ else
 
     data="$(
         echo "$FUNC_DATA" | \
-        jq -b -r '
+        jq -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
         if .value | type == "array" then
@@ -78,7 +78,8 @@ else
             if .value then "--\($key)" else "" end
         else
             "--\($key)\n\(.value)"
-        end'
+        end' | \
+        tr -d '\r'
     )" || {
         echo "Invalid json data"
         exit 1

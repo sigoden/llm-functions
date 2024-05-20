@@ -129,29 +129,34 @@ test() {
     func_names_file=functions.txt.test
     argc list-functions > "$func_names_file"
     argc build --names-file "$func_names_file"
-    argc test-call-functions
+    argc test-functions
     rm -rf "$func_names_file"
 }
 
 # @cmd Test call functions
-test-call-functions() {
+test-functions() {
     if _is_win; then
         ext=".cmd"
     fi
     test_cases=( \
-        'sh#may_execute_command#{"command":"echo \"bash function ok\""}' \
-        'js#may_execute_js_code#{"code":"console.log(\"javascript function ok\")"}' \
-        'py#may_execute_py_code#{"code":"print(\"python funtion ok\")"}' \
-        'rb#may_execute_rb_code#{"code":"puts \"ruby funtion ok\""}'  \
+        'sh#may_execute_command#{"command":"echo \"✓\""}' \
+        'js#may_execute_js_code#{"code":"console.log(\"✓\")"}' \
+        'py#may_execute_py_code#{"code":"print(\"✓\")"}' \
+        'rb#may_execute_rb_code#{"code":"puts \"✓\""}'  \
     )
 
     for test_case in "${test_cases[@]}"; do
         IFS='#' read -r lang func data <<<"${test_case}"
         cmd="$(_lang_to_cmd "$lang")"
+        cmd_path="$BIN_DIR/$func$ext"
         if command -v "$cmd" &> /dev/null; then
-            "$BIN_DIR/$func$ext" "$data"
+            "$cmd_path" "$data" | {
+                echo "Test $cmd_path: $(cat)"
+            }
             if ! _is_win; then
-                "$cmd" "cmd/cmd.$lang" "$func" "$data"
+                "$cmd" "cmd/cmd.$lang" "$func" "$data" | {
+                    echo "Test $cmd cmd/cmd.$lang $func: $(cat)"
+                }
             fi
         fi
     done
