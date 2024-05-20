@@ -46,7 +46,8 @@ AIChat will automatically load `functions.json` and execute functions located in
 
 Now you can interact with your LLM using natural language prompts that trigger your defined functions.
 
-![image](https://github.com/sigoden/llm-functions/assets/4012553/867b7b2a-25fb-4c74-9b66-3701eaabbd1f)
+![function-showcase](https://github.com/sigoden/llm-functions/assets/4012553/391867dd-577c-4aaa-9ff2-c9e67fb0f3a3)
+
 
 ## Function Types
 
@@ -56,13 +57,15 @@ The function returns JSON data to LLM for further processing.
 
 AIChat does not ask permission to run the function or print the output.
 
+![retrieve-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/7e628834-9863-444a-bad8-7b51bfb18dff)
+
 ### Execute Type
 
 The function does not return data to LLM. Instead, they enable more complex actions, such as showing a progress bar or running a TUI application.
 
 AIChat will ask permission before running the function.
 
-![image](https://github.com/sigoden/aichat/assets/4012553/711067b8-dd23-443d-840a-5556697ab075)
+![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
 
 **AIChat categorizes functions starting with `may_` as `execute type` and all others as `retrieve type`.**
 
