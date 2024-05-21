@@ -1,36 +1,55 @@
 #!/usr/bin/env node
 
-function loadModule() {
-  const path = require("path");
-  let func_name = process.argv[1];
-  if (func_name.endsWith("cmd.js")) {
-    func_name = process.argv[2]
+const path = require("path");
+
+function parseArgv() {
+  let func_file = process.argv[1];
+  let func_data = null;
+
+  if (func_file.endsWith("cmd.js")) {
+    func_file = process.argv[2]
+    func_data = process.argv[3]
   } else {
-    func_name = path.basename(func_name)
+    func_file = path.basename(func_file)
+    func_data = process.argv[2];
   }
-  if (!func_name.endsWith(".js")) {
-    func_name += '.js'
+
+  if (!func_file.endsWith(".js")) {
+    func_file += '.js'
   }
-  const func_path = path.resolve(__dirname, `../js/${func_name}`)
+
+  return [func_file, func_data]
+}
+
+function loadFunc(func_file) {
+  const func_path = path.resolve(__dirname, `../js/${func_file}`)
   try {
     return require(func_path);
   } catch {
-    console.log(`Invalid js function: ${func_name}`)
+    console.log(`Invalid function: ${func_file}`)
     process.exit(1)
   }
 }
 
-if (process.env["LLM_FUNCTION_DECLARATE"]) {
-  const { declarate } = loadModule();
+const [func_file, func_data] = parseArgv();
+
+if (process.env["LLM_FUNCTION_ACTION"] == "declarate") {
+  const { declarate } = loadFunc(func_file);
   console.log(JSON.stringify(declarate(), null, 2))
 } else {
-  let data = null;
-  try {
-    data = JSON.parse(process.env["LLM_FUNCTION_DATA"])
-  } catch {
-    console.log("Invalid LLM_FUNCTION_DATA")
+  if (!func_data) {
+    console.log("No json data");
     process.exit(1)
   }
-  const { execute } = loadModule();
-  execute(data)
+
+  let args;
+  try {
+    args = JSON.parse(func_data)
+  } catch {
+    console.log("Invalid json data")
+    process.exit(1)
+  }
+
+  const { execute } = loadFunc(func_file);
+  execute(args)
 }
