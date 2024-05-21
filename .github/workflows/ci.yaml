@@ -25,10 +25,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: extractions/setup-crate@v1
+    - uses: sigoden/install-binary@v1
       with:
-        owner: sigoden
-        name: argc
+        repo: sigoden/argc
 
     - name: Check versions
       run: argc version
