@@ -61,7 +61,9 @@ AIChat does not ask permission to run the function or print the output.
 
 ### Execute Type
 
-The function does not return data to LLM. Instead, they enable more complex actions, such as showing a progress bar or running a TUI application.
+The function does not have to return JSON data.
+
+The function can perform dangerous tasks like creating/deleting files, changing network adapter, and setting a scheduled task...
 
 AIChat will ask permission before running the function.
 
