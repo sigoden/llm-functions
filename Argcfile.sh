@@ -205,9 +205,9 @@ _build_win_shim() {
     lang="$1"
     cmd="$(_lang_to_cmd "$lang")"
     if [[ "$lang" == "sh" ]]; then
-        run="\"$(cygpath -w "$(which $cmd)")\" --noprofile --norc"
+        run="\"$(argc --argc-shell-path)\" --noprofile --norc"
     else
-        run="\"$(cygpath -w "$(which $cmd)")\""
+        run="\"$(_normalize_path "$(which $cmd)")\""
     fi
     cat <<-EOF
 @echo off
