@@ -8,7 +8,6 @@ Make sure you have the following tools installed:
 
 - [argc](https://github.com/sigoden/argc): A bash command-line framewrok and command runner
 - [jq](https://github.com/jqlang/jq): A JSON processor
-- [curl](https://curl.se): A command-line tool for transferring data with URLs 
 
 ## Getting Started with AIChat
 

@@ -178,9 +178,17 @@ install() {
 
 # @cmd Show versions of required tools for bug reports.
 version() {
+    uname -a
     argc --argc-version
     jq --version
-    curl --version | head -n 1
+    for item in "${LANG_CMDS[@]}"; do
+        cmd="${item#*:}"
+        if [[ "$cmd" == "bash" ]]; then
+            echo "$(argc --argc-shell-path) $("$(argc --argc-shell-path)" --version | head -n 1)"
+        elif command -v "$cmd" &> /dev/null; then
+            echo "$(_normalize_path "$(which $cmd)") $($cmd --version)"
+        fi
+    done
 }
 
 _lang_to_cmd() {
@@ -211,6 +219,14 @@ set "script_name=%~n0"
 
 $run "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
 EOF
+}
+
+_normalize_path() {
+    if _is_win; then
+        cygpath -w "$1"
+    else
+        echo "$1"
+    fi
 }
 
 _is_win() {
