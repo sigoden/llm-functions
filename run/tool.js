@@ -6,7 +6,7 @@ function parseArgv() {
   let func_file = process.argv[1];
   let func_data = null;
 
-  if (func_file.endsWith("cmd.js")) {
+  if (func_file.endsWith("tool.js")) {
     func_file = process.argv[2]
     func_data = process.argv[3]
   } else {
@@ -22,7 +22,7 @@ function parseArgv() {
 }
 
 function loadFunc(func_file) {
-  const func_path = path.resolve(__dirname, `../js/${func_file}`)
+  const func_path = path.resolve(__dirname, `../tools/js/${func_file}`)
   try {
     return require(func_path);
   } catch {

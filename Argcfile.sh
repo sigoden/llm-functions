@@ -46,14 +46,14 @@ build-bin() {
     for name in "${names[@]}"; do
         basename="${name%.*}"
         lang="${name##*.}"
-        func_file="$lang/$name"
+        func_file="tools/$lang/$name"
         if [[  -f "$func_file" ]]; then
             if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
                 _build_win_shim $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
-                ln -s "$PWD/cmd/cmd.$lang" "$bin_file"
+                ln -s "$PWD/run/tool.$lang" "$bin_file"
             fi
         else
             not_found_funcs+=("$name")
@@ -85,7 +85,7 @@ build-declarations-json() {
     build_failed_funcs=()
     for name in "${names[@]}"; do
         lang="${name##*.}"
-        func_file="$lang/$name"
+        func_file="tools/$lang/$name"
         if [[ ! -f "$func_file" ]]; then
             not_found_funcs+=("$name")
             continue;
@@ -112,7 +112,7 @@ build-single-declaration() {
     func="$1"
     lang="${func##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    LLM_FUNCTION_ACTION=declarate "$cmd" "cmd/cmd.$lang" "$func"
+    LLM_FUNCTION_ACTION=declarate "$cmd" "run/tool.$lang" "$func"
 }
 
 # @cmd List functions that can be put into functions.txt
@@ -154,8 +154,8 @@ test-functions() {
                 echo "Test $cmd_path: $(cat)"
             }
             if ! _is_win; then
-                "$cmd" "cmd/cmd.$lang" "$func" "$data" | {
-                    echo "Test $cmd cmd/cmd.$lang $func: $(cat)"
+                "$cmd" "run/tool.$lang" "$func" "$data" | {
+                    echo "Test $cmd run/tool.$lang $func: $(cat)"
                 }
             fi
         fi
@@ -242,7 +242,7 @@ _choice_func() {
         lang="${item%:*}"
         cmd="${item#*:}"
         if command -v "$cmd" &> /dev/null; then
-            ls -1 $lang  | grep "\.$lang$"
+            ls -1 tools/$lang  | grep "\.$lang$"
         fi
     done
 }

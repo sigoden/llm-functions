@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ "$0" == *cmd.sh ]]; then
+if [[ "$0" == *tool.sh ]]; then
     FUNC_FILE="$1"
     FUNC_DATA="$2"
 else
@@ -13,7 +13,7 @@ if [[ "$FUNC_FILE" != *'.sh' ]]; then
 fi
 
 PROJECT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
-FUNC_FILE="$PROJECT_DIR/sh/$FUNC_FILE"
+FUNC_FILE="$PROJECT_DIR/tools/sh/$FUNC_FILE"
 
 if [[ "$OS" == "Windows_NT" ]]; then
     FUNC_FILE="$(cygpath -w "$FUNC_FILE")"

@@ -9,7 +9,7 @@ def parse_argv():
     func_file = sys.argv[0]
     func_data = None
 
-    if func_file.endswith("cmd.py"):
+    if func_file.endswith("tool.py"):
         func_file = sys.argv[1] if len(sys.argv) > 1 else None
         func_data = sys.argv[2] if len(sys.argv) > 2 else None
     else:
@@ -23,7 +23,7 @@ def parse_argv():
 
 def load_func(func_file):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    func_path = os.path.join(base_dir, f"../py/{func_file}")
+    func_path = os.path.join(base_dir, f"../tools/py/{func_file}")
     if os.path.exists(func_path):
         spec = importlib.util.spec_from_file_location(func_file, func_path)
         module = importlib.util.module_from_spec(spec)

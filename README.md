@@ -76,7 +76,7 @@ The project supports write functions in bash/js/python.
 
 ### Bash
 
-Create a new bashscript (.e.g. `may_execute_command.sh`) in the [./sh](./sh/) directory. 
+Create a new bashscript in the [./tools/sh](./tools/sh/) directory (.e.g. `may_execute_command.sh`).
 
 ```sh
 #!/usr/bin/env bash
@@ -109,7 +109,7 @@ The relationship between comment tags and parameters in function declarations is
 
 ### Javascript
 
-Create a new javascript (.e.g. `may_execute_command.js`) in the [./js](./js/) directory. 
+Create a new javascript in the [./tools/js](./tools/js/) directory (.e.g. `may_execute_command.js`).
 
 ```js
 exports.declarate = function declarate() {
@@ -139,7 +139,7 @@ exports.execute = function execute(data) {
 
 ### Python
 
-Create a new python script in the [./py](./py/) directory (e.g., `may_execute_py_code.py`).
+Create a new python script in the [./tools/py](./tools/py/) directory (e.g., `may_execute_py_code.py`).
 
 ```py
 def declarate():
@@ -167,7 +167,7 @@ def execute(data):
 
 ### Ruby
 
-Create a new ruby script in the [./rb](./rb/) directory (e.g., `may_execute_rb_code.rb`).
+Create a new ruby script in the [./tools/rb](./tools/rb/) directory (e.g., `may_execute_rb_code.rb`).
 
 ```rb
 def declarate
