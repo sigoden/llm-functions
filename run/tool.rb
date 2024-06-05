@@ -7,7 +7,7 @@ def parse_argv
   func_file = __FILE__
     func_data = nil
 
-  if func_file.end_with?("cmd.rb")
+  if func_file.end_with?("tool.rb")
     func_file = ARGV[0]
     func_data = ARGV[1]
   else
@@ -21,7 +21,7 @@ def parse_argv
 end
 
 def load_func(func_file)
-  func_path = File.expand_path("../rb/#{func_file}", __dir__)
+  func_path = File.expand_path("../tools/rb/#{func_file}", __dir__)
 
   begin
     require func_path
