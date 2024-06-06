@@ -221,7 +221,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$run "%script_dir%cmd\cmd.$lang" "%script_name%.$lang" %*
+$run "%script_dir%scripts\bin.$lang" "%script_name%.$lang" %*
 EOF
 }
 
