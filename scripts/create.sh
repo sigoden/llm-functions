@@ -83,15 +83,15 @@ build_properties() {
     properties=''
     for param in "${argc_params[@]}"; do
         if [[ "$param" == *'!' ]]; then
-            param="${param::-1}"
+            param="${param:0:$((${#param}-1))}"
             required_params+=("$param")
             property='{"'"$param"'":{"type":"string","description":""}}'
         elif [[ "$param" == *'+' ]]; then
-            param="${param::-1}"
+            param="${param:0:$((${#param}-1))}"
             required_params+=("$param")
             property='{"'"$param"'":{"type":"array","description":"","items": {"type":"string"}}}'
         elif [[ "$param" == *'*' ]]; then
-            param="${param::-1}"
+            param="${param:0:$((${#param}-1))}"
             property='{"'"$param"'":{"type":"array","description":"","items": {"type":"string"}}}'
         else
             property='{"'"$param"'":{"type":"string","description":""}}'
@@ -106,7 +106,7 @@ build_properties() {
         required+="\"$param\","
     done
     if [[ -n "$required" ]]; then
-        required="${required::-1}"
+        required="${required:0:$((${#required}-1))}"
         required+="]"
     fi
     echo '{
