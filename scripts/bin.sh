@@ -20,13 +20,15 @@ fi
 
 FUNC_FILE="$LLM_FUNCTIONS_DIR/tools/$FUNC_FILE"
 
+export JQ=jq
 if [[ "$OS" == "Windows_NT" ]]; then
+    export JQ="jq -b"
     FUNC_FILE="$(cygpath -w "$FUNC_FILE")"
 fi
 
 if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
     argc --argc-export "$FUNC_FILE" | \
-    jq -r '
+    $JQ -r '
     def parse_description(flag_option):
         if flag_option.describe == "" then
             {}
@@ -74,23 +76,26 @@ else
 
     data="$(
         echo "$FUNC_DATA" | \
-        jq -r '
+        $JQ -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
         if .value | type == "array" then
-            .value | .[] | "--\($key)\n\(.)"
+            .value | .[] | "--\($key)\n\(. | @json)"
         elif .value | type == "boolean" then
             if .value then "--\($key)" else "" end
         else
-            "--\($key)\n\(.value)"
-        end' | \
-        tr -d '\r'
+            "--\($key)\n\(.value | @json)"
+        end'
     )" || {
         echo "Invalid json data"
         exit 1
     }
     while IFS= read -r line; do
-        ARGS+=("$line")
+        if [[ "$line" == '--'* ]]; then
+            ARGS+=("$line")
+        else
+            ARGS+=("$(echo "$line" | $JQ -r '.')")
+        fi
     done <<< "$data"
     "$FUNC_FILE" "${ARGS[@]}"
 fi
