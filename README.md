@@ -66,7 +66,7 @@ The function can perform dangerous tasks like creating/deleting files, changing 
 
 AIChat will ask permission before running the function.
 
-![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
+![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/bbe7f04d-4bad-49c8-b2f4-6b06290a63a4)
 
 **AIChat categorizes functions starting with `may_` as `execute type` and all others as `retrieve type`.**
 

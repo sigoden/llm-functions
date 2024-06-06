@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Executes a shell command.
-# @option --command! Command to execute, such as `ls -la`
+# @describe Runs a shell command.
+# @option --command! The command to run.
 
 main() {
     eval "$argc_command"
