@@ -7,7 +7,7 @@ if [[ -f "$LLM_FUNCTIONS_DIR/.env" ]]; then
     source "$LLM_FUNCTIONS_DIR/.env"
 fi
 
-if [[ "$0" == *bin.sh ]]; then
+if [[ "$0" == *run-tool.sh ]]; then
     func_name="$1"
     func_data="$2"
 else

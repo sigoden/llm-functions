@@ -9,7 +9,7 @@ def parse_argv():
     func_name = sys.argv[0]
     func_data = None
 
-    if func_name.endswith("bin.py"):
+    if func_name.endswith("run-tool.py"):
         func_name = sys.argv[1] if len(sys.argv) > 1 else None
         func_data = sys.argv[2] if len(sys.argv) > 2 else None
     else:

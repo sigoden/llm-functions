@@ -5,6 +5,7 @@ set -e
 # It automatically generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
 # Examples:
 #   argc create abc.sh foo bar! baz+ qux*
+#   ./scripts/create-tool.sh test.py foo bar! baz+ qux*
 # @arg name! The script file name.
 # @arg params* The script parameters
 
