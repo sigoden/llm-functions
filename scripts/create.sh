@@ -2,20 +2,27 @@
 set -e
 
 # @describe Create a boilplate tool script file.
-# @arg name! The script filename.
+# It automatically generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
+# Examples:
+#   argc create abc.sh foo bar! baz+ qux*
+# @arg name! The script file name.
 # @arg params* The script parameters
 
 main() {
-    ext="${argc_name##*.}"
     output="tools/$argc_name"
     if [[ -f "$output" ]]; then
         _die "$output already exists"
+    fi
+    ext="${argc_name##*.}"
+    support_exts=('.sh' '.js' '.py')
+    if [[ "$ext" == "$argc_name" ]]; then
+        _die "No extension name, pelease add one of ${support_exts[*]}" 
     fi
     case $ext in
     sh) create_sh ;;
     js) create_js ;;
     py) create_py ;;
-    *) _die "Invalid extension name: '$ext'" ;; 
+    *) _die "Invalid extension name: $ext, must be one of ${support_exts[*]}" ;; 
     esac
 }
 
