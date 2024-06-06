@@ -78,11 +78,11 @@ else
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
         if .value | type == "array" then
-            .value | .[] | "--\($key)\n\(.)"
+            .value | .[] | "--\($key)\n\(. | @json)"
         elif .value | type == "boolean" then
             if .value then "--\($key)" else "" end
         else
-            "--\($key)\n\(.value)"
+            "--\($key)\n\(.value | @json)"
         end' | \
         tr -d '\r'
     )" || {
@@ -90,7 +90,11 @@ else
         exit 1
     }
     while IFS= read -r line; do
-        ARGS+=("$line")
+        if [[ "$line" == '--'* ]]; then
+            ARGS+=("$line")
+        else
+            ARGS+=("$(echo "$line" | jq -r '.')")
+        fi
     done <<< "$data"
     "$FUNC_FILE" "${ARGS[@]}"
 fi
