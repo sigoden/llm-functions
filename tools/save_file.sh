@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Saves the contents to a file called `file_name` and returns the file name if successful.
+# @describe Saves the contents to a file called `file_name` and returns the file path if successful.
 # @option --file-name! The name of the file to save to.
 # @option --contents! The contents to save.
 
