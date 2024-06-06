@@ -7,7 +7,7 @@ function parseArgv() {
   let func_file = process.argv[1];
   let func_data = null;
 
-  if (func_file.endsWith("tool.js")) {
+  if (func_file.endsWith("bin.js")) {
     func_file = process.argv[2]
     func_data = process.argv[3]
   } else {
