@@ -8,26 +8,27 @@ if [[ -f "$LLM_FUNCTIONS_DIR/.env" ]]; then
 fi
 
 if [[ "$0" == *bin.sh ]]; then
-    FUNC_FILE="$1"
-    FUNC_DATA="$2"
+    func_name="$1"
+    func_data="$2"
 else
-    FUNC_FILE="$(basename "$0")"
-    FUNC_DATA="$1"
+    func_name="$(basename "$0")"
+    func_data="$1"
 fi
-if [[ "$FUNC_FILE" != *'.sh' ]]; then
-    FUNC_FILE="$FUNC_FILE.sh"
+if [[ "$func_name" == *.sh ]]; then
+    func_name="${func_name::-3}"
 fi
 
-FUNC_FILE="$LLM_FUNCTIONS_DIR/tools/$FUNC_FILE"
+export LLM_FUNCTION_NAME="$func_name"
+func_file="$LLM_FUNCTIONS_DIR/tools/$func_name.sh"
 
 export JQ=jq
 if [[ "$OS" == "Windows_NT" ]]; then
     export JQ="jq -b"
-    FUNC_FILE="$(cygpath -w "$FUNC_FILE")"
+    func_file="$(cygpath -w "$func_file")"
 fi
 
 if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
-    argc --argc-export "$FUNC_FILE" | \
+    argc --argc-export "$func_file" | \
     $JQ -r '
     def parse_description(flag_option):
         if flag_option.describe == "" then
@@ -69,13 +70,13 @@ if [[ "$LLM_FUNCTION_ACTION" == "declarate" ]]; then
         parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
     }'
 else
-    if [[ -z "$FUNC_DATA" ]]; then
+    if [[ -z "$func_data" ]]; then
         echo "No json data"
         exit 1
     fi
 
     data="$(
-        echo "$FUNC_DATA" | \
+        echo "$func_data" | \
         $JQ -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
@@ -92,10 +93,10 @@ else
     }
     while IFS= read -r line; do
         if [[ "$line" == '--'* ]]; then
-            ARGS+=("$line")
+            args+=("$line")
         else
-            ARGS+=("$(echo "$line" | $JQ -r '.')")
+            args+=("$(echo "$line" | $JQ -r '.')")
         fi
     done <<< "$data"
-    "$FUNC_FILE" "${ARGS[@]}"
+    "$func_file" "${args[@]}"
 fi

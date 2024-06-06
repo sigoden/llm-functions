@@ -1,47 +1,51 @@
 #!/usr/bin/env node
 
 const path = require("path");
-const fs = require('fs');
+const fs = require("fs");
 
 function parseArgv() {
-  let func_file = process.argv[1];
-  let func_data = null;
+  let funcName = process.argv[1];
+  let funcData = null;
 
-  if (func_file.endsWith("bin.js")) {
-    func_file = process.argv[2]
-    func_data = process.argv[3]
+  if (funcName.endsWith("bin.js")) {
+    funcName = process.argv[2];
+    funcData = process.argv[3];
   } else {
-    func_file = path.basename(func_file)
-    func_data = process.argv[2];
+    funcName = path.basename(funcName);
+    funcData = process.argv[2];
   }
 
-  if (!func_file.endsWith(".js")) {
-    func_file += '.js'
+  if (funcName.endsWith(".js")) {
+    funcName = funcName.slice(0, -3);
   }
 
-  return [func_file, func_data]
+  return [funcName, funcData];
 }
 
-function loadFunc(func_file) {
-  const func_path = path.resolve(process.env["LLM_FUNCTIONS_DIR"], `tools/${func_file}`)
+function loadFunc(funcName) {
+  const funcFileName = `${funcName}.js`;
+  const funcPath = path.resolve(
+    process.env["LLM_FUNCTIONS_DIR"],
+    `tools/${funcFileName}`,
+  );
   try {
-    return require(func_path);
+    return require(funcPath);
   } catch {
-    console.log(`Invalid function: ${func_file}`)
-    process.exit(1)
+    console.log(`Invalid function: ${funcFileName}`);
+    process.exit(1);
   }
 }
 
 function loadEnv(filePath) {
   try {
-    const data = fs.readFileSync(filePath, 'utf-8');
-    const lines = data.split('\n');
+    const data = fs.readFileSync(filePath, "utf-8");
+    const lines = data.split("\n");
 
-    lines.forEach(line => {
-      if (line.trim().startsWith('#') || line.trim() === '') return;
+    lines.forEach((line) => {
+      if (line.trim().startsWith("#") || line.trim() === "") return;
 
-      const [key, ...value] = line.split('=');
-      process.env[key.trim()] = value.join('=').trim();
+      const [key, ...value] = line.split("=");
+      process.env[key.trim()] = value.join("=").trim();
     });
   } catch {}
 }
@@ -50,25 +54,27 @@ process.env["LLM_FUNCTIONS_DIR"] = path.resolve(__dirname, "..");
 
 loadEnv(path.resolve(process.env["LLM_FUNCTIONS_DIR"], ".env"));
 
-const [func_file, func_data] = parseArgv();
+const [funcName, funcData] = parseArgv();
+
+process.env["LLM_FUNCTION_NAME"] = funcName;
 
 if (process.env["LLM_FUNCTION_ACTION"] == "declarate") {
-  const { declarate } = loadFunc(func_file);
-  console.log(JSON.stringify(declarate(), null, 2))
+  const { declarate } = loadFunc(funcName);
+  console.log(JSON.stringify(declarate(), null, 2));
 } else {
-  if (!func_data) {
+  if (!funcData) {
     console.log("No json data");
-    process.exit(1)
+    process.exit(1);
   }
 
   let args;
   try {
-    args = JSON.parse(func_data)
+    args = JSON.parse(funcData);
   } catch {
-    console.log("Invalid json data")
-    process.exit(1)
+    console.log("Invalid json data");
+    process.exit(1);
   }
 
-  const { execute } = loadFunc(func_file);
-  execute(args)
+  const { execute } = loadFunc(funcName);
+  execute(args);
 }
