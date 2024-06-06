@@ -15,7 +15,7 @@ else
     func_data="$1"
 fi
 if [[ "$func_name" == *.sh ]]; then
-    func_name="${func_name::-3}"
+    func_name="${func_name:0:$((${#func_name}-3))}"
 fi
 
 export LLM_FUNCTION_NAME="$func_name"
