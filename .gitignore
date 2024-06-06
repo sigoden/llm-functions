@@ -3,6 +3,7 @@
 /functions.txt.test
 /functions.json
 /bin
+/tools/test.*
 /.env
 *.cmd
 __pycache__

@@ -52,7 +52,7 @@ build-bin() {
                 _build_win_shim $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
-                ln -s "$PWD/scripts/bin.$lang" "$bin_file"
+                ln -s "$PWD/scripts/run-tool.$lang" "$bin_file"
             fi
         else
             not_found_funcs+=("$name")
@@ -111,7 +111,7 @@ build-single-declaration() {
     func="$1"
     lang="${func##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    LLM_FUNCTION_ACTION=declarate "$cmd" "scripts/bin.$lang" "$func"
+    LLM_FUNCTION_ACTION=declarate "$cmd" "scripts/run-tool.$lang" "$func"
 }
 
 # @cmd List functions that can be put into functions.txt
@@ -151,8 +151,8 @@ test-functions() {
             echo -n "Test $cmd_path: "
             "$cmd_path" "$data"
             if ! _is_win; then
-                echo -n "Test $cmd scripts/bin.$lang $func: "
-                "$cmd" "scripts/bin.$lang" "$func" "$data"
+                echo -n "Test $cmd scripts/run-tool.$lang $func: "
+                "$cmd" "scripts/run-tool.$lang" "$func" "$data"
             fi
         fi
     done
@@ -175,7 +175,7 @@ install() {
 # @cmd Create a boilplate tool script file.
 # @arg args~
 create() {
-    ./scripts/create.sh "$@"
+    ./scripts/create-tool.sh "$@"
 }
 
 # @cmd Show pre-requisite tool versions
@@ -219,7 +219,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$run "%script_dir%scripts\bin.$lang" "%script_name%.$lang" %*
+$run "%script_dir%scripts\run-tool.$lang" "%script_name%.$lang" %*
 EOF
 }
 
