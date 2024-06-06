@@ -31,6 +31,23 @@ def load_func(func_file)
   end
 end
 
+def load_env(file_path)
+  return unless File.exist?(file_path)
+
+  File.readlines(file_path).each do |line|
+    line = line.strip
+    next if line.empty? || line.start_with?('#')
+
+    key, *value = line.split('=', 2)
+    ENV[key.strip] = value.join('=').strip
+  end
+rescue StandardError
+end
+
+ENV['LLM_FUNCTIONS_DIR'] = Pathname.new(__dir__).join('..').expand_path.to_s
+
+load_env(Pathname.new(ENV['LLM_FUNCTIONS_DIR']).join('.env').to_s)
+
 func_file, func_data = parse_argv
 
 if ENV["LLM_FUNCTION_ACTION"] == "declarate"
