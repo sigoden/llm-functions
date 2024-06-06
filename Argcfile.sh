@@ -139,7 +139,7 @@ test-functions() {
         ext=".cmd"
     fi
     test_cases=( \
-        'sh#may_execute_shell_command#{"command":"echo \"✓\""}' \
+        'sh#may_execute_command#{"command":"echo \"✓\""}' \
         'js#may_execute_js_code#{"code":"console.log(\"✓\")"}' \
         'py#may_execute_py_code#{"code":"print(\"✓\")"}' \
         'rb#may_execute_rb_code#{"code":"puts \"✓\""}'  \
