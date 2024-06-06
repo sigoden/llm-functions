@@ -40,10 +40,5 @@ jobs:
       with:
         python-version: '3.11' 
 
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.3'
-
     - name: Run Test
       run: argc test
