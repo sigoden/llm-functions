@@ -32,7 +32,7 @@ EOF
     cat <<-'EOF' >> "$output"
 
 main() {
-    ( set -o posix ; set ) | grep ^argc_ # inspect argc_* variables
+    ( set -o posix ; set ) | grep ^argc_ # inspect all argc variables
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
@@ -104,7 +104,7 @@ build_properties() {
     fi
     echo '{
         "type": "object",
-        "properteis": '"$(echo "$properties" | jq -s 'add')$required"'
+        "properties": '"$(echo "$properties" | jq -s 'add')$required"'
     }' | jq '.'
 }
 

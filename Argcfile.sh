@@ -175,7 +175,7 @@ install() {
 }
 
 # @cmd Create a boilplate tool script file.
-# It automaticlly generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
+# It automatically generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
 # Examples:
 #   argc create abc.sh foo bar! baz+ qux*
 # @arg name! The script filename.
