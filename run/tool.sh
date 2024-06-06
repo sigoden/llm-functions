@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+export LLM_FUNCTIONS_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
+
+if [[ -f "$LLM_FUNCTIONS_DIR/.env" ]]; then
+    source "$LLM_FUNCTIONS_DIR/.env"
+fi
+
 if [[ "$0" == *tool.sh ]]; then
     FUNC_FILE="$1"
     FUNC_DATA="$2"
@@ -12,8 +18,7 @@ if [[ "$FUNC_FILE" != *'.sh' ]]; then
     FUNC_FILE="$FUNC_FILE.sh"
 fi
 
-PROJECT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
-FUNC_FILE="$PROJECT_DIR/tools/$FUNC_FILE"
+FUNC_FILE="$LLM_FUNCTIONS_DIR/tools/$FUNC_FILE"
 
 if [[ "$OS" == "Windows_NT" ]]; then
     FUNC_FILE="$(cygpath -w "$FUNC_FILE")"

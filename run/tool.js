@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const path = require("path");
+const fs = require('fs');
 
 function parseArgv() {
   let func_file = process.argv[1];
@@ -22,7 +23,7 @@ function parseArgv() {
 }
 
 function loadFunc(func_file) {
-  const func_path = path.resolve(__dirname, `../tools/${func_file}`)
+  const func_path = path.resolve(process.env["LLM_FUNCTIONS_DIR"], `tools/${func_file}`)
   try {
     return require(func_path);
   } catch {
@@ -30,6 +31,24 @@ function loadFunc(func_file) {
     process.exit(1)
   }
 }
+
+function loadEnv(filePath) {
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    const lines = data.split('\n');
+
+    lines.forEach(line => {
+      if (line.trim().startsWith('#') || line.trim() === '') return;
+
+      const [key, ...value] = line.split('=');
+      process.env[key.trim()] = value.join('=').trim();
+    });
+  } catch {}
+}
+
+process.env["LLM_FUNCTIONS_DIR"] = path.resolve(__dirname, "..");
+
+loadEnv(path.resolve(process.env["LLM_FUNCTIONS_DIR"], ".env"));
 
 const [func_file, func_data] = parseArgv();
 

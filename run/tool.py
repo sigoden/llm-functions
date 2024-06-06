@@ -22,8 +22,7 @@ def parse_argv():
     return func_file, func_data
 
 def load_func(func_file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    func_path = os.path.join(base_dir, f"../tools/{func_file}")
+    func_path = os.path.join(os.environ["LLM_FUNCTIONS_DIR"], f"tools/{func_file}")
     if os.path.exists(func_path):
         spec = importlib.util.spec_from_file_location(func_file, func_path)
         module = importlib.util.module_from_spec(spec)
@@ -32,6 +31,23 @@ def load_func(func_file):
     else:
         print(f"Invalid function: {func_file}")
         sys.exit(1)
+
+def load_env(file_path):
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('#') or line == '':
+                    continue
+
+                key, *value = line.split('=')
+                os.environ[key.strip()] = '='.join(value).strip()
+    except FileNotFoundError:
+        pass
+
+os.environ["LLM_FUNCTIONS_DIR"] = os.path.join(os.path.dirname(__file__), "..")
+
+load_env(os.path.join(os.environ["LLM_FUNCTIONS_DIR"], ".env"))
 
 func_file, func_data = parse_argv()
 
