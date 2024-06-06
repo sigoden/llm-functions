@@ -46,7 +46,7 @@ build-bin() {
     for name in "${names[@]}"; do
         basename="${name%.*}"
         lang="${name##*.}"
-        func_file="tools/$lang/$name"
+        func_file="tools/$name"
         if [[  -f "$func_file" ]]; then
             if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
@@ -85,7 +85,7 @@ build-declarations-json() {
     build_failed_funcs=()
     for name in "${names[@]}"; do
         lang="${name##*.}"
-        func_file="tools/$lang/$name"
+        func_file="tools/$name"
         if [[ ! -f "$func_file" ]]; then
             not_found_funcs+=("$name")
             continue;
@@ -242,7 +242,7 @@ _choice_func() {
         lang="${item%:*}"
         cmd="${item#*:}"
         if command -v "$cmd" &> /dev/null; then
-            ls -1 tools/$lang  | grep "\.$lang$"
+            ls -1 tools | grep "\.$lang$"
         fi
     done
 }

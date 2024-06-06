@@ -21,7 +21,7 @@ def parse_argv
 end
 
 def load_func(func_file)
-  func_path = File.expand_path("../tools/rb/#{func_file}", __dir__)
+  func_path = File.expand_path("../tools/#{func_file}", __dir__)
 
   begin
     require func_path
