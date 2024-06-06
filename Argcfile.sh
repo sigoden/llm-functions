@@ -148,13 +148,11 @@ test-functions() {
         cmd="$(_lang_to_cmd "$lang")"
         cmd_path="$BIN_DIR/$func$ext"
         if command -v "$cmd" &> /dev/null; then
-            "$cmd_path" "$data" | {
-                echo "Test $cmd_path: $(cat)"
-            }
+            echo -n "Test $cmd_path: "
+            "$cmd_path" "$data"
             if ! _is_win; then
-                "$cmd" "scripts/bin.$lang" "$func" "$data" | {
-                    echo "Test $cmd scripts/bin.$lang $func: $(cat)"
-                }
+                echo -n "Test $cmd scripts/bin.$lang $func: "
+                "$cmd" "scripts/bin.$lang" "$func" "$data"
             fi
         fi
     done

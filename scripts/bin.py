@@ -45,6 +45,7 @@ def load_env(file_path):
     except FileNotFoundError:
         pass
 
+os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["LLM_FUNCTIONS_DIR"] = os.path.join(os.path.dirname(__file__), "..")
 
 load_env(os.path.join(os.environ["LLM_FUNCTIONS_DIR"], ".env"))
