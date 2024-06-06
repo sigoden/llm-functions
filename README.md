@@ -1,6 +1,6 @@
 # LLM Functions
 
-This project allows you to enhance large language models (LLMs) with custom functions written in bash/js/python/ruby. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
+This project allows you to enhance large language models (LLMs) with custom functions written in bash/js/python. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
 
 ## Prerequisites
 
@@ -163,35 +163,6 @@ def declarate():
 
 def execute(data):
   exec(data["code"])
-```
-
-### Ruby
-
-Create a new ruby script in the [./tools/](./tools/) directory (e.g., `may_execute_rb_code.rb`).
-
-```rb
-def declarate
-  {
-    "name": "may_execute_rb_code",
-    "description": "Runs the ruby code.",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "Ruby code to execute, such as `puts \"hello world\"`"
-        }
-      },
-      "required": [
-        "code"
-      ]
-    }
-  }
-end
-
-def execute(data)
-  eval(data["code"])
-end
 ```
 
 ## License
