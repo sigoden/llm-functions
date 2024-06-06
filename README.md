@@ -76,17 +76,17 @@ The project supports write functions in bash/js/python.
 
 ### Bash
 
-Create a new bashscript in the [./tools/](./tools/) directory (.e.g. `may_execute_command.sh`).
+Create a new bashscript in the [./tools/](./tools/) directory (.e.g. `may_execute_shell_command.sh`).
 
 ```sh
 #!/usr/bin/env bash
 set -e
 
-# @describe Executes a shell command.
-# @option --command~ Command to execute, such as `ls -la`
+# @describe Runs a shell command.
+# @option --command! The command to execute.
 
 main() {
-    eval $argc_shell_command
+    eval "$argc_command"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
@@ -109,7 +109,7 @@ The relationship between comment tags and parameters in function declarations is
 
 ### Javascript
 
-Create a new javascript in the [./tools/](./tools/) directory (.e.g. `may_execute_command.js`).
+Create a new javascript in the [./tools/](./tools/) directory (.e.g. `may_execute_js_code.js`).
 
 ```js
 exports.declarate = function declarate() {

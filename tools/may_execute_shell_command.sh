@@ -2,7 +2,7 @@
 set -e
 
 # @describe Runs a shell command.
-# @option --command! The command to run.
+# @option --command! The command to execute.
 
 main() {
     eval "$argc_command"
