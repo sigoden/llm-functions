@@ -140,7 +140,7 @@ test-functions() {
     test_cases=( \
         'sh#may_execute_command#{"command":"echo \"✓\""}' \
         'js#may_execute_js_code#{"code":"console.log(\"✓\")"}' \
-        'py#may_execute_py_code#{"code":"print(f\"✓\")"}' \
+        'py#may_execute_py_code#{"code":"print(\"✓\")"}' \
     )
 
     for test_case in "${test_cases[@]}"; do
