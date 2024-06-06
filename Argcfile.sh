@@ -52,7 +52,7 @@ build-bin() {
                 _build_win_shim $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
-                ln -s "$PWD/run/tool.$lang" "$bin_file"
+                ln -s "$PWD/scripts/bin.$lang" "$bin_file"
             fi
         else
             not_found_funcs+=("$name")
@@ -111,7 +111,7 @@ build-single-declaration() {
     func="$1"
     lang="${func##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    LLM_FUNCTION_ACTION=declarate "$cmd" "run/tool.$lang" "$func"
+    LLM_FUNCTION_ACTION=declarate "$cmd" "scripts/bin.$lang" "$func"
 }
 
 # @cmd List functions that can be put into functions.txt
@@ -152,8 +152,8 @@ test-functions() {
                 echo "Test $cmd_path: $(cat)"
             }
             if ! _is_win; then
-                "$cmd" "run/tool.$lang" "$func" "$data" | {
-                    echo "Test $cmd run/tool.$lang $func: $(cat)"
+                "$cmd" "scripts/bin.$lang" "$func" "$data" | {
+                    echo "Test $cmd scripts/bin.$lang $func: $(cat)"
                 }
             fi
         fi
@@ -174,7 +174,7 @@ install() {
     fi
 }
 
-# @cmd Show versions of required tools for bug reports.
+# @cmd Show pre-requisite tool versions
 version() {
     uname -a
     argc --argc-version
