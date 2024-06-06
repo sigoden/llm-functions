@@ -22,7 +22,7 @@ function parseArgv() {
 }
 
 function loadFunc(func_file) {
-  const func_path = path.resolve(__dirname, `../tools/js/${func_file}`)
+  const func_path = path.resolve(__dirname, `../tools/${func_file}`)
   try {
     return require(func_path);
   } catch {
