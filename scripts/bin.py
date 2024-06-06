@@ -2,7 +2,6 @@
 
 import os
 import json
-import io
 import sys
 import importlib.util
 
@@ -45,9 +44,6 @@ def load_env(file_path):
                 os.environ[key.strip()] = '='.join(value).strip()
     except FileNotFoundError:
         pass
-
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 os.environ["LLM_FUNCTIONS_DIR"] = os.path.join(os.path.dirname(__file__), "..")
 

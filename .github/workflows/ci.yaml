@@ -42,3 +42,5 @@ jobs:
 
     - name: Run Test
       run: argc test
+      env:
+        PYTHONIOENCODING: utf-8 
