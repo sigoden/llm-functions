@@ -11,10 +11,10 @@ LANG_CMDS=( \
     "py:python" \
 )
 
-# @cmd Call the function
+# @cmd Run the tool
 # @arg cmd![`_choice_cmd`] The function command
 # @arg json The json data
-call() {
+run-tool() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -128,16 +128,18 @@ list-tools() {
 
 # @cmd Test the project
 test() {
-    mkdir -p tmp/tests
-    names_file=tmp/tests/functions.txt
-    declarations_file=tmp/tests/functions.json
-    argc list-tools > "$names_file"
-    argc build --names-file "$names_file" --declarations-file "$declarations_file"
-    argc test-tools
+    test-tools
 }
 
 # @cmd Test call functions
 test-tools() {
+    tmp_dir="cache/tmp"
+    mkdir -p "$tmp_dir"
+    names_file="$tmp_dir/functions.txt"
+    declarations_file="$tmp_dir/functions.json"
+    argc list-tools > "$names_file"
+    argc build --names-file "$names_file" --declarations-file "$declarations_file"
+
     if _is_win; then
         ext=".cmd"
     fi
@@ -159,6 +161,33 @@ test-tools() {
                 "$cmd" "scripts/run-tool.$lang" "$tool_name" "$data"
             fi
         fi
+    done
+}
+
+# @cmd Test all demo tools
+test-demo-tools() {
+    for item in "${LANG_CMDS[@]}"; do
+        lang="${item%:*}"
+        echo "---- Test demo_tool.$lang ---"
+        argc build-bin "demo_tool.$lang"
+        argc run-tool demo_tool '{
+     "boolean": true,
+     "string": "Hello",
+     "string_enum": "foo",
+     "integer": 123,
+     "number": 3.14,
+     "array": [
+          "a",
+          "b",
+          "c"
+     ],
+     "string_optional": "OptionalValue",
+     "array_optional": [
+          "x",
+          "y"
+     ]
+}'
+        echo
     done
 }
 

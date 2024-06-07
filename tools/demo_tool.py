@@ -1,5 +1,5 @@
+import os
 from typing import List, Literal, Optional
-
 
 def run(
     boolean: bool,
@@ -22,11 +22,9 @@ def run(
         string_optional: Define a optional string property
         array_optional: Define a optional string array property
     """
-    print(f"boolean: {boolean}")
-    print(f"string: {string}")
-    print(f"string_enum: {string_enum}")
-    print(f"integer: {integer}")
-    print(f"number: {number}")
-    print(f"array: {array}")
-    print(f"string_optional: {string_optional}")
-    print(f"array_optional: {array_optional}")
+    for key, value in locals().items():
+        print(f"{key}: {value}")
+
+    for key, value in os.environ.items():
+        if key.startswith("LLM_"):
+            print(f"{key}: {value}")
