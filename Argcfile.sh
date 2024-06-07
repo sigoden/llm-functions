@@ -22,26 +22,32 @@ call() {
 }
 
 # @cmd Build the project
-# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
+# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # This file specifies which function files to build. 
 # Example:
 #   get_current_weather.sh
 #   may_execute_js_code.js
 build() {
-    argc build-declarations-json --names-file "${argc_names_file}"
+    argc build-declarations-json --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
     argc build-bin --names-file "${argc_names_file}"
 }
 
-# @cmd Build bin dir 
-# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
+# @cmd Build tool binaries
+# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @arg tools*[`_choice_tool`] The tool filenames
 build-bin() {
-    if [[ ! -f "$argc_names_file" ]]; then
-        _die "no found "$argc_names_file""
+    if [[ "${#argc_tools[@]}" -gt 0 ]]; then
+        names=("${argc_tools[@]}" )
+    elif [[ -f "$argc_names_file" ]]; then
+        names=($(cat "$argc_names_file"))
+    fi
+    if [[ -z "$names" ]]; then
+        _die "error: no tools selected"
     fi
     mkdir -p "$BIN_DIR"
     rm -rf "$BIN_DIR"/*
-    names=($(cat "$argc_names_file"))
-    not_found_funcs=()
+    not_found_tools=()
     for name in "${names[@]}"; do
         basename="${name%.*}"
         lang="${name##*.}"
@@ -52,14 +58,14 @@ build-bin() {
                 _build_win_shim $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
-                ln -s "$PWD/scripts/run-tool.$lang" "$bin_file"
+                ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
             fi
         else
-            not_found_funcs+=("$name")
+            not_found_tools+=("$name")
         fi
     done
-    if [[ -n "$not_found_funcs" ]]; then
-        _die "error: not founds functions: ${not_found_funcs[*]}"
+    if [[ -n "$not_found_tools" ]]; then
+        _die "error: not found tools: ${not_found_tools[*]}"
     fi
     for name in "$BIN_DIR"/*; do
         echo "Build $name"
@@ -67,73 +73,71 @@ build-bin() {
 }
 
 # @cmd Build declarations.json
-# @option --output=functions.json <FILE> Path to a json file to save function declarations
-# @option --names-file=functions.txt Path to a file containing function filenames, one per line.
-# @arg funcs*[`_choice_func`] The function filenames
+# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
+# @arg tools*[`_choice_tool`] The tool filenames
 build-declarations-json() {
-    if [[ "${#argc_funcs[@]}" -gt 0 ]]; then
-        names=("${argc_funcs[@]}" )
+    if [[ "${#argc_tools[@]}" -gt 0 ]]; then
+        names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: no function for building declarations.json"
+        _die "error: no tools selected"
     fi
     json_list=()
-    not_found_funcs=()
-    build_failed_funcs=()
+    not_found_tools=()
+    build_failed_tools=()
     for name in "${names[@]}"; do
         lang="${name##*.}"
         func_file="tools/$name"
         if [[ ! -f "$func_file" ]]; then
-            not_found_funcs+=("$name")
+            not_found_tools+=("$name")
             continue;
         fi
-        json_data="$("build-single-declaration" "$name")" || {
-            build_failed_funcs+=("$name")
+        json_data="$(build-tool-declaration "$name")" || {
+            build_failed_tools+=("$name")
         }
         json_list+=("$json_data")
     done
-    if [[ -n "$not_found_funcs" ]]; then
-        _die "error: not found functions: ${not_found_funcs[*]}"
+    if [[ -n "$not_found_tools" ]]; then
+        _die "error: not found tools: ${not_found_tools[*]}"
     fi
-    if [[ -n "$build_failed_funcs" ]]; then
-        _die "error: invalid functions: ${build_failed_funcs[*]}"
+    if [[ -n "$build_failed_tools" ]]; then
+        _die "error: invalid tools: ${build_failed_tools[*]}"
     fi
-    echo "Build $argc_output"
-    echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.' > "$argc_output"
+    echo "Build $argc_declarations_file"
+    echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.' > "$argc_declarations_file"
 }
 
 
-# @cmd Build single declaration
-# @arg func![`_choice_func`] The function name
-build-single-declaration() {
-    func="$1"
-    lang="${func##*.}"
+# @cmd Build function declaration for a tool
+# @arg tool![`_choice_tool`] The function name
+build-tool-declaration() {
+    lang="${1##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    LLM_FUNCTION_ACTION=declarate "$cmd" "scripts/run-tool.$lang" "$func"
+    "$cmd" "scripts/build-declarations.$lang" "tools/$1" | jq '.[0]'
 }
 
-# @cmd List functions that can be put into functions.txt
+# @cmd List tools that can be put into functions.txt
 # Examples:
-#      argc --list-functions > functions.txt
-#      argc --list-functions search_duckduckgo.sh >> functions.txt
-# @arg funcs*[`_choice_func`] The function filenames, list all available functions if not provided
-list-functions() {
-    _choice_func
+#      argc list-tools > functions.txt
+list-tools() {
+    _choice_tool
 }
 
 # @cmd Test the project
 test() {
-    func_names_file=functions.txt.test
-    argc list-functions > "$func_names_file"
-    argc build --names-file "$func_names_file"
-    argc test-functions
-    rm -rf "$func_names_file"
+    mkdir -p tmp/tests
+    names_file=tmp/tests/functions.txt
+    declarations_file=tmp/tests/functions.json
+    argc list-tools > "$names_file"
+    argc build --names-file "$names_file" --declarations-file "$declarations_file"
+    argc test-tools
 }
 
 # @cmd Test call functions
-test-functions() {
+test-tools() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -172,7 +176,7 @@ install() {
     fi
 }
 
-# @cmd Create a boilplate tool script file.
+# @cmd Create a boilplate tool scriptfile.
 # @arg args~
 create() {
     ./scripts/create-tool.sh "$@"
@@ -239,7 +243,7 @@ _is_win() {
     fi
 }
 
-_choice_func() {
+_choice_tool() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
         cmd="${item#*:}"

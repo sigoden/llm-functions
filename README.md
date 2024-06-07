@@ -72,7 +72,9 @@ AIChat will ask permission before running the function.
 
 ## Writing Your Own Functions
 
-The project supports write functions in bash/js/python.
+You can write functions in bash/javascript/python.
+
+`llm-functions` will automatic generate function declarations from comments. Refer to `demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
 
 ### Bash
 
@@ -92,47 +94,19 @@ main() {
 eval "$(argc --argc-eval "$0" "$@")"
 ```
 
-`llm-functions` will automatic generate function declaration.json from [comment tags](https://github.com/sigoden/argc?tab=readme-ov-file#comment-tags).
-
-The relationship between comment tags and parameters in function declarations is as follows:
-
-```sh
-# @flag --boolean                   Parameter `{"type": "boolean"}`
-# @option --string                  Parameter `{"type": "string"}`
-# @option --string-enum[foo|bar]    Parameter `{"type": "string", "enum": ["foo", "bar"]}`
-# @option --integer <INT>           Parameter `{"type": "integer"}`
-# @option --number <NUM>            Parameter `{"type": "number"}`
-# @option --array* <VALUE>          Parameter `{"type": "array", "items": {"type":"string"}}`
-# @option --scalar-required!        Use `!` to mark a scalar parameter as required.
-# @option --array-required+         Use `+` to mark a array parameter as required
-```
-
 ### Javascript
 
 Create a new javascript in the [./tools/](./tools/) directory (.e.g. `may_execute_js_code.js`).
 
 ```js
-exports.declarate = function declarate() {
-  return {
-    "name": "may_execute_js_code",
-    "description": "Runs the javascript code in node.js.",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "Javascript code to execute, such as `console.log(\"hello world\")`"
-        }
-      },
-      "required": [
-        "code"
-      ]
-    }
-  }
-}
-
-exports.execute = function execute(data) {
-  eval(data.code)
+/**
+ * Runs the javascript code in node.js.
+ * @typedef {Object} Args
+ * @property {string} code - Javascript code to execute, such as `console.log("hello world")`
+ * @param {Args} args
+ */
+exports.main = function main({ code }) {
+  eval(code);
 }
 
 ```
@@ -142,27 +116,13 @@ exports.execute = function execute(data) {
 Create a new python script in the [./tools/](./tools/) directory (e.g., `may_execute_py_code.py`).
 
 ```py
-def declarate():
-  return {
-    "name": "may_execute_py_code",
-    "description": "Runs the python code.",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "python code to execute, such as `print(\"hello world\")`"
-        }
-      },
-      "required": [
-        "code"
-      ]
-    }
-  }
+def main(code: str):
+    """Runs the python code.
+    Args:
+        code: Python code to execute, such as `print("hello world")`
+    """
+    exec(code)
 
-
-def execute(data):
-  exec(data["code"])
 ```
 
 ## License

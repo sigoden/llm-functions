@@ -58,23 +58,18 @@ const [funcName, funcData] = parseArgv();
 
 process.env["LLM_FUNCTION_NAME"] = funcName;
 
-if (process.env["LLM_FUNCTION_ACTION"] == "declarate") {
-  const { declarate } = loadFunc(funcName);
-  console.log(JSON.stringify(declarate(), null, 2));
-} else {
-  if (!funcData) {
-    console.log("No json data");
-    process.exit(1);
-  }
-
-  let args;
-  try {
-    args = JSON.parse(funcData);
-  } catch {
-    console.log("Invalid json data");
-    process.exit(1);
-  }
-
-  const { execute } = loadFunc(funcName);
-  execute(args);
+if (!funcData) {
+  console.log("No json data");
+  process.exit(1);
 }
+
+let args;
+try {
+  args = JSON.parse(funcData);
+} catch {
+  console.log("Invalid json data");
+  process.exit(1);
+}
+
+const { main } = loadFunc(funcName);
+main(args);
