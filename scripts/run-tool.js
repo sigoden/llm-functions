@@ -4,34 +4,34 @@ const path = require("path");
 const fs = require("fs");
 
 function parseArgv() {
-  let funcName = process.argv[1];
-  let funcData = null;
+  let toolName = process.argv[1];
+  let toolData = null;
 
-  if (funcName.endsWith("run-tool.js")) {
-    funcName = process.argv[2];
-    funcData = process.argv[3];
+  if (toolName.endsWith("run-tool.js")) {
+    toolName = process.argv[2];
+    toolData = process.argv[3];
   } else {
-    funcName = path.basename(funcName);
-    funcData = process.argv[2];
+    toolName = path.basename(toolName);
+    toolData = process.argv[2];
   }
 
-  if (funcName.endsWith(".js")) {
-    funcName = funcName.slice(0, -3);
+  if (toolName.endsWith(".js")) {
+    toolName = toolName.slice(0, -3);
   }
 
-  return [funcName, funcData];
+  return [toolName, toolData];
 }
 
-function loadFunc(funcName) {
-  const funcFileName = `${funcName}.js`;
-  const funcPath = path.resolve(
-    process.env["LLM_FUNCTIONS_DIR"],
-    `tools/${funcFileName}`,
+function loadModule(toolName) {
+  const toolFileName = `${toolName}.js`;
+  const toolPath = path.resolve(
+    process.env["LLM_ROOT_DIR"],
+    `tools/${toolFileName}`,
   );
   try {
-    return require(funcPath);
+    return require(toolPath);
   } catch {
-    console.log(`Invalid function: ${funcFileName}`);
+    console.log(`Invalid tooltion: ${toolFileName}`);
     process.exit(1);
   }
 }
@@ -50,26 +50,32 @@ function loadEnv(filePath) {
   } catch {}
 }
 
-process.env["LLM_FUNCTIONS_DIR"] = path.resolve(__dirname, "..");
+const LLM_ROOT_DIR = path.resolve(__dirname, "..");
+process.env["LLM_ROOT_DIR"] = LLM_ROOT_DIR;
 
-loadEnv(path.resolve(process.env["LLM_FUNCTIONS_DIR"], ".env"));
+loadEnv(path.resolve(LLM_ROOT_DIR, ".env"));
 
-const [funcName, funcData] = parseArgv();
+const [toolName, toolData] = parseArgv();
 
-process.env["LLM_FUNCTION_NAME"] = funcName;
+process.env["LLM_TOOL_NAME"] = toolName;
+process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(
+  LLM_ROOT_DIR,
+  "cache",
+  toolName,
+);
 
-if (!funcData) {
+if (!toolData) {
   console.log("No json data");
   process.exit(1);
 }
 
-let args;
+let data = null;
 try {
-  args = JSON.parse(funcData);
+  data = JSON.parse(toolData);
 } catch {
   console.log("Invalid json data");
   process.exit(1);
 }
 
-const { run } = loadFunc(funcName);
-run(args);
+const { run } = loadModule(toolName);
+run(data);

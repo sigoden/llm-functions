@@ -1,40 +1,42 @@
 #!/usr/bin/env bash
 set -e
 
-export LLM_FUNCTIONS_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
+export LLM_ROOT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
 
-if [[ -f "$LLM_FUNCTIONS_DIR/.env" ]]; then
-    source "$LLM_FUNCTIONS_DIR/.env"
+if [[ -f "$LLM_ROOT_DIR/.env" ]]; then
+    source "$LLM_ROOT_DIR/.env"
 fi
 
 if [[ "$0" == *run-tool.sh ]]; then
-    func_name="$1"
-    func_data="$2"
+    tool_name="$1"
+    tool_data="$2"
 else
-    func_name="$(basename "$0")"
-    func_data="$1"
+    tool_name="$(basename "$0")"
+    tool_data="$1"
 fi
-if [[ "$func_name" == *.sh ]]; then
-    func_name="${func_name:0:$((${#func_name}-3))}"
+if [[ "$tool_name" == *.sh ]]; then
+    tool_name="${tool_name:0:$((${#tool_name}-3))}"
 fi
 
-export LLM_FUNCTION_NAME="$func_name"
-func_file="$LLM_FUNCTIONS_DIR/tools/$func_name.sh"
+export LLM_TOOL_NAME="$tool_name"
+export LLM_TOOL_CACHE_DIR="$LLM_ROOT_DIR/cache/$tool_name"
 
-export JQ=jq
+tool_file="$LLM_ROOT_DIR/tools/$tool_name.sh"
+
+_jq=jq
 if [[ "$OS" == "Windows_NT" ]]; then
-    export JQ="jq -b"
-    func_file="$(cygpath -w "$func_file")"
+    _jq="jq -b"
+    tool_file="$(cygpath -w "$tool_file")"
 fi
 
-if [[ -z "$func_data" ]]; then
+if [[ -z "$tool_data" ]]; then
     echo "No json data"
     exit 1
 fi
 
 data="$(
-    echo "$func_data" | \
-    $JQ -r '
+    echo "$tool_data" | \
+    $_jq -r '
     to_entries | .[] | 
     (.key | split("_") | join("-")) as $key |
     if .value | type == "array" then
@@ -52,7 +54,7 @@ while IFS= read -r line; do
     if [[ "$line" == '--'* ]]; then
         args+=("$line")
     else
-        args+=("$(echo "$line" | $JQ -r '.')")
+        args+=("$(echo "$line" | $_jq -r '.')")
     fi
 done <<< "$data"
-"$func_file" "${args[@]}"
+"$tool_file" "${args[@]}"

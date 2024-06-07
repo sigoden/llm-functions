@@ -20,15 +20,15 @@ main() {
     ext="${argc_name##*.}"
     support_exts=('.sh' '.js' '.py')
     if [[ "$ext" == "$argc_name" ]]; then
-        _die "No extension name, pelease add one of ${support_exts[*]}" 
+        _die "error: no extension name, pelease add one of ${support_exts[*]}" 
     fi
     case $ext in
     sh) create_sh ;;
     js) create_js ;;
     py) create_py ;;
-    *) _die "Invalid extension name: $ext, must be one of ${support_exts[*]}" ;; 
+    *) _die "error: invalid extension name: $ext, must be one of ${support_exts[*]}" ;; 
     esac
-    _die "$output generated"
+    echo "$output generated"
 }
 
 create_sh() {
@@ -187,7 +187,7 @@ build_properties() {
 }
 
 _die() {
-    echo "$*"
+    echo "$*" >&2
     exit 1
 }
 

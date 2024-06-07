@@ -9,8 +9,11 @@ from collections import OrderedDict
 
 TOOL_ENTRY_FUNC = "run"
 
-def main(is_tool = True):
+
+def main(is_tool=True):
     scriptfile = sys.argv[1]
+    is_tool = os.path.dirname(scriptfile) == "tools"
+
     with open(scriptfile, "r", encoding="utf-8") as f:
         contents = f.read()
 
@@ -92,8 +95,8 @@ def parse_docstring(docstring: str):
                 break
     params = {}
     for rawParam in rawParams:
-        name, type_, description = parse_param(rawParam)
-        params[name] = (type_, description)
+        name, type_, param_description = parse_param(rawParam)
+        params[name] = (type_, param_description)
     return (description.strip(), params)
 
 
