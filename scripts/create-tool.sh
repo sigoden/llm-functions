@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Create a boilplate tool script file.
+# @describe Create a boilplate tool scriptfile.
+#
 # It automatically generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
 # Examples:
 #   argc create abc.sh foo bar! baz+ qux*
 #   ./scripts/create-tool.sh test.py foo bar! baz+ qux*
+#
+# @flag --force Override the exist tool file
 # @arg name! The script file name.
 # @arg params* The script parameters
 
 main() {
     output="tools/$argc_name"
-    if [[ -f "$output" ]]; then
+    if [[ -f "$output" ]] && [[ -z "$argc_force" ]]; then
         _die "$output already exists"
     fi
     ext="${argc_name##*.}"
@@ -25,6 +28,7 @@ main() {
     py) create_py ;;
     *) _die "Invalid extension name: $ext, must be one of ${support_exts[*]}" ;; 
     esac
+    _die "$output generated"
 }
 
 create_sh() {
@@ -49,25 +53,91 @@ EOF
 }
 
 create_js() {
+    properties=''
+    for param in "${argc_params[@]}"; do
+        if [[ "$param" == *'!' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            property=" * @property {string} $param - "
+        elif [[ "$param" == *'+' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            property=" * @property {string[]} $param - "
+        elif [[ "$param" == *'*' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            property=" * @property {string[]} [$param] - "
+        else
+            property=" * @property {string} [$param] - "
+        fi
+        properties+=$'\n'"$property"
+    done
     cat <<EOF > "$output"
-exports.declarate = function declarate() {
-  return $(build_schema)
-}
-
-exports.execute = function execute(data) {
-  console.log(data)
+/**
+ *
+ * @typedef {Object} Args${properties}
+ * @param {Args} args
+ */
+exports.main = function main(args) {
+  console.log(args);
 }
 EOF
 }
 
 create_py() {
+    has_array_param=false
+    has_optional_pram=false
+    required_properties=''
+    optional_properties=''
+    required_arguments=()
+    optional_arguments=()
+    indent="    "
+    for param in "${argc_params[@]}"; do
+        optional=false
+        if [[ "$param" == *'!' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            type="str"
+        elif [[ "$param" == *'+' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            type="List[str]"
+            has_array_param=true
+        elif [[ "$param" == *'*' ]]; then
+            param="${param:0:$((${#param}-1))}"
+            type="Optional[List[str]] = None"
+            optional=true
+            has_array_param=true
+        else
+            optional=true
+            type="Optional[str] = None"
+        fi
+        if [[ "$optional" == "true" ]]; then
+            has_optional_pram=true
+            optional_arguments+="$param: $type, "
+            optional_properties+=$'\n'"$indent$indent$param: -"
+        else
+            required_arguments+="$param: $type, "
+            required_properties+=$'\n'"$indent$indent$param: -"
+        fi
+    done
+    import_typing_members=()
+    if [[ "$has_array_param" == "true" ]]; then
+        import_typing_members+=("List")
+    fi
+    if [[ "$has_optional_pram" == "true" ]]; then
+        import_typing_members+=("Optional")
+    fi
+    imports=""
+    if [[ -n "$import_typing_members" ]]; then
+        members="$(echo "${import_typing_members[*]}" | sed 's/ /, /')"
+        imports="from typing import $members"$'\n'
+    fi
+    if [[ -n "$imports" ]]; then
+        imports="$imports"$'\n'
+    fi
     cat <<EOF > "$output"
-def declarate():
-  return $(build_schema) 
-
-
-def execute(data):
-  print(data)
+${imports}
+def main(${required_arguments}${optional_arguments}):
+    """
+    Args:${required_properties}${optional_properties}
+    """
+    pass
 EOF
 }
 
