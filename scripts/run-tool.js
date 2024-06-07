@@ -71,5 +71,5 @@ try {
   process.exit(1);
 }
 
-const { main } = loadFunc(funcName);
-main(args);
+const { run } = loadFunc(funcName);
+run(args);

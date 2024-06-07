@@ -75,7 +75,7 @@ create_js() {
  * @typedef {Object} Args${properties}
  * @param {Args} args
  */
-exports.main = function main(args) {
+exports.run = function run(args) {
   console.log(args);
 }
 EOF

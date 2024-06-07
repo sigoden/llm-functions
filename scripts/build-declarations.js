@@ -2,19 +2,23 @@
 
 const fs = require("fs");
 
-function main() {
+const TOOL_ENTRY_FUNC = "run";
+
+function main(isTool = true) {
   const scriptfile = process.argv[2];
   const contents = fs.readFileSync(process.argv[2], "utf8");
-  const functions = extractFunctions(contents);
+  const functions = extractFunctions(contents, isTool);
   let declarations = functions.map(({ funcName, jsdoc }) => {
     const { description, params } = parseJsDoc(jsdoc, funcName);
     const declaration = buildDeclaration(funcName, description, params);
     return declaration;
   });
-  const name = getBasename(scriptfile);
-  if (declarations.length > 0) {
-    declarations = declarations.slice(0, 1);
-    declarations[0].name = name;
+  if (isTool) {
+    const name = getBasename(scriptfile);
+    if (declarations.length > 0) {
+      declarations = declarations.slice(0, 1);
+      declarations[0].name = name;
+    }
   }
   console.log(JSON.stringify(declarations, null, 2));
 }
@@ -23,7 +27,7 @@ function main() {
  * @param {string} contents
  * @param {bool} isTool
  */
-function extractFunctions(contents, isTool = true) {
+function extractFunctions(contents, isTool) {
   const output = [];
   const lines = contents.split("\n");
   let isInComment = false;
@@ -45,9 +49,9 @@ function extractFunctions(contents, isTool = true) {
         continue;
       }
       if (isTool) {
-        if (/function main/.test(line)) {
+        if (new RegExp(`function ${TOOL_ENTRY_FUNC}`).test(line)) {
           output.push({
-            funcName: "main",
+            funcName: TOOL_ENTRY_FUNC,
             jsdoc,
           });
         }

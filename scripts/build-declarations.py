@@ -7,13 +7,14 @@ import re
 import sys
 from collections import OrderedDict
 
+TOOL_ENTRY_FUNC = "run"
 
-def main():
+def main(is_tool = True):
     scriptfile = sys.argv[1]
     with open(scriptfile, "r", encoding="utf-8") as f:
         contents = f.read()
 
-    functions = extract_functions(contents)
+    functions = extract_functions(contents, is_tool)
     declarations = []
     for function in functions:
         func_name, docstring, func_args = function
@@ -22,15 +23,16 @@ def main():
             build_declaration(func_name, description, params, func_args)
         )
 
-    name = os.path.splitext(os.path.basename(scriptfile))[0]
-    if declarations:
-        declarations = declarations[0:1]
-        declarations[0]["name"] = name
+    if is_tool:
+        name = os.path.splitext(os.path.basename(scriptfile))[0]
+        if declarations:
+            declarations = declarations[0:1]
+            declarations[0]["name"] = name
 
     print(json.dumps(declarations, indent=2))
 
 
-def extract_functions(contents: str):
+def extract_functions(contents: str, is_tool: bool):
     tree = ast.parse(contents)
     output = []
     for node in ast.walk(tree):
@@ -38,6 +40,8 @@ def extract_functions(contents: str):
             continue
         func_name = node.name
         if func_name.startswith("_"):
+            continue
+        if is_tool and func_name != TOOL_ENTRY_FUNC:
             continue
         docstring = ast.get_docstring(node) or ""
         func_args = OrderedDict()
