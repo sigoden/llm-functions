@@ -11,6 +11,6 @@
  * @property {string[]} [array_optional] - Define a optional string array property
  * @param {Args} args
  */
-exports.main = function main(args) {
+exports.run = function run(args) {
   console.log(args);
 }

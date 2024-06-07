@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 
 
-def main(
+def run(
     boolean: bool,
     string: str,
     string_enum: Literal["foo", "bar"],

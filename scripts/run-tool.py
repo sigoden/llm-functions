@@ -72,4 +72,4 @@ except (json.JSONDecodeError, TypeError):
     sys.exit(1)
 
 module = load_func(func_name)
-module.main(**args)
+module.run(**args)

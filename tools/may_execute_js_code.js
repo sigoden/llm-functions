@@ -4,6 +4,6 @@
  * @property {string} code - Javascript code to execute, such as `console.log("hello world")`
  * @param {Args} args
  */
-exports.main = function main({ code }) {
+exports.run = function run({ code }) {
   eval(code);
 }
