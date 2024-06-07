@@ -44,7 +44,7 @@ EOF
     cat <<-'EOF' >> "$output"
 
 main() {
-    ( set -o posix ; set ) | grep ^argc_ # inspect all argc variables
+    ( set -o posix ; set ) | grep ^argc_
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

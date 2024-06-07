@@ -9,7 +9,8 @@
 # @option --array-optional*          Define a optional string array property
 
 main() {
-    ( set -o posix ; set ) | grep ^argc_ # inspect all argc variables
+    ( set -o posix ; set ) | grep ^argc_ 
+    printenv | grep '^LLM_'
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

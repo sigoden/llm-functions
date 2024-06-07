@@ -12,5 +12,13 @@
  * @param {Args} args
  */
 exports.run = function run(args) {
-  console.log(JSON.stringify(args, null, 2));
+  for (const [key, value] of Object.entries(args)) {
+      console.log(`${key}: ${JSON.stringify(value)}`);
+  }
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.startsWith("LLM_")) {
+      console.log(`${key}: ${value}`);
+    }
+  }
 }
