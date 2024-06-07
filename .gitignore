@@ -1,8 +1,8 @@
 /tmp
-/functions.txt
-/functions.txt.test
-/functions.json
+functions.txt
+functions.json
 /bin
+/cache
 /tools/test.*
 /.env
 *.cmd

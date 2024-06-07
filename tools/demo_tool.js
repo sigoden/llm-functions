@@ -12,5 +12,5 @@
  * @param {Args} args
  */
 exports.run = function run(args) {
-  console.log(args);
+  console.log(JSON.stringify(args, null, 2));
 }

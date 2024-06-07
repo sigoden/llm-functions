@@ -7,32 +7,32 @@ import importlib.util
 
 
 def parse_argv():
-    func_name = sys.argv[0]
-    func_data = None
+    tool_name = sys.argv[0]
+    tool_data = None
 
-    if func_name.endswith("run-tool.py"):
-        func_name = sys.argv[1] if len(sys.argv) > 1 else None
-        func_data = sys.argv[2] if len(sys.argv) > 2 else None
+    if tool_name.endswith("run-tool.py"):
+        tool_name = sys.argv[1] if len(sys.argv) > 1 else None
+        tool_data = sys.argv[2] if len(sys.argv) > 2 else None
     else:
-        func_name = os.path.basename(func_name)
-        func_data = sys.argv[1] if len(sys.argv) > 1 else None
+        tool_name = os.path.basename(tool_name)
+        tool_data = sys.argv[1] if len(sys.argv) > 1 else None
 
-    if func_name.endswith(".py"):
-        func_name = func_name[:-3]
+    if tool_name.endswith(".py"):
+        tool_name = tool_name[:-3]
 
-    return func_name, func_data
+    return tool_name, tool_data
 
 
-def load_func(func_name):
-    func_file_name = f"{func_name}.py"
-    func_path = os.path.join(os.environ["LLM_FUNCTIONS_DIR"], f"tools/{func_file_name}")
-    if os.path.exists(func_path):
-        spec = importlib.util.spec_from_file_location(f"{func_file_name}", func_path)
+def load_module(tool_name):
+    tool_file_name = f"{tool_name}.py"
+    tool_path = os.path.join(os.environ["LLM_ROOT_DIR"], f"tools/{tool_file_name}")
+    if os.path.exists(tool_path):
+        spec = importlib.util.spec_from_file_location(f"{tool_file_name}", tool_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
     else:
-        print(f"Invalid function: {func_file_name}")
+        print(f"Invalid function: {tool_file_name}")
         sys.exit(1)
 
 
@@ -50,26 +50,27 @@ def load_env(file_path):
         pass
 
 
-os.environ["LLM_FUNCTIONS_DIR"] = os.path.abspath(
+LLM_ROOT_DIR = os.environ["LLM_ROOT_DIR"] = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
 )
 
-load_env(os.path.join(os.environ["LLM_FUNCTIONS_DIR"], ".env"))
+load_env(os.path.join(LLM_ROOT_DIR, ".env"))
 
-func_name, func_data = parse_argv()
+tool_name, tool_data = parse_argv()
 
-os.environ["LLM_FUNCTION_NAME"] = func_name
+os.environ["LLM_TOOL_NAME"] = tool_name
+os.environ["LLM_TOOL_CACHE_DIR"] = os.path.join(LLM_ROOT_DIR, "cache", tool_name)
 
-if not func_data:
+if not tool_data:
     print("No json data")
     sys.exit(1)
 
-args = None
+data = None
 try:
-    args = json.loads(func_data)
+    data = json.loads(tool_data)
 except (json.JSONDecodeError, TypeError):
     print("Invalid json data")
     sys.exit(1)
 
-module = load_func(func_name)
-module.run(**args)
+module = load_module(tool_name)
+module.run(**data)

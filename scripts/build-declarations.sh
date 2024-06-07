@@ -1,7 +1,23 @@
 #!/usr/bin/env bash
 
-argc --argc-export "$1" | \
-jq -r '
+main() {
+    scriptfile="$1"
+    is_tool=false
+    if [[ "$(dirname "$scriptfile")" == tools ]]; then
+        is_tool=true
+    fi
+    if [[ "$is_tool" == "true" ]]; then
+        expr='[.]' 
+    else
+        expr='.subcommands' 
+    fi
+    argc --argc-export "$scriptfile" | \
+    jq "$expr" | \
+    build_declarations
+}
+
+build_declarations() {
+    jq -r '
     def parse_description(flag_option):
         if flag_option.describe == "" then
             {}
@@ -36,8 +52,15 @@ jq -r '
             required: [flag_options[] | select(.required == true) | .id | sub("-"; "_"; "g")],
         };
 
-    [{
-        name: (.name | sub("-"; "_"; "g")),
-        description: .describe,
-        parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
-    }]'
+    def parse_declaration:
+        {
+            name: (.name | sub("-"; "_"; "g")),
+            description: .describe,
+            parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
+        };
+    [
+        .[] | parse_declaration
+    ]'
+}
+
+main "$@"

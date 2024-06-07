@@ -148,15 +148,15 @@ test-tools() {
     )
 
     for test_case in "${test_cases[@]}"; do
-        IFS='#' read -r lang func data <<<"${test_case}"
+        IFS='#' read -r lang tool_name data <<<"${test_case}"
         cmd="$(_lang_to_cmd "$lang")"
-        cmd_path="$BIN_DIR/$func$ext"
+        cmd_path="$BIN_DIR/$tool_name$ext"
         if command -v "$cmd" &> /dev/null; then
             echo -n "Test $cmd_path: "
             "$cmd_path" "$data"
             if ! _is_win; then
-                echo -n "Test $cmd scripts/run-tool.$lang $func: "
-                "$cmd" "scripts/run-tool.$lang" "$func" "$data"
+                echo -n "Test $cmd scripts/run-tool.$lang $tool_name: "
+                "$cmd" "scripts/run-tool.$lang" "$tool_name" "$data"
             fi
         fi
     done
@@ -258,7 +258,7 @@ _choice_cmd() {
 }
 
 _die() {
-    echo "$*"
+    echo "$*" >&2
     exit 1
 }
 

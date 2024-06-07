@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
+const path = require("path");
 
 const TOOL_ENTRY_FUNC = "run";
 
-function main(isTool = true) {
+function main() {
   const scriptfile = process.argv[2];
+  const isTool = path.dirname(scriptfile) == "tools";
   const contents = fs.readFileSync(process.argv[2], "utf8");
   const functions = extractFunctions(contents, isTool);
   let declarations = functions.map(({ funcName, jsdoc }) => {
@@ -56,12 +58,19 @@ function extractFunctions(contents, isTool) {
           });
         }
       } else {
-        const match = /function *([_A-Za-z]+)/.exec(line);
+        let match = /^export (async )?function ([A-Za-z0-9_]+)/.exec(line);
+        let funcName = null;
         if (match) {
-          const funcName = match[1];
-          if (!funcName.startsWith("_")) {
-            output.push({ funcName, jsdoc });
+          funcName = match[2];
+        }
+        if (!funcName) {
+          match = /^exports\.([A-Za-z0-9_]+) = (async )?function /.exec(line);
+          if (match) {
+            funcName = match[1];
           }
+        }
+        if (funcName) {
+          output.push({ funcName, jsdoc });
         }
       }
       jsdoc = "";
@@ -166,21 +175,6 @@ function buildProperty(type, description) {
 }
 
 /**
- * @param {string} filePath
- */
-function getBasename(filePath) {
-  const filenameWithExt = filePath.split(/[/\\]/).pop();
-
-  const lastDotIndex = filenameWithExt.lastIndexOf(".");
-
-  if (lastDotIndex === -1) {
-    return filenameWithExt;
-  }
-
-  return filenameWithExt.substring(0, lastDotIndex);
-}
-
-/**
  * @param {string} name
  * @param {string} description
  * @param {Param[]} params
@@ -202,6 +196,21 @@ function buildDeclaration(name, description, params) {
     schema.required = requiredParams;
   }
   return schema;
+}
+
+/**
+ * @param {string} filePath
+ */
+function getBasename(filePath) {
+  const filenameWithExt = filePath.split(/[/\\]/).pop();
+
+  const lastDotIndex = filenameWithExt.lastIndexOf(".");
+
+  if (lastDotIndex === -1) {
+    return filenameWithExt;
+  }
+
+  return filenameWithExt.substring(0, lastDotIndex);
 }
 
 main();

@@ -6,9 +6,9 @@ set -e
 # @option --contents! The contents to save.
 
 main() {
-    base_dir="$LLM_FUNCTIONS_DIR/tmp/files"
-    output_file="$base_dir/$argc_file_name"
+    base_dir="${LLM_TOOL_CACHE_DIR:-/tmp}"
     mkdir -p "$base_dir"
+    output_file="$base_dir/$argc_file_name"
     echo "$argc_contents" > "$output_file"
     echo "$output_file"
 }
