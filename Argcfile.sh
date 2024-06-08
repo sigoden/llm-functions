@@ -292,9 +292,9 @@ EOF
 _ask_json_data() {
     declaration="$1"
     echo 'Missing the JSON data but here are its properties:'
-    echo "$declaration" | _inspect_declaration_params | sed 's/^/>  /'
+    echo "$declaration" | ./scripts/declarations-util.sh pretty-print | sed -n '2,$s/^/>/p'
     echo 'Generate placeholder data:'
-    data="$(echo "$declaration" | _generate_data_according_declaration)"
+    data="$(echo "$declaration" | _declarations_json_data)"
     echo ">  $data"
     read -r -p 'Use the generated data? (y/n) ' res
     case "$res" in
@@ -308,64 +308,8 @@ _ask_json_data() {
     esac
 }
 
-_inspect_declaration_params() {
-    jq -r '
-def get_indicator:
-    .value.type as $type |
-    [
-        { condition: ($type == "array" and .required), result: "+" },
-        { condition: ($type == "array"), result: "*" },
-        { condition: .required, result: "!" },
-        { condition: true, result: "" }
-    ] | map(select(.condition) | .result) | first;
-
-def get_kind:
-    .value.type as $type |
-    (.value.enum // []) as $enum |
-    ([
-        { condition: ($type == "array"), result: "string[]" },
-        { condition: ($type == "string" and ($enum | length > 0)), result: ($enum | join("|")) },
-        { condition: ($type == "string"), result: "" },
-        { condition: true, result: $type }
-    ] | map(select(.condition) | .result) | first) as $kind |
-    if $kind != "" then "(\($kind))" else "" end;
-
-def print_property:
-    .key as $key |
-    (.value.description | split("\n")[0]) as $description |
-    (. | get_kind) as $kind |
-    (. | get_indicator) as $indicator |
-    "\($key)\($kind)\($indicator): \($description)";
-
-.parameters | 
-.required as $requiredProperties |
-.properties | to_entries[] | 
-.key as $key | .+ { "required": ($requiredProperties | index($key) != null) } |
-print_property
-'
-}
-
-_generate_data_according_declaration() {
-    jq -c '
-def convert_string:
-    if has("enum") then .enum[0] else "foo" end;
-
-def convert_property:
-    .key as $key |
-    .value.type as $type |
-    [
-        { condition: ($type == "string"), result: { $key: (.value | convert_string) }},
-        { condition: ($type == "boolean"), result: { $key: false }},
-        { condition: ($type == "integer"), result: { $key: 42 }},
-        { condition: ($type == "number"), result: { $key: 3.14 }},
-        { condition: ($type == "array"), result: { $key: [ "v1" ] } }
-    ] | map(select(.condition) | .result) | first;
-
-.parameters |
-[
-    .properties | to_entries[] | convert_property
-] | add // {}
-'
+_declarations_json_data() {
+   ./scripts/declarations-util.sh generate-json | tail -n +2
 }
 
 _normalize_path() {
