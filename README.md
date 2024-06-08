@@ -21,7 +21,7 @@ git clone https://github.com/sigoden/llm-functions
 
 First, create a `./tools.txt` file with each tool name on a new line.
 
-Then, run `argc build` to build declarations file: `./functions.json` and binaries dir: `./bin/`.
+Then, run `argc build` to build declarations file (`./functions.json`) and binaries dir (`./bin/`).
 
 **3. Configure your AIChat:**
 
