@@ -13,15 +13,15 @@ LANG_CMDS=( \
 )
 
 # @cmd Run the tool
-# @alias call
+# @alias tool:run
 # @arg cmd![`_choice_cmd`] The tool command
 # @arg json The json data
-run-tool() {
+run@tool() {
     if _is_win; then
         ext=".cmd"
     fi
     if [[ -z "$argc_json" ]]; then
-        declaration="$(cat functions.json | jq --arg name "$argc_cmd" '.[] | select(.name == $name)')"
+        declaration="$(jq --arg name "$argc_cmd" '.[] | select(.name == $name)' functions.json)"
         if [[ -n "$declaration" ]]; then
             _ask_json_data "$declaration"
         fi
@@ -32,11 +32,12 @@ run-tool() {
     "$BIN_DIR/$argc_cmd$ext" "$argc_json"
 }
 
-# @cmd Run the tool
+# @cmd Run the bot
+# @alias bot:run
 # @arg cmd![`_choice_bot`] The bot command
 # @arg action![`_choice_bot_action`] The bot action
 # @arg json The json data
-run-bot() {
+run@bot() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -57,11 +58,20 @@ run-bot() {
 
 # @cmd Build the project
 build() {
-    argc build-tools
-    argc build-bots
+    if [[ -f tools.txt ]]; then
+        argc build@tool
+    else
+        echo 'Skipped building tools sine tools.txt is missing'
+    fi
+    if [[ -f bots.txt ]]; then
+        argc build@bot
+    else
+        echo 'Skipped building bots sine bots.txt is missing'
+    fi
 }
 
 # @cmd Build tools
+# @alias tool:build
 # @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # This file specifies which tools will be used.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
@@ -69,22 +79,23 @@ build() {
 #   get_current_weather.sh
 #   may_execute_js_code.js
 # @arg tools*[`_choice_tool`] The tool filenames
-build-tools() {
+build@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         mkdir -p "$TMP_DIR"
         argc_names_file="$TMP_DIR/tools.txt"
         printf "%s\n" "${argc_tools[@]}" > "$argc_names_file"
-    else
-        argc clean-tools
+    elif [[ "$argc_declarations_file" == "functions.json" ]]; then
+        argc clean@tool
     fi
-    argc build-tools-json --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
-    argc build-tools-bin --names-file "${argc_names_file}"
+    argc build-declarations@tool --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
+    argc build-bin@tool --names-file "${argc_names_file}"
 }
 
 # @cmd Build tools to bin
+# @alias tool:build-bin
 # @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @arg tools*[`_choice_tool`] The tool filenames
-build-tools-bin() {
+build-bin@tool() {
     mkdir -p "$BIN_DIR"
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
@@ -120,11 +131,12 @@ build-tools-bin() {
     fi
 }
 
-# @cmd Build tool functions.json
+# @cmd Build tools function declarations file
+# @alias tool:build-declarations
 # @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # @arg tools*[`_choice_tool`] The tool filenames
-build-tools-json() {
+build-declarations@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
@@ -143,7 +155,7 @@ build-tools-json() {
             not_found_tools+=("$name")
             continue;
         fi
-        json_data="$(build-tool-declaration "$name")" || {
+        json_data="$(generate-declarations@tool "$name" | jq -r '.[0]')" || {
             build_failed_tools+=("$name")
         }
         json_list+=("$json_data")
@@ -159,36 +171,39 @@ build-tools-json() {
 }
 
 
-# @cmd Build function declaration for a tool
+# @cmd Generate function declaration for the tool
+# @alias tool:generate-declarations
 # @arg tool![`_choice_tool`] The function name
-build-tool-declaration() {
+generate-declarations@tool() {
     lang="${1##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    "$cmd" "scripts/build-declarations.$lang" "tools/$1" | jq '.[0]'
+    "$cmd" "scripts/build-declarations.$lang" "tools/$1"
 }
 
 # @cmd Build bots
+# @alias bot:build
 # @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
 # Example:
 #   hackernews
 #   spotify
 # @arg bots*[`_choice_bot`] The bot filenames
-build-bots() {
+build@bot() {
     if [[ "${#argc_bots[@]}" -gt 0 ]]; then
         mkdir -p "$TMP_DIR"
         argc_names_file="$TMP_DIR/bots.txt"
         printf "%s\n" "${argc_bots[@]}" > "$argc_names_file"
     else
-        argc clean-bots
+        argc clean@bot
     fi
-    argc build-bots-json --names-file "${argc_names_file}"
-    argc build-bots-bin --names-file "${argc_names_file}"
+    argc build-declarations@bot --names-file "${argc_names_file}"
+    argc build-bin@bot --names-file "${argc_names_file}"
 }
 
-# @cmd Build tools to bin
-# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
+# @cmd Build bots to bin
+# @alias bot:build-bin
+# @option --names-file=bots.txt Path to a file containing bot dirs, one per line.
 # @arg bots*[`_choice_bot`] The bot names
-build-bots-bin() {
+build-bin@bot() {
     mkdir -p "$BIN_DIR"
     if [[ "${#argc_bots[@]}" -gt 0 ]]; then
         names=("${argc_bots[@]}" )
@@ -229,10 +244,11 @@ build-bots-bin() {
     fi
 }
 
-# @cmd Build bots functions.json
-# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
-# @arg tools*[`_choice_tool`] The tool filenames
-build-bots-json() {
+# @cmd Build bots function declarations file
+# @alias bot:build-declarations
+# @option --names-file=bots.txt Path to a file containing bot dirs, one per line.
+# @arg bots*[`_choice_bot`] The tool filenames
+build-declarations@bot() {
     if [[ "${#argc_bots[@]}" -gt 0 ]]; then
         names=("${argc_bots[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
@@ -252,7 +268,7 @@ build-bots-json() {
             bot_tools_file="$bot_dir/tools.$lang"
             if [[ -f "$bot_tools_file" ]]; then
                 found=true
-                json_data="$(build-bot-declarations "$name")" || {
+                json_data="$(generate-declarations@bot "$name")" || {
                     build_failed_bots+=("$name")
                 }
                 declarations_file="$bot_dir/functions.json"
@@ -272,10 +288,11 @@ build-bots-json() {
     fi
 }
 
-# @cmd Build function declarations for an bot
+# @cmd Generate function declarations for the bot
+# @alias bot:generate-declarations
 # @flag --oneline Summary JSON in one line
 # @arg bot![`_choice_bot`] The bot name
-build-bot-declarations() {
+generate-declarations@bot() {
     tools_path="$(_get_bot_tools_path "$1")"
     if [[ -z "$tools_path" ]]; then
         _die "error: no found entry file at bots/$1/tools.<lang>"
@@ -290,38 +307,42 @@ build-bot-declarations() {
     fi
 }
 
-# @cmd List tools that can be put into functions.txt
+# @cmd List tools which can be put into functions.txt
+# @alias tool:list
 # Examples:
 #      argc list-tools > tools.txt
-list-tools() {
+list@tool() {
     _choice_tool
 }
 
-# @cmd List bots that can be put into bots.txt
+# @cmd List bots which can be put into bots.txt
+# @alias bot:list
 # Examples:
 #      argc list-bots > bots.txt
-list-bots() {
+list@bot() {
     _choice_bot
 }
 
 # @cmd Test the project
 test() {
-    test-tools
-    test-bots
+    test@tool
+    test@bot
 }
 
 # @cmd Test tools
-test-tools() {
+# @alias tool:test
+test@tool() {
     mkdir -p "$TMP_DIR"
     names_file="$TMP_DIR/tools.txt"
     declarations_file="$TMP_DIR/functions.json"
-    argc list-tools > "$names_file"
-    argc build-tools --names-file "$names_file" --declarations-file "$declarations_file"
-    test-tools-execute-lang
+    argc list@tool > "$names_file"
+    argc build@tool --names-file "$names_file" --declarations-file "$declarations_file"
+    test-execute-code-tools
 }
 
 # @cmd Test maybe_execute_* tools
-test-tools-execute-lang() {
+# @alias tool:test-execute-code
+test-execute-code-tools() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -347,12 +368,13 @@ test-tools-execute-lang() {
 }
 
 # @cmd Test demo tools
-test-tools-demo() {
+# @alias tool:test-demo
+test-demo-tools() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
         echo "---- Test demo_tool.$lang ---"
-        argc build-tools-bin "demo_tool.$lang"
-        argc run-tool demo_tool '{
+        argc build-bin@tool "demo_tool.$lang"
+        argc run@tool demo_tool '{
      "boolean": true,
      "string": "Hello",
      "string_enum": "foo",
@@ -374,17 +396,19 @@ test-tools-demo() {
 }
 
 # @cmd Test bots
-test-bots() {
+# @alias bot:test
+test@bot() {
     tmp_dir="cache/tmp"
     mkdir -p "$tmp_dir"
     names_file="$tmp_dir/bots.txt"
-    argc list-bots > "$names_file"
-    argc build-bots --names-file "$names_file"
-    test-bots-todo-lang
+    argc list@bot > "$names_file"
+    argc build@bot --names-file "$names_file"
+    test-todo-bots
 }
 
 # @cmd Test todo-* bots
-test-bots-todo-lang() {
+# @alias bot:test-todo
+test-todo-bots() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -413,13 +437,15 @@ test-bots-todo-lang() {
 }
 
 # @cmd Clean tools
-clean-tools() {
+# @alias tool:clean
+clean@tool() {
     _choice_tool | sed 's/\.\([a-z]\+\)$//' |  xargs -I{} rm -rf "$BIN_DIR/{}"
     rm -rf functions.json
 }
 
 # @cmd Clean bots
-clean-bots() {
+# @alias bot:clean
+clean@bot() {
     _choice_bot | xargs -I{} rm -rf "$BIN_DIR/{}" 
     _choice_bot | xargs -I{} rm -rf bots/{}/functions.json
 }
@@ -438,7 +464,7 @@ install() {
     fi
 }
 
-# @cmd Create a boilplate tool scriptfile.
+# @cmd Create a boilplate tool script
 # @arg args~
 create() {
     ./scripts/create-tool.sh "$@"
@@ -560,7 +586,7 @@ _choice_bot_action() {
     else
         expr="s/:.*//"
     fi
-    argc build-bot-declarations "$1" --oneline  | sed "$expr"
+    argc generate-declarations@bot "$1" --oneline  | sed "$expr"
 }
 
 _choice_cmd() {
