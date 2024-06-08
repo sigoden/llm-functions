@@ -19,9 +19,9 @@ git clone https://github.com/sigoden/llm-functions
 
 **2. Build function declarations file and bin dir:**
 
-First, create a `./functions.txt` file with each function name on a new line.
+First, create a `./tools.txt` file with each tool name on a new line.
 
-Then, run `argc build` to build function declarations file `./functions.json` and bin dir `./bin/`.
+Then, run `argc build` to build declarations file: `./functions.json` and binaries dir: `./bin/`.
 
 **3. Configure your AIChat:**
 
@@ -39,7 +39,7 @@ Don't forget to add the following config to your AIChat `config.yaml` file:
 function_calling: true
 ```
 
-AIChat will automatically load `functions.json` and execute functions located in the `./bin` directory based on your prompts.
+AIChat will automatically load `functions.json` and execute commands located in the `./bin` directory based on your prompts.
 
 **4. Start using your functions:**
 
@@ -74,7 +74,7 @@ AIChat will ask permission before running the function.
 
 You can write functions in bash/javascript/python.
 
-`llm-functions` will automatic generate function declarations from comments. Refer to `demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
+`llm-functions` will automatic generate function declarations from comments. Refer to `tools/demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
 
 ### Bash
 
