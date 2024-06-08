@@ -2,6 +2,8 @@
 
 set -e
 
+# @describe Utils for declarations json file
+
 # @cmd Pretty print declarations
 #
 # Examples:

@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Create a boilplate tool scriptfile.
+# @describe Create a boilplate tool script.
 #
-# It automatically generate declaration json for `*.py` and `*.js` and generate `@option` tags for `.sh`.
 # Examples:
-#   argc create abc.sh foo bar! baz+ qux*
+#   argc create test.sh foo bar! baz+ qux*
 #   ./scripts/create-tool.sh test.py foo bar! baz+ qux*
 #
 # @flag --force Override the exist tool file
