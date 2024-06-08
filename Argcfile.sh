@@ -464,7 +464,7 @@ install() {
     fi
 }
 
-# @cmd Create a boilplate tool script.
+# @cmd Create a boilplate tool script
 # @arg args~
 create() {
     ./scripts/create-tool.sh "$@"

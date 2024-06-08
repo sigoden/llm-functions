@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Create a boilplate tool script.
+# @describe Create a boilplate tool script
 #
 # Examples:
 #   argc create test.sh foo bar! baz+ qux*
