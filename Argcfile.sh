@@ -21,7 +21,7 @@ run-tool() {
         ext=".cmd"
     fi
     if [[ -z "$argc_json" ]]; then
-        declaration="$(jq --arg name "$argc_cmd" '.[] | select(.name == $name)' functions.json)"
+        declaration="$(cat functions.json | jq --arg name "$argc_cmd" '.[] | select(.name == $name)')"
         if [[ -n "$declaration" ]]; then
             _ask_json_data "$declaration"
         fi
@@ -497,7 +497,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$run "%script_dir%scripts\run-$kind.$lang" "%script_name%.$lang" %*
+$run "%script_dir%scripts\run-$kind.$lang" "%script_name%" %*
 EOF
 }
 

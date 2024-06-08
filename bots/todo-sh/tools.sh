@@ -6,7 +6,7 @@ set -e
 add_todo() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
-        num="$(jq '[.[].id] | max + 1' "$todos_file")"
+        num="$(cat "$todos_file" | jq '[.[].id] | max + 1')"
         data="$(cat "$todos_file")"
     else
         num=1

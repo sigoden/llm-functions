@@ -15,8 +15,8 @@ pretty-print() {
 
 # @cmd Generate placeholder json according to declarations
 # Examples:
-#   ./scripts/declarations.sh generate-json-data functions.json
-#   cat functions.json | ./scripts/declarations.sh generate-json-data functions.json
+#   ./scripts/declarations.sh generate-json functions.json
+#   cat functions.json | ./scripts/declarations.sh generate-json functions.json
 # @arg json-file The json file, Read stdin if omitted
 generate-json() {
     _run _generate_json

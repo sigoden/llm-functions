@@ -2,6 +2,7 @@
 
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 async function main() {
   const [botName, botFunc, rawData] = parseArgv("run-bot.js");
@@ -71,6 +72,9 @@ function loadEnv(filePath) {
 
 async function run(botPath, botFunc, botData) {
   let mod;
+  if (os.platform() === "win32") {
+    botPath = `file://${botPath}`;
+  }
   try {
     mod = await import(botPath);
   } catch {

@@ -13,7 +13,7 @@ main() {
 parse_argv() {
     if [[ "$0" == *"$this_file_name" ]]; then
         bot_name="$1"
-        bot_func="$3"
+        bot_func="$2"
         bot_data="$3"
     else
         bot_name="$(basename "$0")"
