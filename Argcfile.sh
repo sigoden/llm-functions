@@ -28,7 +28,7 @@ build() {
 }
 
 # @cmd Build tools
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # This file specifies which tools will be used.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # Example:
@@ -40,7 +40,7 @@ build-tools() {
 }
 
 # @cmd Build tools to bin
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @arg tools*[`_choice_tool`] The tool filenames
 build-tools-bin() {
     mkdir -p "$BIN_DIR"
@@ -79,7 +79,7 @@ build-tools-bin() {
 }
 
 # @cmd Build tool functions.json
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # @arg tools*[`_choice_tool`] The tool filenames
 build-tools-json() {
@@ -125,9 +125,9 @@ build-tool-declaration() {
     "$cmd" "scripts/build-declarations.$lang" "tools/$1" | jq '.[0]'
 }
 
-# @cmd List tools that can be put into functions.txt
+# @cmd List tools that can be put into tools.txt
 # Examples:
-#      argc list-tools > functions.txt
+#      argc list-tools > tools.txt
 list-tools() {
     _choice_tool
 }
@@ -141,7 +141,7 @@ test() {
 test-tools() {
     tmp_dir="cache/tmp"
     mkdir -p "$tmp_dir"
-    names_file="$tmp_dir/functions.txt"
+    names_file="$tmp_dir/tools.txt"
     declarations_file="$tmp_dir/functions.json"
     argc list-tools > "$names_file"
     argc build-tools --names-file "$names_file" --declarations-file "$declarations_file"

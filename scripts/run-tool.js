@@ -68,7 +68,7 @@ function loadEnv(filePath) {
 
 async function run(toolPath, toolFunc, toolData) {
   let mod;
-  if (os.platform() === "win32") {  
+  if (os.platform() === "win32") {
     toolPath = `file://${toolPath}`;
   }
   try {
