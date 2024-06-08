@@ -4,6 +4,7 @@ set -e
 # @meta dotenv
 
 BIN_DIR=bin
+TMP_DIR="cache/tmp"
 
 LANG_CMDS=( \
     "sh:bash" \
@@ -18,6 +19,15 @@ LANG_CMDS=( \
 run-tool() {
     if _is_win; then
         ext=".cmd"
+    fi
+    if [[ -z "$argc_json" ]]; then
+        declaration="$(jq --arg name "$argc_cmd" '.[] | select(.name == $name)' functions.json)"
+        if [[ -n "$declaration" ]]; then
+            _ask_json_data "$declaration"
+        fi
+    fi
+    if [[ -z "$argc_json" ]]; then
+        _die "error: no JSON data"
     fi
     "$BIN_DIR/$argc_cmd$ext" "$argc_json"
 }
@@ -40,19 +50,27 @@ build() {
 }
 
 # @cmd Build tools
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # This file specifies which tools will be used.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # Example:
 #   get_current_weather.sh
 #   may_execute_js_code.js
+# @arg tools*[`_choice_tool`] The tool filenames
 build-tools() {
+    if [[ "${#argc_tools[@]}" -gt 0 ]]; then
+        mkdir -p "$TMP_DIR"
+        argc_names_file="$TMP_DIR/tools.txt"
+        printf "%s\n" "${argc_tools[@]}" > "$argc_names_file"
+    else
+        argc clean-tools
+    fi
     argc build-tools-json --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
     argc build-tools-bin --names-file "${argc_names_file}"
 }
 
 # @cmd Build tools to bin
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @arg tools*[`_choice_tool`] The tool filenames
 build-tools-bin() {
     mkdir -p "$BIN_DIR"
@@ -91,7 +109,7 @@ build-tools-bin() {
 }
 
 # @cmd Build tool functions.json
-# @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # @arg tools*[`_choice_tool`] The tool filenames
 build-tools-json() {
@@ -253,7 +271,7 @@ build-bot-declarations() {
 
 # @cmd List tools that can be put into functions.txt
 # Examples:
-#      argc list-tools > functions.txt
+#      argc list-tools > tools.txt
 list-tools() {
     _choice_tool
 }
@@ -273,10 +291,9 @@ test() {
 
 # @cmd Test tools
 test-tools() {
-    tmp_dir="cache/tmp"
-    mkdir -p "$tmp_dir"
-    names_file="$tmp_dir/functions.txt"
-    declarations_file="$tmp_dir/functions.json"
+    mkdir -p "$TMP_DIR"
+    names_file="$TMP_DIR/tools.txt"
+    declarations_file="$TMP_DIR/functions.json"
     argc list-tools > "$names_file"
     argc build-tools --names-file "$names_file" --declarations-file "$declarations_file"
     test-tools-execute-lang
@@ -374,6 +391,10 @@ test-bots-todo-lang() {
 
 }
 
+# @cmd Clean tools
+clean-tools() {
+    _choice_tool | sed 's/\.\([a-z]\+\)$//' |  xargs -I{} rm -rf "$BIN_DIR/{}"
+}
 
 # @cmd Install this repo to aichat functions_dir
 install() {
@@ -449,6 +470,85 @@ set "script_name=%~n0"
 
 $run "%script_dir%scripts\run-tool.$lang" "%script_name%.$lang" %*
 EOF
+}
+
+_ask_json_data() {
+    declaration="$1"
+    echo 'Missing the JSON data but here are its properties:'
+    echo "$declaration" | _inspect_declaration_params | sed 's/^/>  /'
+    echo 'Generate placeholder data:'
+    data="$(echo "$declaration" | _generate_data_according_declaration)"
+    echo ">  $data"
+    read -r -p 'Use the generated data? (y/n) ' res
+    case "$res" in
+    [yY][eE][sS]|[yY])
+        argc_json="$data"
+        ;;
+    *)
+        read -r -p "Please enter the data: " data
+        argc_json="$data"
+        ;;
+    esac
+}
+
+_inspect_declaration_params() {
+    jq -r '
+def get_indicator:
+    .value.type as $type |
+    [
+        { condition: ($type == "array" and .required), result: "+" },
+        { condition: ($type == "array"), result: "*" },
+        { condition: .required, result: "!" },
+        { condition: true, result: "" }
+    ] | map(select(.condition) | .result) | first;
+
+def get_kind:
+    .value.type as $type |
+    (.value.enum // []) as $enum |
+    ([
+        { condition: ($type == "array"), result: "string[]" },
+        { condition: ($type == "string" and ($enum | length > 0)), result: ($enum | join("|")) },
+        { condition: ($type == "string"), result: "" },
+        { condition: true, result: $type }
+    ] | map(select(.condition) | .result) | first) as $kind |
+    if $kind != "" then "(\($kind))" else "" end;
+
+def print_property:
+    .key as $key |
+    (.value.description | split("\n")[0]) as $description |
+    (. | get_kind) as $kind |
+    (. | get_indicator) as $indicator |
+    "\($key)\($kind)\($indicator): \($description)";
+
+.parameters | 
+.required as $requiredProperties |
+.properties | to_entries[] | 
+.key as $key | .+ { "required": ($requiredProperties | index($key) != null) } |
+print_property
+'
+}
+
+_generate_data_according_declaration() {
+    jq -c '
+def convert_string:
+    if has("enum") then .enum[0] else "foo" end;
+
+def convert_property:
+    .key as $key |
+    .value.type as $type |
+    [
+        { condition: ($type == "string"), result: { $key: (.value | convert_string) }},
+        { condition: ($type == "boolean"), result: { $key: false }},
+        { condition: ($type == "integer"), result: { $key: 42 }},
+        { condition: ($type == "number"), result: { $key: 3.14 }},
+        { condition: ($type == "array"), result: { $key: [ "v1" ] } }
+    ] | map(select(.condition) | .result) | first;
+
+.parameters |
+[
+    .properties | to_entries[] | convert_property
+] | add // {}
+'
 }
 
 _normalize_path() {
