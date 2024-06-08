@@ -105,7 +105,7 @@ build-tools-bin() {
         if [[  -f "$tool_path" ]]; then
             if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
-                _build_win_shim_tool $lang > "$bin_file"
+                _build_win_shim tool $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
                 ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
@@ -212,7 +212,7 @@ build-bots-bin() {
                 found=true
                 if _is_win; then
                     bin_file="$BIN_DIR/$name.cmd" 
-                    _build_win_shim_bot $lang > "$bin_file"
+                    _build_win_shim bot $lang > "$bin_file"
                 else
                     bin_file="$BIN_DIR/$name" 
                     ln -s -f "$PWD/scripts/run-bot.$lang" "$bin_file"
@@ -480,8 +480,9 @@ _get_bot_tools_path() {
     done
 }
 
-_build_win_shim_tool() {
-    lang="$1"
+_build_win_shim() {
+    kind="$1"
+    lang="$2"
     cmd="$(_lang_to_cmd "$lang")"
     if [[ "$lang" == "sh" ]]; then
         run="\"$(argc --argc-shell-path)\" --noprofile --norc"
@@ -496,7 +497,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$run "%script_dir%scripts\run-tool.$lang" "%script_name%.$lang" %*
+$run "%script_dir%scripts\run-$kind.$lang" "%script_name%.$lang" %*
 EOF
 }
 
