@@ -180,11 +180,15 @@ function buildProperty(type, description) {
  * @param {Param[]} params
  */
 function buildDeclaration(name, description, params) {
-  const schema = {
+  const declaration = {
     name,
     description,
-    properties: {},
+    parameters: {
+      type: "object",
+      properties: {},
+    },
   };
+  const schema = declaration.parameters;
   const requiredParams = [];
   for (const { name, property, required } of params) {
     schema.properties[name] = property;
@@ -195,7 +199,7 @@ function buildDeclaration(name, description, params) {
   if (requiredParams.length > 0) {
     schema.required = requiredParams;
   }
-  return schema;
+  return declaration;
 }
 
 /**
