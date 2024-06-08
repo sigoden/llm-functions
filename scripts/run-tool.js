@@ -3,11 +3,22 @@
 const path = require("path");
 const fs = require("fs");
 
-function parseArgv() {
+async function main() {
+  const [toolName, rawData] = parseArgv("run-tool.js");
+  const toolData = parseRawData(rawData);
+
+  const rootDir = path.resolve(__dirname, "..");
+  setupEnv(rootDir, toolName);
+
+  const toolPath = path.resolve(rootDir, `tools/${toolName}.js`);
+  await run(toolPath, "run", toolData);
+}
+
+function parseArgv(thisFileName) {
   let toolName = process.argv[1];
   let toolData = null;
 
-  if (toolName.endsWith("run-tool.js")) {
+  if (toolName.endsWith(thisFileName)) {
     toolName = process.argv[2];
     toolData = process.argv[3];
   } else {
@@ -22,18 +33,22 @@ function parseArgv() {
   return [toolName, toolData];
 }
 
-function loadModule(toolName) {
-  const toolFileName = `${toolName}.js`;
-  const toolPath = path.resolve(
-    process.env["LLM_ROOT_DIR"],
-    `tools/${toolFileName}`,
-  );
-  try {
-    return require(toolPath);
-  } catch {
-    console.log(`Invalid tooltion: ${toolFileName}`);
-    process.exit(1);
+function parseRawData(data) {
+  if (!data) {
+    throw new Error("No JSON data");
   }
+  try {
+    return JSON.parse(data);
+  } catch {
+    throw new Error("Invalid JSON data");
+  }
+}
+
+function setupEnv(rootDir, toolName) {
+  process.env["LLM_ROOT_DIR"] = rootDir;
+  loadEnv(path.resolve(rootDir, ".env"));
+  process.env["LLM_TOOL_NAME"] = toolName;
+  process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(rootDir, "cache", toolName);
 }
 
 function loadEnv(filePath) {
@@ -50,32 +65,42 @@ function loadEnv(filePath) {
   } catch {}
 }
 
-const LLM_ROOT_DIR = path.resolve(__dirname, "..");
-process.env["LLM_ROOT_DIR"] = LLM_ROOT_DIR;
-
-loadEnv(path.resolve(LLM_ROOT_DIR, ".env"));
-
-const [toolName, toolData] = parseArgv();
-
-process.env["LLM_TOOL_NAME"] = toolName;
-process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(
-  LLM_ROOT_DIR,
-  "cache",
-  toolName,
-);
-
-if (!toolData) {
-  console.log("No json data");
-  process.exit(1);
+async function run(toolPath, toolFunc, toolData) {
+  let mod;
+  try {
+    mod = await import(toolPath);
+  } catch {
+    throw new Error(`Unable to load tool at '${toolPath}'`);
+  }
+  if (!mod || !mod[toolFunc]) {
+    throw new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
+  }
+  const value = await mod[toolFunc](toolData);
+  dumpValue(value);
 }
 
-let data = null;
-try {
-  data = JSON.parse(toolData);
-} catch {
-  console.log("Invalid json data");
-  process.exit(1);
+function dumpValue(value) {
+  if (value === null || value === undefined) {
+    return;
+  }
+  const type = typeof value;
+  if (type === "string" || type === "number" || type === "boolean") {
+    console.log(value);
+  } else if (type === "object") {
+    const proto = Object.prototype.toString.call(value);
+    if (proto === "[object Object]" || proto === "[object Array]") {
+      const valueStr = JSON.stringify(value, null, 2);
+      require("assert").deepStrictEqual(value, JSON.parse(valueStr));
+      console.log(valueStr);
+    }
+  }
 }
 
-const { run } = loadModule(toolName);
-run(data);
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    console.error(err?.message || err);
+    process.exit(1);
+  }
+})();
