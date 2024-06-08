@@ -127,11 +127,15 @@ def parse_param(raw_param: str):
 def build_declaration(
     name: str, description: str, params: dict, args: OrderedDict[str, str]
 ) -> dict[str, dict]:
-    schema = {
+    declaration = {
         "name": name,
         "description": description,
-        "properties": {},
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        },
     }
+    schema = declaration["parameters"]
     required_params = []
     for arg_name, arg_type in args.items():
         type_ = arg_type
@@ -153,7 +157,7 @@ def build_declaration(
             required_params.append(arg_name)
     if required_params:
         schema["required"] = required_params
-    return schema
+    return declaration
 
 
 def build_property(type_: str, description: str):
