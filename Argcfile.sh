@@ -12,7 +12,8 @@ LANG_CMDS=( \
 )
 
 # @cmd Run the tool
-# @arg cmd![`_choice_cmd`] The function command
+# @alias call
+# @arg cmd![`_choice_cmd`] The tool command
 # @arg json The json data
 run-tool() {
     if _is_win; then
@@ -22,44 +23,52 @@ run-tool() {
 }
 
 # @cmd Build the project
+build() {
+    argc build-tools
+}
+
+# @cmd Build tools
 # @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
+# This file specifies which tools will be used.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
-# This file specifies which function files to build. 
 # Example:
 #   get_current_weather.sh
 #   may_execute_js_code.js
-build() {
-    argc build-declarations-json --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
-    argc build-bin --names-file "${argc_names_file}"
+build-tools() {
+    argc build-tools-json --names-file "${argc_names_file}" --declarations-file "${argc_declarations_file}"
+    argc build-tools-bin --names-file "${argc_names_file}"
 }
 
-# @cmd Build tool binaries
+# @cmd Build tools to bin
 # @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
 # @arg tools*[`_choice_tool`] The tool filenames
-build-bin() {
+build-tools-bin() {
+    mkdir -p "$BIN_DIR"
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
+        if [[ "${#names[@]}" -gt 0 ]]; then
+            (cd "$BIN_DIR" && rm -rf "${names[@]}")
+        fi
     fi
     if [[ -z "$names" ]]; then
-        _die "error: no tools selected"
+        _die "error: not input tools, not found '$argc_names_file', please create it add some tools."
     fi
-    mkdir -p "$BIN_DIR"
-    rm -rf "$BIN_DIR"/*
     not_found_tools=()
     for name in "${names[@]}"; do
         basename="${name%.*}"
         lang="${name##*.}"
-        func_file="tools/$name"
-        if [[  -f "$func_file" ]]; then
+        tool_path="tools/$name"
+        if [[  -f "$tool_path" ]]; then
             if _is_win; then
                 bin_file="$BIN_DIR/$basename.cmd" 
-                _build_win_shim $lang > "$bin_file"
+                _build_win_shim_tool $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename" 
                 ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
             fi
+            echo "Build tool $name"
         else
             not_found_tools+=("$name")
         fi
@@ -67,31 +76,28 @@ build-bin() {
     if [[ -n "$not_found_tools" ]]; then
         _die "error: not found tools: ${not_found_tools[*]}"
     fi
-    for name in "$BIN_DIR"/*; do
-        echo "Build $name"
-    done
 }
 
-# @cmd Build declarations.json
+# @cmd Build tool functions.json
 # @option --names-file=functions.txt Path to a file containing tool filenames, one per line.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # @arg tools*[`_choice_tool`] The tool filenames
-build-declarations-json() {
+build-tools-json() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: no tools selected"
+        _die "error: not input tools, not found '$argc_names_file', please create it add some tools."
     fi
     json_list=()
     not_found_tools=()
     build_failed_tools=()
     for name in "${names[@]}"; do
         lang="${name##*.}"
-        func_file="tools/$name"
-        if [[ ! -f "$func_file" ]]; then
+        tool_path="tools/$name"
+        if [[ ! -f "$tool_path" ]]; then
             not_found_tools+=("$name")
             continue;
         fi
@@ -131,15 +137,19 @@ test() {
     test-tools
 }
 
-# @cmd Test call functions
+# @cmd Test tools
 test-tools() {
     tmp_dir="cache/tmp"
     mkdir -p "$tmp_dir"
     names_file="$tmp_dir/functions.txt"
     declarations_file="$tmp_dir/functions.json"
     argc list-tools > "$names_file"
-    argc build --names-file "$names_file" --declarations-file "$declarations_file"
+    argc build-tools --names-file "$names_file" --declarations-file "$declarations_file"
+    test-tools-execute-lang
+}
 
+# @cmd Test maybe_execute_* tools
+test-tools-execute-lang() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -152,8 +162,8 @@ test-tools() {
     for test_case in "${test_cases[@]}"; do
         IFS='#' read -r lang tool_name data <<<"${test_case}"
         cmd="$(_lang_to_cmd "$lang")"
-        cmd_path="$BIN_DIR/$tool_name$ext"
         if command -v "$cmd" &> /dev/null; then
+            cmd_path="$BIN_DIR/$tool_name$ext"
             echo -n "Test $cmd_path: "
             "$cmd_path" "$data"
             if ! _is_win; then
@@ -164,12 +174,12 @@ test-tools() {
     done
 }
 
-# @cmd Test all demo tools
-test-demo-tools() {
+# @cmd Test demo tools
+test-tools-demo() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
         echo "---- Test demo_tool.$lang ---"
-        argc build-bin "demo_tool.$lang"
+        argc build-tools-bin "demo_tool.$lang"
         argc run-tool demo_tool '{
      "boolean": true,
      "string": "Hello",
@@ -236,7 +246,7 @@ _lang_to_cmd() {
     done
 }
 
-_build_win_shim() {
+_build_win_shim_tool() {
     lang="$1"
     cmd="$(_lang_to_cmd "$lang")"
     if [[ "$lang" == "sh" ]]; then
