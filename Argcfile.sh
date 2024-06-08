@@ -22,9 +22,21 @@ run-tool() {
     "$BIN_DIR/$argc_cmd$ext" "$argc_json"
 }
 
+# @cmd Run the tool
+# @arg cmd![`_choice_bot`] The bot command
+# @arg action![`_choice_bot_action`] The bot action
+# @arg json The json data
+run-bot() {
+    if _is_win; then
+        ext=".cmd"
+    fi
+    "$BIN_DIR/$argc_cmd$ext" "$argc_action" "$argc_json"
+}
+
 # @cmd Build the project
 build() {
     argc build-tools
+    argc build-bots
 }
 
 # @cmd Build tools
@@ -125,6 +137,120 @@ build-tool-declaration() {
     "$cmd" "scripts/build-declarations.$lang" "tools/$1" | jq '.[0]'
 }
 
+# @cmd Build bots
+# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
+# Example:
+#   todo-js
+build-bots() {
+    argc build-bots-json --names-file "${argc_names_file}"
+    argc build-bots-bin --names-file "${argc_names_file}"
+}
+
+# @cmd Build tools to bin
+# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
+# @arg bots*[`_choice_bot`] The bot names
+build-bots-bin() {
+    mkdir -p "$BIN_DIR"
+    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
+        names=("${argc_bots[@]}" )
+    elif [[ -f "$argc_names_file" ]]; then
+        names=($(cat "$argc_names_file"))
+        if [[ "${#names[@]}" -gt 0 ]]; then
+            (cd "$BIN_DIR" && rm -rf "${names[@]}")
+        fi
+    fi
+    if [[ -z "$names" ]]; then
+        _die "error: not input bots, not found '$argc_names_file', please create it add some tools."
+    fi
+    not_found_bots=()
+    for name in "${names[@]}"; do
+        bot_dir="bots/$name"
+        found=false
+        for item in "${LANG_CMDS[@]}"; do
+            lang="${item%:*}"
+            bot_tools_file="$bot_dir/tools.$lang"
+            if [[ -f "$bot_tools_file" ]]; then
+                found=true
+                if _is_win; then
+                    bin_file="$BIN_DIR/$name.cmd" 
+                    _build_win_shim_bot $lang > "$bin_file"
+                else
+                    bin_file="$BIN_DIR/$name" 
+                    ln -s -f "$PWD/scripts/run-bot.$lang" "$bin_file"
+                fi
+                echo "Build bot $name"
+            fi
+        done
+        if [[ "$found" = "false" ]]; then
+            not_found_bots+=("$name")
+        fi
+    done
+    if [[ -n "$not_found_bots" ]]; then
+        _die "error: not found bots: ${not_found_bots[*]}"
+    fi
+}
+
+# @cmd Build bots functions.json
+# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
+# @arg tools*[`_choice_tool`] The tool filenames
+build-bots-json() {
+    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
+        names=("${argc_bots[@]}" )
+    elif [[ -f "$argc_names_file" ]]; then
+        names=($(cat "$argc_names_file"))
+    fi
+    if [[ -z "$names" ]]; then
+        _die "error: not input bots, not found '$argc_names_file', please create it add some tools."
+    fi
+    not_found_bots=()
+    build_failed_bots=()
+    for name in "${names[@]}"; do
+        bot_dir="bots/$name"
+        build_ok=false
+        found=false
+        for item in "${LANG_CMDS[@]}"; do
+            lang="${item%:*}"
+            bot_tools_file="$bot_dir/tools.$lang"
+            if [[ -f "$bot_tools_file" ]]; then
+                found=true
+                json_data="$(build-bot-declarations "$name")" || {
+                    build_failed_bots+=("$name")
+                }
+                declarations_file="$bot_dir/functions.json"
+                echo "Build bot $name functions.json"
+                echo "$json_data" > "$declarations_file"
+            fi
+        done
+        if [[ "$found" == "false" ]]; then
+            not_found_bots+=("$name")
+        fi
+    done
+    if [[ -n "$not_found_bots" ]]; then
+        _die "error: not found bots: ${not_found_bots[*]}"
+    fi
+    if [[ -n "$build_failed_bots" ]]; then
+        _die "error: invalid bots: ${build_failed_bots[*]}"
+    fi
+}
+
+# @cmd Build function declarations for an bot
+# @flag --oneline Summary JSON in one line
+# @arg bot![`_choice_bot`] The bot name
+build-bot-declarations() {
+    tools_path="$(_get_bot_tools_path "$1")"
+    if [[ -z "$tools_path" ]]; then
+        _die "error: no found entry file at bots/$1/tools.<lang>"
+    fi
+    lang="${tools_path##*.}"
+    cmd="$(_lang_to_cmd "$lang")"
+    json="$("$cmd" "scripts/build-declarations.$lang" "$tools_path")"
+    if [[ -n "$argc_oneline" ]]; then
+        echo "$json" | jq -r '.[] | .name + ": " + (.description | split("\n"))[0]'
+    else
+        echo "$json"
+    fi
+}
+
 # @cmd List tools that can be put into functions.txt
 # Examples:
 #      argc list-tools > functions.txt
@@ -132,9 +258,17 @@ list-tools() {
     _choice_tool
 }
 
+# @cmd List bots that can be put into bots.txt
+# Examples:
+#      argc list-bots > bots.txt
+list-bots() {
+    _choice_bot
+}
+
 # @cmd Test the project
 test() {
     test-tools
+    test-bots
 }
 
 # @cmd Test tools
@@ -201,6 +335,46 @@ test-tools-demo() {
     done
 }
 
+# @cmd Test bots
+test-bots() {
+    tmp_dir="cache/tmp"
+    mkdir -p "$tmp_dir"
+    names_file="$tmp_dir/bots.txt"
+    argc list-bots > "$names_file"
+    argc build-bots --names-file "$names_file"
+    test-bots-todo-lang
+}
+
+# @cmd Test todo-* bots
+test-bots-todo-lang() {
+    if _is_win; then
+        ext=".cmd"
+    fi
+    test_cases=( \
+        'add_todo#{"desc":"Add a todo item"}' \
+        'add_todo#{"desc":"Add another todo item"}' \
+        'del_todo#{"id":1}' \
+        'list_todos#{}' \
+        'clear_todos#{}' \
+    )
+    for item in "${LANG_CMDS[@]}"; do
+        cmd="${item#*:}"
+        if command -v "$cmd" &> /dev/null; then
+            lang="${item%:*}"
+            bot_name="todo-$lang"
+            rm -rf "cache/$bot_name/todos.json"
+            for test_case in "${test_cases[@]}"; do
+                IFS='#' read -r action data <<<"${test_case}"
+                cmd_path="$BIN_DIR/$bot_name$ext"
+                echo "Test $cmd_path: "
+                "$cmd_path" "$action" "$data"
+            done
+        fi
+    done
+
+}
+
+
 # @cmd Install this repo to aichat functions_dir
 install() {
     functions_dir="$(aichat --info | grep functions_dir | awk '{print $2}')"
@@ -242,6 +416,17 @@ _lang_to_cmd() {
         lang="${item%:*}"
         if [[ "$lang" == "$match_lang" ]]; then
             echo "${item#*:}"
+        fi
+    done
+}
+
+_get_bot_tools_path() {
+    name="$1"
+    for item in "${LANG_CMDS[@]}"; do
+        lang="${item%:*}"
+        entry_file="bots/$name/tools.$lang"
+        if [[ -f "bots/$name/tools.$lang" ]]; then
+            echo "$entry_file"
         fi
     done
 }
@@ -290,6 +475,19 @@ _choice_tool() {
             ls -1 tools | grep "\.$lang$"
         fi
     done
+}
+
+_choice_bot() {
+    ls -1 bots
+}
+
+_choice_bot_action() {
+    if [[ "$ARGC_COMPGEN" -eq 1 ]]; then
+        expr="s/: /\t/"
+    else
+        expr="s/:.*//"
+    fi
+    argc build-bot-declarations "$1" --oneline  | sed "$expr"
 }
 
 _choice_cmd() {
