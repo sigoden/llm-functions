@@ -40,6 +40,18 @@ run-bot() {
     if _is_win; then
         ext=".cmd"
     fi
+    if [[ -z "$argc_json" ]]; then
+        functions_path="bots/$argc_cmd/functions.json"
+        if [[ -f "$functions_path" ]]; then
+            declaration="$(jq --arg name "$argc_action" '.[] | select(.name == $name)' "$functions_path")"
+            if [[ -n "$declaration" ]]; then
+                _ask_json_data "$declaration"
+            fi
+        fi
+    fi
+    if [[ -z "$argc_json" ]]; then
+        _die "error: no JSON data"
+    fi
     "$BIN_DIR/$argc_cmd$ext" "$argc_action" "$argc_json"
 }
 
@@ -158,8 +170,17 @@ build-tool-declaration() {
 # @cmd Build bots
 # @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
 # Example:
-#   todo-js
+#   hackernews
+#   spotify
+# @arg bots*[`_choice_bot`] The bot filenames
 build-bots() {
+    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
+        mkdir -p "$TMP_DIR"
+        argc_names_file="$TMP_DIR/bots.txt"
+        printf "%s\n" "${argc_bots[@]}" > "$argc_names_file"
+    else
+        argc clean-bots
+    fi
     argc build-bots-json --names-file "${argc_names_file}"
     argc build-bots-bin --names-file "${argc_names_file}"
 }
@@ -235,7 +256,7 @@ build-bots-json() {
                     build_failed_bots+=("$name")
                 }
                 declarations_file="$bot_dir/functions.json"
-                echo "Build bot $name functions.json"
+                echo "Build $declarations_file"
                 echo "$json_data" > "$declarations_file"
             fi
         done
@@ -394,6 +415,13 @@ test-bots-todo-lang() {
 # @cmd Clean tools
 clean-tools() {
     _choice_tool | sed 's/\.\([a-z]\+\)$//' |  xargs -I{} rm -rf "$BIN_DIR/{}"
+    rm -rf functions.json
+}
+
+# @cmd Clean bots
+clean-bots() {
+    _choice_bot | xargs -I{} rm -rf "$BIN_DIR/{}" 
+    _choice_bot | xargs -I{} rm -rf bots/{}/functions.json
 }
 
 # @cmd Install this repo to aichat functions_dir
