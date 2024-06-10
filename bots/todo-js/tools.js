@@ -34,7 +34,7 @@ exports.del_todo = function delTodo(args) {
     fs.writeFileSync(todosFile, JSON.stringify(newData));
     console.log(`Successfully deleted todo id=${args.id}`);
   } else {
-    _die('Empty todo list');
+    console.log('Empty todo list');
   }
 }
 
@@ -46,7 +46,7 @@ exports.list_todos = function listTodos() {
   if (fs.existsSync(todosFile)) {
     console.log(fs.readFileSync(todosFile, "utf8"));
   } else {
-    _die('Empty todo list');
+    console.log("[]");
   }
 }
 
@@ -65,9 +65,4 @@ function _getTodosFile() {
     fs.mkdirSync(cacheDir, { recursive: true });
   }
   return path.join(cacheDir, 'todos.json');
-}
-
-function _die(message) {
-  console.error(message);
-  process.exit(1);
 }

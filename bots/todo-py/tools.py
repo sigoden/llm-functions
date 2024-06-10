@@ -32,7 +32,8 @@ def del_todo(id: int):
         with open(todos_file, "r") as f:
             data = json.load(f)
     except (FileNotFoundError, JSONDecodeError):
-        _die("Empty todo list")
+        print("Empty todo list")
+        return
     data = [item for item in data if item["id"] != id]
     with open(todos_file, "w") as f:
         json.dump(data, f)
@@ -46,7 +47,7 @@ def list_todos():
         with open(todos_file, "r") as f:
             print(f.read())
     except FileNotFoundError:
-        _die("Empty todo list")
+        print("[]")
 
 
 def clear_todos():
@@ -59,7 +60,3 @@ def _get_todos_file() -> str:
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir, exist_ok=True)
     return os.path.join(cache_dir, "todos.json")
-
-def _die(msg: str):
-    print(msg, file=sys.stderr)
-    exit(1)
