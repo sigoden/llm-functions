@@ -457,7 +457,12 @@ install() {
         _die "error: your aichat version don't support function calling"
     fi
     if [[ ! -e "$functions_dir" ]]; then
-        ln -s "$(pwd)" "$functions_dir" 
+        if _is_win; then
+            current_dir="$(cygpath -w "$(pwd)")"
+            cmd <<< "mklink /D \"${functions_dir%/}\" \"${current_dir%/}\"" > /dev/null
+        else
+            ln -s "$(pwd)" "$functions_dir" 
+        fi
         echo "$functions_dir symlinked"
     else
         echo "$functions_dir already exists"
@@ -597,6 +602,8 @@ _die() {
     echo "$*" >&2
     exit 1
 }
+
+if _is_win; then set -o igncr; fi
 
 # See more details at https://github.com/sigoden/argc
 eval "$(argc --argc-eval "$0" "$@")"
