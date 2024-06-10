@@ -31,7 +31,7 @@ del_todo() {
         > "$todos_file"
         echo "Successfully deleted todo id=$argc_id"
     else
-        _die "Empty todo list"
+        echo "Empty todo list"
     fi
 }
 
@@ -41,7 +41,7 @@ list_todos() {
     if [[ -f "$todos_file" ]]; then
         cat "$todos_file" 
     else
-        _die "Empty todo list"
+        echo '[]'
     fi
 }
 
@@ -61,11 +61,6 @@ _argc_before() {
 
 _get_todos_file() {
     echo "${LLM_BOT_CACHE_DIR:-/tmp}/todos.json"
-}
-
-_die() {
-    echo "$*" >&2
-    exit 1
 }
 
 # See more details at https://github.com/sigoden/argc
