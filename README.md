@@ -17,11 +17,23 @@ Make sure you have the following tools installed:
 git clone https://github.com/sigoden/llm-functions
 ```
 
-**2. Build function declarations file and bin dir:**
+**2. Build tools and bots:**
 
-First, create a `./tools.txt` file with each tool name on a new line.
+- Create a `./tools.txt` file with each tool filename on a new line.
 
-Then, run `argc build` to build declarations file (`./functions.json`) and binaries dir (`./bin/`).
+```
+get_current_weather.sh
+may_execute_py_code.py
+```
+
+- Create a `./bots.txt` file with each bot name on a new line.
+
+```
+todo-sh
+hackernews
+```
+
+- Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and bots.
 
 **3. Configure your AIChat:**
 
@@ -45,36 +57,21 @@ AIChat will automatically load `functions.json` and execute commands located in 
 
 Now you can interact with your LLM using natural language prompts that trigger your defined functions.
 
-![function-showcase](https://github.com/sigoden/llm-functions/assets/4012553/391867dd-577c-4aaa-9ff2-c9e67fb0f3a3)
-
-
-## Function Types
-
-### Retrieve Type
-
-The function returns JSON data to LLM for further processing.
-
-AIChat does not ask permission to run the function or print the output.
+## AIChat Showcases 
 
 ![retrieve-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/7e628834-9863-444a-bad8-7b51bfb18dff)
 
-### Execute Type
-
-The function does not have to return JSON data.
-
-The function can perform dangerous tasks like creating/deleting files, changing network adapter, and setting a scheduled task...
-
-AIChat will ask permission before running the function.
-
 ![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
 
-**AIChat categorizes functions starting with `may_` as `execute type` and all others as `retrieve type`.**
+![bot-showcase](https://github.com/sigoden/llm-functions/assets/4012553/b4411eeb-d79c-4245-8ec2-dd424ba25621)
 
-## Writing Your Own Functions
+## Writing Your Own Tools
 
-You can write functions in bash/javascript/python.
+Writing tools is super easy, you only need to write functions with comments.
 
-`llm-functions` will automatic generate function declarations from comments. Refer to `tools/demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
+`llm-functions` will automatically generate binaries, function declarations, and so on
+
+Refer to `./tools/demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
 
 ### Bash
 
@@ -124,6 +121,33 @@ def main(code: str):
     exec(code)
 
 ```
+
+## Writing Bots 
+
+Bot = Prompt + Tools (Function Callings) + Knowndge (RAG). It's also known as OpenAI's GPTs.
+
+The bot has the following folder structure:
+```
+└── bots
+    └── mybot
+        ├── embeddings/                     # Contains RAG files for knownledge
+        ├── functions.json                  # Function declarations file (Auto-generated)
+        ├── index.yaml                      # Bot definition file
+        └── tools.{sh,js,py}                # Bot tools script
+```
+
+The bot definition file (`index.yaml`) defines crucial aspects of your bot:
+
+```yaml
+name: TestBot                             
+description: This is test bot
+version: v0.1.0
+instructions: You are a test bot to ... 
+conversation_starters:
+  - What can you do?
+```
+
+Refer to `./bots/todo-{sh,js,py}` for examples of how to implement a bot.
 
 ## License
 
