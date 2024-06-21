@@ -63,7 +63,7 @@ Now you can interact with your LLM using natural language prompts that trigger y
 
 ![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
 
-![agent-showcase](https://github.com/sigoden/llm-functions/assets/4012553/b4411eeb-d79c-4245-8ec2-dd424ba25621)
+![agent-showcase](https://github.com/sigoden/llm-functions/assets/4012553/05e1e57e-3bcc-4504-b78f-c36b27d16bfd)
 
 ## Writing Your Own Tools
 
@@ -142,7 +142,7 @@ The agent definition file (`index.yaml`) defines crucial aspects of your agent:
 name: TestAgent                             
 description: This is test agent
 version: v0.1.0
-instructions: You are a test agent to ... 
+instructions: You are a test ai agent to ... 
 conversation_starters:
   - What can you do?
 ```
