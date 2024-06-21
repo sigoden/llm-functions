@@ -56,7 +56,7 @@ def clear_todos():
 
 
 def _get_todos_file() -> str:
-    cache_dir=os.environ.get("LLM_BOT_CACHE_DIR", "/tmp")
+    cache_dir=os.environ.get("LLM_AGENT_CACHE_DIR", "/tmp")
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir, exist_ok=True)
     return os.path.join(cache_dir, "todos.json")

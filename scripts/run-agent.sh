@@ -2,26 +2,26 @@
 set -e
 
 main() {
-    this_file_name=run-bot.sh
+    this_file_name=run-agent.sh
     parse_argv "$@"
     root_dir="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
     setup_env
-    bot_tools_path="$root_dir/bots/$bot_name/tools.sh"
+    agent_tools_path="$root_dir/agents/$agent_name/tools.sh"
     run
 }
 
 parse_argv() {
     if [[ "$0" == *"$this_file_name" ]]; then
-        bot_name="$1"
-        bot_func="$2"
-        bot_data="$3"
+        agent_name="$1"
+        agent_func="$2"
+        agent_data="$3"
     else
-        bot_name="$(basename "$0")"
-        bot_func="$1"
-        bot_data="$2"
+        agent_name="$(basename "$0")"
+        agent_func="$1"
+        agent_data="$2"
     fi
-    if [[ "$bot_name" == *.sh ]]; then
-        bot_name="${bot_name:0:$((${#bot_name}-3))}"
+    if [[ "$agent_name" == *.sh ]]; then
+        agent_name="${agent_name:0:$((${#agent_name}-3))}"
     fi
 }
 
@@ -30,24 +30,24 @@ setup_env() {
     if [[ -f "$LLM_ROOT_DIR/.env" ]]; then
         source "$LLM_ROOT_DIR/.env"
     fi
-    export LLM_BOT_NAME="$bot_name"
-    export LLM_BOT_ROOT_DIR="$LLM_ROOT_DIR/bots/$bot_name"
-    export LLM_BOT_CACHE_DIR="$LLM_ROOT_DIR/cache/$bot_name"
+    export LLM_AGENT_NAME="$agent_name"
+    export LLM_AGENT_ROOT_DIR="$LLM_ROOT_DIR/agents/$agent_name"
+    export LLM_AGENT_CACHE_DIR="$LLM_ROOT_DIR/cache/$agent_name"
 }
 
 run() {
-    if [[ -z "$bot_data" ]]; then
+    if [[ -z "$agent_data" ]]; then
         die "No JSON data"
     fi
 
     _jq=jq
     if [[ "$OS" == "Windows_NT" ]]; then
         _jq="jq -b"
-        bot_tools_path="$(cygpath -w "$bot_tools_path")"
+        agent_tools_path="$(cygpath -w "$agent_tools_path")"
     fi
 
     data="$(
-        echo "$bot_data" | \
+        echo "$agent_data" | \
         $_jq -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
@@ -68,7 +68,7 @@ run() {
             args+=("$(echo "$line" | $_jq -r '.')")
         fi
     done <<< "$data"
-    "$bot_tools_path" "$bot_func" "${args[@]}"
+    "$agent_tools_path" "$agent_func" "${args[@]}"
 }
 
 die() {

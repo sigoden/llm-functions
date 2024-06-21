@@ -17,7 +17,7 @@ Make sure you have the following tools installed:
 git clone https://github.com/sigoden/llm-functions
 ```
 
-**2. Build tools and bots:**
+**2. Build tools and agents:**
 
 - Create a `./tools.txt` file with each tool filename on a new line.
 
@@ -26,14 +26,14 @@ get_current_weather.sh
 may_execute_py_code.py
 ```
 
-- Create a `./bots.txt` file with each bot name on a new line.
+- Create a `./agents.txt` file with each agent name on a new line.
 
 ```
 todo-sh
 hackernews
 ```
 
-- Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and bots.
+- Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and agents.
 
 **3. Configure your AIChat:**
 
@@ -63,7 +63,7 @@ Now you can interact with your LLM using natural language prompts that trigger y
 
 ![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
 
-![bot-showcase](https://github.com/sigoden/llm-functions/assets/4012553/b4411eeb-d79c-4245-8ec2-dd424ba25621)
+![agent-showcase](https://github.com/sigoden/llm-functions/assets/4012553/b4411eeb-d79c-4245-8ec2-dd424ba25621)
 
 ## Writing Your Own Tools
 
@@ -122,32 +122,32 @@ def main(code: str):
 
 ```
 
-## Writing Bots 
+## Writing Agents 
 
-Bot = Prompt + Tools (Function Callings) + Knowndge (RAG). It's also known as OpenAI's GPTs.
+Agent = Prompt + Tools (Function Callings) + Knowndge (RAG). It's also known as OpenAI's GPTs.
 
-The bot has the following folder structure:
+The agent has the following folder structure:
 ```
-└── bots
-    └── mybot
+└── agents
+    └── myagent
         ├── embeddings/                     # Contains RAG files for knownledge
         ├── functions.json                  # Function declarations file (Auto-generated)
-        ├── index.yaml                      # Bot definition file
-        └── tools.{sh,js,py}                # Bot tools script
+        ├── index.yaml                      # Agent definition file
+        └── tools.{sh,js,py}                # Agent tools script
 ```
 
-The bot definition file (`index.yaml`) defines crucial aspects of your bot:
+The agent definition file (`index.yaml`) defines crucial aspects of your agent:
 
 ```yaml
-name: TestBot                             
-description: This is test bot
+name: TestAgent                             
+description: This is test agent
 version: v0.1.0
-instructions: You are a test bot to ... 
+instructions: You are a test agent to ... 
 conversation_starters:
   - What can you do?
 ```
 
-Refer to `./bots/todo-{sh,js,py}` for examples of how to implement a bot.
+Refer to `./agents/todo-{sh,js,py}` for examples of how to implement a agent.
 
 ## License
 
