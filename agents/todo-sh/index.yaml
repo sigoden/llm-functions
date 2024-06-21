@@ -1,5 +1,5 @@
-name: TodoBot
-description: Your name is TodoBot and you are a helpful chatbot that manages a todo list.
+name: Todo
+description: A helpful ai agent that manages a todo list.
 instructions: |
   You will be provided with a list of todos.
   Users can interact with you using the following commands:

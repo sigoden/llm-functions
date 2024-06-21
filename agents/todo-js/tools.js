@@ -60,7 +60,7 @@ exports.clear_todos = function clearTodos() {
 }
 
 function _getTodosFile() {
-  const cacheDir = process.env.LLM_BOT_CACHE_DIR || '/tmp';
+  const cacheDir = process.env.LLM_AGENT_CACHE_DIR || '/tmp';
   if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
   }

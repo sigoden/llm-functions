@@ -60,7 +60,7 @@ _argc_before() {
 }
 
 _get_todos_file() {
-    echo "${LLM_BOT_CACHE_DIR:-/tmp}/todos.json"
+    echo "${LLM_AGENT_CACHE_DIR:-/tmp}/todos.json"
 }
 
 # See more details at https://github.com/sigoden/argc

@@ -5,36 +5,36 @@ const fs = require("fs");
 const os = require("os");
 
 async function main() {
-  const [botName, botFunc, rawData] = parseArgv("run-bot.js");
-  const botData = parseRawData(rawData);
+  const [agentName, agentFunc, rawData] = parseArgv("run-agent.js");
+  const agentData = parseRawData(rawData);
 
   const rootDir = path.resolve(__dirname, "..");
-  setupEnv(rootDir, botName);
+  setupEnv(rootDir, agentName);
 
-  const botToolsPath = path.resolve(rootDir, `bots/${botName}/tools.js`);
-  await run(botToolsPath, botFunc, botData);
+  const agentToolsPath = path.resolve(rootDir, `agents/${agentName}/tools.js`);
+  await run(agentToolsPath, agentFunc, agentData);
 }
 
 function parseArgv(thisFileName) {
-  let botName = process.argv[1];
-  let botFunc = "";
-  let botData = null;
+  let agentName = process.argv[1];
+  let agentFunc = "";
+  let agentData = null;
 
-  if (botName.endsWith(thisFileName)) {
-    botName = process.argv[2];
-    botFunc = process.argv[3];
-    botData = process.argv[4];
+  if (agentName.endsWith(thisFileName)) {
+    agentName = process.argv[2];
+    agentFunc = process.argv[3];
+    agentData = process.argv[4];
   } else {
-    botName = path.basename(botName);
-    botFunc = process.argv[2];
-    botData = process.argv[3];
+    agentName = path.basename(agentName);
+    agentFunc = process.argv[2];
+    agentData = process.argv[3];
   }
 
-  if (botName.endsWith(".js")) {
-    botName = botName.slice(0, -3);
+  if (agentName.endsWith(".js")) {
+    agentName = agentName.slice(0, -3);
   }
 
-  return [botName, botFunc, botData];
+  return [agentName, agentFunc, agentData];
 }
 
 function parseRawData(data) {
@@ -48,12 +48,12 @@ function parseRawData(data) {
   }
 }
 
-function setupEnv(rootDir, botName) {
+function setupEnv(rootDir, agentName) {
   process.env["LLM_ROOT_DIR"] = rootDir;
   loadEnv(path.resolve(rootDir, ".env"));
-  process.env["LLM_BOT_NAME"] = botName;
-  process.env["LLM_BOT_ROOT_DIR"] = path.resolve(rootDir, "bots", botName);
-  process.env["LLM_BOT_CACHE_DIR"] = path.resolve(rootDir, "cache", botName);
+  process.env["LLM_AGENT_NAME"] = agentName;
+  process.env["LLM_AGENT_ROOT_DIR"] = path.resolve(rootDir, "agents", agentName);
+  process.env["LLM_AGENT_CACHE_DIR"] = path.resolve(rootDir, "cache", agentName);
 }
 
 function loadEnv(filePath) {
@@ -70,20 +70,20 @@ function loadEnv(filePath) {
   } catch {}
 }
 
-async function run(botPath, botFunc, botData) {
+async function run(agentPath, agentFunc, agentData) {
   let mod;
   if (os.platform() === "win32") {
-    botPath = `file://${botPath}`;
+    agentPath = `file://${agentPath}`;
   }
   try {
-    mod = await import(botPath);
+    mod = await import(agentPath);
   } catch {
-    throw new Error(`Unable to load bot tools at '${botPath}'`);
+    throw new Error(`Unable to load agent tools at '${agentPath}'`);
   }
-  if (!mod || !mod[botFunc]) {
-    throw new Error(`Not module function '${botFunc}' at '${botPath}'`);
+  if (!mod || !mod[agentFunc]) {
+    throw new Error(`Not module function '${agentFunc}' at '${agentPath}'`);
   }
-  const value = await mod[botFunc](botData);
+  const value = await mod[agentFunc](agentData);
   dumpValue(value);
 }
 

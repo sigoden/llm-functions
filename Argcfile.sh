@@ -32,17 +32,17 @@ run@tool() {
     "$BIN_DIR/$argc_cmd$ext" "$argc_json"
 }
 
-# @cmd Run the bot
-# @alias bot:run
-# @arg cmd![`_choice_bot`] The bot command
-# @arg action![`_choice_bot_action`] The bot action
+# @cmd Run the agent
+# @alias agent:run
+# @arg cmd![`_choice_agent`] The agent command
+# @arg action![`_choice_agent_action`] The agent action
 # @arg json The json data
-run@bot() {
+run@agent() {
     if _is_win; then
         ext=".cmd"
     fi
     if [[ -z "$argc_json" ]]; then
-        functions_path="bots/$argc_cmd/functions.json"
+        functions_path="agents/$argc_cmd/functions.json"
         if [[ -f "$functions_path" ]]; then
             declaration="$(jq --arg name "$argc_action" '.[] | select(.name == $name)' "$functions_path")"
             if [[ -n "$declaration" ]]; then
@@ -63,10 +63,10 @@ build() {
     else
         echo 'Skipped building tools sine tools.txt is missing'
     fi
-    if [[ -f bots.txt ]]; then
-        argc build@bot
+    if [[ -f agents.txt ]]; then
+        argc build@agent
     else
-        echo 'Skipped building bots sine bots.txt is missing'
+        echo 'Skipped building agents sine agents.txt is missing'
     fi
 }
 
@@ -180,33 +180,33 @@ generate-declarations@tool() {
     "$cmd" "scripts/build-declarations.$lang" "tools/$1"
 }
 
-# @cmd Build bots
-# @alias bot:build
-# @option --names-file=bots.txt Path to a file containing bot filenames, one per line.
+# @cmd Build agents
+# @alias agent:build
+# @option --names-file=agents.txt Path to a file containing agent filenames, one per line.
 # Example:
 #   hackernews
 #   spotify
-# @arg bots*[`_choice_bot`] The bot filenames
-build@bot() {
-    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
+# @arg agents*[`_choice_agent`] The agent filenames
+build@agent() {
+    if [[ "${#argc_agents[@]}" -gt 0 ]]; then
         mkdir -p "$TMP_DIR"
-        argc_names_file="$TMP_DIR/bots.txt"
-        printf "%s\n" "${argc_bots[@]}" > "$argc_names_file"
+        argc_names_file="$TMP_DIR/agents.txt"
+        printf "%s\n" "${argc_agents[@]}" > "$argc_names_file"
     else
-        argc clean@bot
+        argc clean@agent
     fi
-    argc build-declarations@bot --names-file "${argc_names_file}"
-    argc build-bin@bot --names-file "${argc_names_file}"
+    argc build-declarations@agent --names-file "${argc_names_file}"
+    argc build-bin@agent --names-file "${argc_names_file}"
 }
 
-# @cmd Build bots to bin
-# @alias bot:build-bin
-# @option --names-file=bots.txt Path to a file containing bot dirs, one per line.
-# @arg bots*[`_choice_bot`] The bot names
-build-bin@bot() {
+# @cmd Build agents to bin
+# @alias agent:build-bin
+# @option --names-file=agents.txt Path to a file containing agent dirs, one per line.
+# @arg agents*[`_choice_agent`] The agent names
+build-bin@agent() {
     mkdir -p "$BIN_DIR"
-    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
-        names=("${argc_bots[@]}" )
+    if [[ "${#argc_agents[@]}" -gt 0 ]]; then
+        names=("${argc_agents[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
         if [[ "${#names[@]}" -gt 0 ]]; then
@@ -214,88 +214,88 @@ build-bin@bot() {
         fi
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input bots, not found '$argc_names_file', please create it add some tools."
+        _die "error: not input agents, not found '$argc_names_file', please create it add some tools."
     fi
-    not_found_bots=()
+    not_found_agents=()
     for name in "${names[@]}"; do
-        bot_dir="bots/$name"
+        agent_dir="agents/$name"
         found=false
         for item in "${LANG_CMDS[@]}"; do
             lang="${item%:*}"
-            bot_tools_file="$bot_dir/tools.$lang"
-            if [[ -f "$bot_tools_file" ]]; then
+            agent_tools_file="$agent_dir/tools.$lang"
+            if [[ -f "$agent_tools_file" ]]; then
                 found=true
                 if _is_win; then
                     bin_file="$BIN_DIR/$name.cmd" 
-                    _build_win_shim bot $lang > "$bin_file"
+                    _build_win_shim agent $lang > "$bin_file"
                 else
                     bin_file="$BIN_DIR/$name" 
-                    ln -s -f "$PWD/scripts/run-bot.$lang" "$bin_file"
+                    ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
                 fi
-                echo "Build bot $name"
+                echo "Build agent $name"
             fi
         done
         if [[ "$found" = "false" ]]; then
-            not_found_bots+=("$name")
+            not_found_agents+=("$name")
         fi
     done
-    if [[ -n "$not_found_bots" ]]; then
-        _die "error: not found bots: ${not_found_bots[*]}"
+    if [[ -n "$not_found_agents" ]]; then
+        _die "error: not found agents: ${not_found_agents[*]}"
     fi
 }
 
-# @cmd Build bots function declarations file
-# @alias bot:build-declarations
-# @option --names-file=bots.txt Path to a file containing bot dirs, one per line.
-# @arg bots*[`_choice_bot`] The tool filenames
-build-declarations@bot() {
-    if [[ "${#argc_bots[@]}" -gt 0 ]]; then
-        names=("${argc_bots[@]}" )
+# @cmd Build agents function declarations file
+# @alias agent:build-declarations
+# @option --names-file=agents.txt Path to a file containing agent dirs, one per line.
+# @arg agents*[`_choice_agent`] The tool filenames
+build-declarations@agent() {
+    if [[ "${#argc_agents[@]}" -gt 0 ]]; then
+        names=("${argc_agents[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
         names=($(cat "$argc_names_file"))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input bots, not found '$argc_names_file', please create it add some tools."
+        _die "error: not input agents, not found '$argc_names_file', please create it add some tools."
     fi
-    not_found_bots=()
-    build_failed_bots=()
+    not_found_agents=()
+    build_failed_agents=()
     for name in "${names[@]}"; do
-        bot_dir="bots/$name"
+        agent_dir="agents/$name"
         build_ok=false
         found=false
         for item in "${LANG_CMDS[@]}"; do
             lang="${item%:*}"
-            bot_tools_file="$bot_dir/tools.$lang"
-            if [[ -f "$bot_tools_file" ]]; then
+            agent_tools_file="$agent_dir/tools.$lang"
+            if [[ -f "$agent_tools_file" ]]; then
                 found=true
-                json_data="$(generate-declarations@bot "$name")" || {
-                    build_failed_bots+=("$name")
+                json_data="$(generate-declarations@agent "$name")" || {
+                    build_failed_agents+=("$name")
                 }
-                declarations_file="$bot_dir/functions.json"
+                declarations_file="$agent_dir/functions.json"
                 echo "Build $declarations_file"
                 echo "$json_data" > "$declarations_file"
             fi
         done
         if [[ "$found" == "false" ]]; then
-            not_found_bots+=("$name")
+            not_found_agents+=("$name")
         fi
     done
-    if [[ -n "$not_found_bots" ]]; then
-        _die "error: not found bots: ${not_found_bots[*]}"
+    if [[ -n "$not_found_agents" ]]; then
+        _die "error: not found agents: ${not_found_agents[*]}"
     fi
-    if [[ -n "$build_failed_bots" ]]; then
-        _die "error: invalid bots: ${build_failed_bots[*]}"
+    if [[ -n "$build_failed_agents" ]]; then
+        _die "error: invalid agents: ${build_failed_agents[*]}"
     fi
 }
 
-# @cmd Generate function declarations for the bot
-# @alias bot:generate-declarations
+# @cmd Generate function declarations for the agent
+# @alias agent:generate-declarations
 # @flag --oneline Summary JSON in one line
-# @arg bot![`_choice_bot`] The bot name
-generate-declarations@bot() {
-    tools_path="$(_get_bot_tools_path "$1")"
+# @arg agent![`_choice_agent`] The agent name
+generate-declarations@agent() {
+    tools_path="$(_get_agent_tools_path "$1")"
     if [[ -z "$tools_path" ]]; then
-        _die "error: no found entry file at bots/$1/tools.<lang>"
+        _die "error: no found entry file at agents/$1/tools.<lang>"
     fi
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
@@ -315,18 +315,18 @@ list@tool() {
     _choice_tool
 }
 
-# @cmd List bots which can be put into bots.txt
-# @alias bot:list
+# @cmd List agents which can be put into agents.txt
+# @alias agent:list
 # Examples:
-#      argc list-bots > bots.txt
-list@bot() {
-    _choice_bot
+#      argc list-agents > agents.txt
+list@agent() {
+    _choice_agent
 }
 
 # @cmd Test the project
 test() {
     test@tool
-    test@bot
+    test@agent
 }
 
 # @cmd Test tools
@@ -395,20 +395,20 @@ test-demo-tools() {
     done
 }
 
-# @cmd Test bots
-# @alias bot:test
-test@bot() {
+# @cmd Test agents
+# @alias agent:test
+test@agent() {
     tmp_dir="cache/tmp"
     mkdir -p "$tmp_dir"
-    names_file="$tmp_dir/bots.txt"
-    argc list@bot > "$names_file"
-    argc build@bot --names-file "$names_file"
-    test-todo-bots
+    names_file="$tmp_dir/agents.txt"
+    argc list@agent > "$names_file"
+    argc build@agent --names-file "$names_file"
+    test-todo-agents
 }
 
-# @cmd Test todo-* bots
-# @alias bot:test-todo
-test-todo-bots() {
+# @cmd Test todo-* agents
+# @alias agent:test-todo
+test-todo-agents() {
     if _is_win; then
         ext=".cmd"
     fi
@@ -423,11 +423,11 @@ test-todo-bots() {
         cmd="${item#*:}"
         if command -v "$cmd" &> /dev/null; then
             lang="${item%:*}"
-            bot_name="todo-$lang"
-            rm -rf "cache/$bot_name/todos.json"
+            agent_name="todo-$lang"
+            rm -rf "cache/$agent_name/todos.json"
             for test_case in "${test_cases[@]}"; do
                 IFS='#' read -r action data <<<"${test_case}"
-                cmd_path="$BIN_DIR/$bot_name$ext"
+                cmd_path="$BIN_DIR/$agent_name$ext"
                 echo "Test $cmd_path: "
                 "$cmd_path" "$action" "$data"
             done
@@ -443,11 +443,11 @@ clean@tool() {
     rm -rf functions.json
 }
 
-# @cmd Clean bots
-# @alias bot:clean
-clean@bot() {
-    _choice_bot | xargs -I{} rm -rf "$BIN_DIR/{}" 
-    _choice_bot | xargs -I{} rm -rf bots/{}/functions.json
+# @cmd Clean agents
+# @alias agent:clean
+clean@agent() {
+    _choice_agent | xargs -I{} rm -rf "$BIN_DIR/{}" 
+    _choice_agent | xargs -I{} rm -rf agents/{}/functions.json
 }
 
 # @cmd Install this repo to aichat functions_dir
@@ -500,12 +500,12 @@ _lang_to_cmd() {
     done
 }
 
-_get_bot_tools_path() {
+_get_agent_tools_path() {
     name="$1"
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
-        entry_file="bots/$name/tools.$lang"
-        if [[ -f "bots/$name/tools.$lang" ]]; then
+        entry_file="agents/$name/tools.$lang"
+        if [[ -f "agents/$name/tools.$lang" ]]; then
             echo "$entry_file"
         fi
     done
@@ -581,17 +581,17 @@ _choice_tool() {
     done
 }
 
-_choice_bot() {
-    ls -1 bots
+_choice_agent() {
+    ls -1 agents
 }
 
-_choice_bot_action() {
+_choice_agent_action() {
     if [[ "$ARGC_COMPGEN" -eq 1 ]]; then
         expr="s/: /\t/"
     else
         expr="s/:.*//"
     fi
-    argc generate-declarations@bot "$1" --oneline  | sed "$expr"
+    argc generate-declarations@agent "$1" --oneline  | sed "$expr"
 }
 
 _choice_cmd() {
