@@ -130,7 +130,7 @@ The agent has the following folder structure:
 ```
 └── agents
     └── myagent
-        ├── embeddings/                     # Contains RAG files for knownledge
+        ├── embeddings/                     # Contains RAG files for knowledge
         ├── functions.json                  # Function declarations file (Auto-generated)
         ├── index.yaml                      # Agent definition file
         └── tools.{sh,js,py}                # Agent tools script
