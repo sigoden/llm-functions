@@ -100,7 +100,7 @@ build-bin@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
-        names=($(cat "$argc_names_file"))
+        names=($(cat "$argc_names_file" | grep -v '^#'))
         if [[ "${#names[@]}" -gt 0 ]]; then
             (cd "$BIN_DIR" && rm -rf "${names[@]}")
         fi
@@ -140,7 +140,7 @@ build-declarations@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
         names=("${argc_tools[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
-        names=($(cat "$argc_names_file"))
+        names=($(cat "$argc_names_file" | grep -v '^#'))
     fi
     if [[ -z "$names" ]]; then
         _die "error: not input tools, not found '$argc_names_file', please create it add some tools."
@@ -208,7 +208,7 @@ build-bin@agent() {
     if [[ "${#argc_agents[@]}" -gt 0 ]]; then
         names=("${argc_agents[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
-        names=($(cat "$argc_names_file"))
+        names=($(cat "$argc_names_file" | grep -v '^#'))
         if [[ "${#names[@]}" -gt 0 ]]; then
             (cd "$BIN_DIR" && rm -rf "${names[@]}")
         fi
@@ -252,7 +252,7 @@ build-declarations@agent() {
     if [[ "${#argc_agents[@]}" -gt 0 ]]; then
         names=("${argc_agents[@]}" )
     elif [[ -f "$argc_names_file" ]]; then
-        names=($(cat "$argc_names_file"))
+        names=($(cat "$argc_names_file" | grep -v '^#'))
     fi
     if [[ -z "$names" ]]; then
         _die "error: not input agents, not found '$argc_names_file', please create it add some tools."
