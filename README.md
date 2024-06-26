@@ -40,7 +40,7 @@ hackernews
 Symlink this repo directory to aichat **functions_dir**:
 
 ```sh
-ln -s "$(pwd)" "$(aichat --info | grep functions_dir | awk '{print $2}')"
+ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
 # OR
 argc install
 ```
