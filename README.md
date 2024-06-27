@@ -130,7 +130,6 @@ The agent has the following folder structure:
 ```
 └── agents
     └── myagent
-        ├── embeddings/                     # Contains RAG files for knowledge
         ├── functions.json                  # Function declarations file (Auto-generated)
         ├── index.yaml                      # Agent definition file
         └── tools.{sh,js,py}                # Agent tools script
@@ -145,6 +144,8 @@ version: v0.1.0
 instructions: You are a test ai agent to ... 
 conversation_starters:
   - What can you do?
+documents:
+  - files/doc.pdf
 ```
 
 Refer to `./agents/todo-{sh,js,py}` for examples of how to implement a agent.

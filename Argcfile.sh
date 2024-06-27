@@ -235,7 +235,7 @@ build-bin@agent() {
                 echo "Build agent $name"
             fi
         done
-        if [[ "$found" = "false" ]]; then
+        if [[ "$found" == "false" ]] && [[ ! -d "$agent_dir"  ]]; then
             not_found_agents+=("$name")
         fi
     done
@@ -276,7 +276,7 @@ build-declarations@agent() {
                 echo "$json_data" > "$declarations_file"
             fi
         done
-        if [[ "$found" == "false" ]]; then
+        if [[ "$found" == "false" ]] && [[ ! -d "$agent_dir"  ]]; then
             not_found_agents+=("$name")
         fi
     done
