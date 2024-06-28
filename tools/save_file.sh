@@ -7,8 +7,8 @@ set -e
 
 main() {
     base_dir="${LLM_TOOL_CACHE_DIR:-/tmp}"
-    mkdir -p "$base_dir"
     output_file="$base_dir/$argc_file_name"
+    mkdir -p "$(dirname "$output_file")"
     echo "$argc_contents" > "$output_file"
     echo "$output_file"
 }
