@@ -53,9 +53,13 @@ Now you can interact with your LLM using natural language prompts that trigger y
 
 ## Showcases 
 
-![tools-showcase](https://github.com/sigoden/aichat/assets/4012553/f9d7f827-9a2a-4ea1-8b8c-19e1c93178d4)
+### Tool
 
-![agent-showcase](https://github.com/sigoden/llm-functions/assets/4012553/05e1e57e-3bcc-4504-b78f-c36b27d16bfd)
+![aichat-tool-use](https://github.com/sigoden/llm-functions/assets/4012553/41c297cb-b3f7-4e5f-925e-a80d07684b1d)
+
+### Agent
+
+![aichat-agent](https://github.com/sigoden/aichat/assets/4012553/7308a423-2ee5-4847-be1b-a53538bc98dc)
 
 ## Writing Your Own Tools
 
