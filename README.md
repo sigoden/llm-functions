@@ -1,6 +1,11 @@
 # LLM Functions
 
-This project allows you to enhance large language models (LLMs) with custom functions written in bash/js/python. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
+This project allows you to enhance large language models (LLMs) with custom tools and agents developed in bash/javascript/python. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
+
+![tool-showcase](https://github.com/sigoden/llm-functions/assets/4012553/41c297cb-b3f7-4e5f-925e-a80d07684b1d)
+
+![agent-showcase](https://github.com/sigoden/aichat/assets/4012553/7308a423-2ee5-4847-be1b-a53538bc98dc)
+
 
 ## Prerequisites
 
@@ -23,14 +28,16 @@ git clone https://github.com/sigoden/llm-functions
 
 ```
 get_current_weather.sh
-may_execute_py_code.py
+execute_command.sh
+#execute_py_code.py
 ```
 
 - Create a `./agents.txt` file with each agent name on a new line.
 
 ```
 todo-sh
-hackernews
+#todo-js
+#todo-py
 ```
 
 - Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and agents.
@@ -50,16 +57,6 @@ AIChat will automatically load `functions.json` and execute commands located in 
 **4. Start using your functions:**
 
 Now you can interact with your LLM using natural language prompts that trigger your defined functions.
-
-## Showcases 
-
-### Tool
-
-![aichat-tool-use](https://github.com/sigoden/llm-functions/assets/4012553/41c297cb-b3f7-4e5f-925e-a80d07684b1d)
-
-### Agent
-
-![aichat-agent](https://github.com/sigoden/aichat/assets/4012553/7308a423-2ee5-4847-be1b-a53538bc98dc)
 
 ## Writing Your Own Tools
 
