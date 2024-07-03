@@ -45,23 +45,15 @@ ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
 argc install
 ```
 
-Don't forget to add the following config to your AIChat `config.yaml` file:
-
-```yaml
-function_calling: true
-```
-
 AIChat will automatically load `functions.json` and execute commands located in the `./bin` directory based on your prompts.
 
 **4. Start using your functions:**
 
 Now you can interact with your LLM using natural language prompts that trigger your defined functions.
 
-## AIChat Showcases 
+## Showcases 
 
-![retrieve-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/7e628834-9863-444a-bad8-7b51bfb18dff)
-
-![execute-type-showcase](https://github.com/sigoden/llm-functions/assets/4012553/1dbc345f-daf9-4d65-a49f-3df8c7df1727)
+![tools-showcase](https://github.com/sigoden/aichat/assets/4012553/f9d7f827-9a2a-4ea1-8b8c-19e1c93178d4)
 
 ![agent-showcase](https://github.com/sigoden/llm-functions/assets/4012553/05e1e57e-3bcc-4504-b78f-c36b27d16bfd)
 
