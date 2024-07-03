@@ -77,7 +77,7 @@ build() {
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
 # Example:
 #   get_current_weather.sh
-#   may_execute_js_code.js
+#   execute_js_code.js
 # @arg tools*[`_choice_tool`] The tool filenames
 build@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
@@ -347,9 +347,9 @@ test-execute-code-tools() {
         ext=".cmd"
     fi
     test_cases=( \
-        'sh#may_execute_command#{"command":"echo \"✓\""}' \
-        'js#may_execute_js_code#{"code":"console.log(\"✓\")"}' \
-        'py#may_execute_py_code#{"code":"print(\"✓\")"}' \
+        'sh#execute_command#{"command":"echo \"✓\""}' \
+        'js#execute_js_code#{"code":"console.log(\"✓\")"}' \
+        'py#execute_py_code#{"code":"print(\"✓\")"}' \
     )
 
     for test_case in "${test_cases[@]}"; do
