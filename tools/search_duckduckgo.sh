@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Takes in a query string and returns search result from DuckDuckGo.
-# Use it to answer user questions that require dates, facts, real-time information, or news.
-# This ensures accurate and up-to-date answers.
+# @describe Perform a web search using DuckDuckGo API to get up-to-date information or additional context.
+# Use this when you need current information or feel a search could provide a better answer.
 
 # @meta require-tools ddgr
 # @env DDG_MAX_RESULTS=5 The max results to return.

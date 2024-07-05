@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Perform a web search using Tavily API to get up-to-date information or additional context.
+# @describe Perform a web search using EXA API to get up-to-date information or additional context.
 # Use this when you need current information or feel a search could provide a better answer.
 
-# @env TAVILY_API_KEY! The max results to return.
+# @env TAVILY_API_KEY! The api key
 # @env TAVILY_MAX_RESULTS=5 The max results to return.
 # @option --query! The query to search for.
 
 main() {
-   curl -fsSL -X POST \
-    -H 'content-type: application/json' \
-    -d '{"api_key":"'"$TAVILY_API_KEY"'","query":"'"$argc_query"'","search_depth":"advanced","max_results":"'"$TAVILY_MAX_RESULTS"'"}' \
-    https://api.tavily.com/search
+    curl -fsSL -X POST https://api.tavily.com/search \
+        -H "content-type: application/json" \
+        -d '
+{
+    "api_key": "'"$TAVILY_API_KEY"'",
+    "query": "'"$argc_query"'",
+    "search_depth": "advanced",
+    "max_results": "'"$TAVILY_MAX_RESULTS"'"
+}' | \
+        jq '[.results[] | {title: .title, url: .url, content: .content}]'
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
