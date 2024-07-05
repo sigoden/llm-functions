@@ -26,7 +26,7 @@ parse_argv() {
 setup_env() {
     export LLM_ROOT_DIR="$root_dir"
     if [[ -f "$LLM_ROOT_DIR/.env" ]]; then
-        source "$LLM_ROOT_DIR/.env"
+        set -o allexport && source "$LLM_ROOT_DIR/.env" && set +o allexport
     fi
     export LLM_TOOL_NAME="$tool_name"
     export LLM_TOOL_CACHE_DIR="$LLM_ROOT_DIR/cache/$tool_name"
