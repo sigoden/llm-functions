@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Save the contents to a file at the specified path.
+# @describe Write the contents to a file at the specified path.
 # If the file exists, only the necessary changes will be applied.
 # If the file doesn't exist, it will be created.
 # Always provide the full intended contents of the file.
