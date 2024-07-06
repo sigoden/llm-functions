@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Searche Wikipedia for a query.
+# @describe Search Wikipedia for a query.
 # Uses it to get detailed information about a public figure, interpretation of a complex scientific concept or in-depth connectivity of a significant historical event,.
 
 # @option --query! The query to search for.
