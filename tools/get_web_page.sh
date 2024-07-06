@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Get the contents from a URL.
+# @describe Get webpage content from a given URL.
 # @meta require-tools pandoc
 # @option --url! The URL to scrape.
 
