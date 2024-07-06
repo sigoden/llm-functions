@@ -14,14 +14,11 @@ LANG_CMDS=( \
 
 # @cmd Run the tool
 # @alias tool:run
-# @arg cmd![`_choice_cmd`] The tool command
+# @arg tool![`_choice_tool`] The tool name
 # @arg json The json data
 run@tool() {
-    if _is_win; then
-        ext=".cmd"
-    fi
     if [[ -z "$argc_json" ]]; then
-        declaration="$(jq --arg name "$argc_cmd" '.[] | select(.name == $name)' functions.json)"
+        declaration="$(generate-declarations@tool "$argc_tool" | jq -r '.[0]')"
         if [[ -n "$declaration" ]]; then
             _ask_json_data "$declaration"
         fi
@@ -29,31 +26,30 @@ run@tool() {
     if [[ -z "$argc_json" ]]; then
         _die "error: no JSON data"
     fi
-    "$BIN_DIR/$argc_cmd$ext" "$argc_json"
+    lang="${argc_tool##*.}"
+    cmd="$(_lang_to_cmd "$lang")"
+    "$cmd" ./scripts/run-tool.$lang "$argc_tool" "$argc_json"
 }
 
 # @cmd Run the agent
 # @alias agent:run
-# @arg cmd![`_choice_agent`] The agent command
+# @arg agent![`_choice_agent`] The agent name
 # @arg action![`_choice_agent_action`] The agent action
 # @arg json The json data
 run@agent() {
-    if _is_win; then
-        ext=".cmd"
-    fi
     if [[ -z "$argc_json" ]]; then
-        functions_path="agents/$argc_cmd/functions.json"
-        if [[ -f "$functions_path" ]]; then
-            declaration="$(jq --arg name "$argc_action" '.[] | select(.name == $name)' "$functions_path")"
-            if [[ -n "$declaration" ]]; then
-                _ask_json_data "$declaration"
-            fi
+        declaration="$(generate-declarations@agent "$argc_agent" | jq --arg name "$argc_action" '.[] | select(.name == $name)')"
+        if [[ -n "$declaration" ]]; then
+            _ask_json_data "$declaration"
         fi
     fi
     if [[ -z "$argc_json" ]]; then
         _die "error: no JSON data"
     fi
-    "$BIN_DIR/$argc_cmd$ext" "$argc_action" "$argc_json"
+    tools_path="$(_get_agent_tools_path "$argc_agent")"
+    lang="${tools_path##*.}"
+    cmd="$(_lang_to_cmd "$lang")"
+    "$cmd" ./scripts/run-agent.$lang "$argc_agent" "$argc_action" "$argc_json"
 }
 
 # @cmd Build the project
@@ -173,7 +169,7 @@ build-declarations@tool() {
 
 # @cmd Generate function declaration for the tool
 # @alias tool:generate-declarations
-# @arg tool![`_choice_tool`] The function name
+# @arg tool![`_choice_tool`] The tool name
 generate-declarations@tool() {
     lang="${1##*.}"
     cmd="$(_lang_to_cmd "$lang")"
@@ -539,16 +535,12 @@ _ask_json_data() {
     echo 'Generate placeholder data:'
     data="$(echo "$declaration" | _declarations_json_data)"
     echo ">  $data"
-    read -r -p 'Use the generated data? (y/n) ' res
-    case "$res" in
-    [yY][eE][sS]|[yY])
+    read -e -r -p 'JSON data (Press ENTER to use placeholder): ' res
+    if [[ -z "$res" ]]; then
         argc_json="$data"
-        ;;
-    *)
-        read -r -p "Please enter the data: " data
-        argc_json="$data"
-        ;;
-    esac
+    else
+        argc_json="$res"
+    fi
 }
 
 _declarations_json_data() {
@@ -592,10 +584,6 @@ _choice_agent_action() {
         expr="s/:.*//"
     fi
     argc generate-declarations@agent "$1" --oneline  | sed "$expr"
-}
-
-_choice_cmd() {
-    ls -1 "$BIN_DIR" | sed -e 's/\.cmd$//'
 }
 
 _die() {
