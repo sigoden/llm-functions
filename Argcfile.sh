@@ -71,9 +71,6 @@ build() {
 # @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
 # This file specifies which tools will be used.
 # @option --declarations-file=functions.json <FILE> Path to a json file to save function declarations
-# Example:
-#   get_current_weather.sh
-#   execute_js_code.js
 # @arg tools*[`_choice_tool`] The tool filenames
 build@tool() {
     if [[ "${#argc_tools[@]}" -gt 0 ]]; then
@@ -184,9 +181,6 @@ generate-declarations@tool() {
 # @cmd Build agents
 # @alias agent:build
 # @option --names-file=agents.txt Path to a file containing agent filenames, one per line.
-# Example:
-#   hackernews
-#   spotify
 # @arg agents*[`_choice_agent`] The agent filenames
 build@agent() {
     if [[ "${#argc_agents[@]}" -gt 0 ]]; then
@@ -269,7 +263,6 @@ build-declarations@agent() {
         agent_dir="agents/$name"
         declarations_file="$agent_dir/functions.json"
         tool_names_file="$agent_dir/tools.txt"
-        rm -rf "$declarations_file"
         found=false
         if [[ -d "$agent_dir" ]]; then
             found=true
@@ -482,6 +475,24 @@ clean@agent() {
     _choice_agent | xargs -I{} rm -rf agents/{}/functions.json
 }
 
+# @cmd Symlink web_search tool
+#
+# Example:
+#   argc link-web-search search_bing.sh
+# @arg tool![`_choice_tool`]  The tool work as web_search
+link-web-search() {
+    _link_tool $1 web_search
+}
+
+# @cmd Symlink code_interpreter tool
+#
+# Example:
+#   argc link-code-interpreter execute_py_code.py 
+# @arg tool![`_choice_tool`]  The tool work as code_interpreter
+link-code-interpreter() {
+    _link_tool $1 code_interpreter
+}
+
 # @cmd Install this repo to aichat functions_dir
 install() {
     functions_dir="$(aichat --info | grep -w functions_dir | awk '{print $2}')"
@@ -562,6 +573,17 @@ set "script_name=%~n0"
 
 $run "%script_dir%scripts\run-$kind.$lang" "%script_name%" %*
 EOF
+}
+
+_link_tool() {
+    from="$1"
+    to="$2.${1##*.}"
+    rm -rf tools/$to
+    if _is_win; then
+        (cd tools && cmd <<< "mklink $to $from" > /dev/null)
+    else
+        (cd tools && ln -rs $from $to)
+    fi
 }
 
 _ask_json_data() {

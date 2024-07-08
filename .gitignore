@@ -5,6 +5,8 @@ functions.json
 /bin
 /cache
 /tools/test.*
+/tools/web_search.*
+/tools/code_interpreter.*
 /.env
 __pycache__
 /venv
