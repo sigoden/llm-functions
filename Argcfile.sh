@@ -102,7 +102,7 @@ build-bin@tool() {
         fi
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input tools, not found '$argc_names_file', please create it add some tools."
+        _die "error: no tools provided. '$argc_names_file' is missing. please create it and add some tools."
     fi
     not_found_tools=()
     for name in "${names[@]}"; do
@@ -139,7 +139,7 @@ build-declarations@tool() {
         names=($(cat "$argc_names_file" | grep -v '^#'))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input tools, not found '$argc_names_file', please create it add some tools."
+        _die "error: no tools provided. '$argc_names_file' is missing. please create it and add some tools."
     fi
     json_list=()
     not_found_tools=()
@@ -162,8 +162,13 @@ build-declarations@tool() {
     if [[ -n "$build_failed_tools" ]]; then
         _die "error: invalid tools: ${build_failed_tools[*]}"
     fi
-    echo "Build $argc_declarations_file"
-    echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.' > "$argc_declarations_file"
+    json_data="$(echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.')"
+    if [[ "$argc_declarations_file" == "-" ]]; then
+        echo "$json_data"
+    else
+        echo "Build $argc_declarations_file"
+        echo "$json_data" > "$argc_declarations_file"
+    fi
 }
 
 
@@ -210,7 +215,7 @@ build-bin@agent() {
         fi
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input agents, not found '$argc_names_file', please create it add some tools."
+        _die "error: no agents provided. '$argc_names_file' is missing. please create it and add some agents."
     fi
     not_found_agents=()
     for name in "${names[@]}"; do
@@ -229,6 +234,11 @@ build-bin@agent() {
                     ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
                 fi
                 echo "Build agent $name"
+                tool_names_file="$agent_dir/tools.txt"
+                if [[ -f "$tool_names_file" ]]; then
+                    argc build-bin@tool --names-file "${tool_names_file}"
+                fi
+                break
             fi
         done
         if [[ "$found" == "false" ]] && [[ ! -d "$agent_dir"  ]]; then
@@ -251,28 +261,54 @@ build-declarations@agent() {
         names=($(cat "$argc_names_file" | grep -v '^#'))
     fi
     if [[ -z "$names" ]]; then
-        _die "error: not input agents, not found '$argc_names_file', please create it add some tools."
+        _die "error: no agents provided. '$argc_names_file' is missing. please create it and add some agents."
     fi
     not_found_agents=()
     build_failed_agents=()
     for name in "${names[@]}"; do
         agent_dir="agents/$name"
-        build_ok=false
+        declarations_file="$agent_dir/functions.json"
+        tool_names_file="$agent_dir/tools.txt"
+        rm -rf "$declarations_file"
         found=false
-        for item in "${LANG_CMDS[@]}"; do
-            lang="${item%:*}"
-            agent_tools_file="$agent_dir/tools.$lang"
-            if [[ -f "$agent_tools_file" ]]; then
-                found=true
-                json_data="$(generate-declarations@agent "$name")" || {
+        if [[ -d "$agent_dir" ]]; then
+            found=true
+            ok=true
+            json_data=""
+            agent_json_data=""
+            tools_json_data=""
+            for item in "${LANG_CMDS[@]}"; do
+                lang="${item%:*}"
+                agent_tools_file="$agent_dir/tools.$lang"
+                if [[ -f "$agent_tools_file" ]]; then
+                    agent_json_data="$(generate-declarations@agent "$name")" || {
+                        ok=false
+                        build_failed_agents+=("$name")
+                    }
+                    break
+                fi
+            done
+            if [[ -f "$tool_names_file" ]]; then
+                tools_json_data="$(argc build-declarations@tool --names-file="$tool_names_file" --declarations-file=-)" || {
+                    ok=false
                     build_failed_agents+=("$name")
                 }
-                declarations_file="$agent_dir/functions.json"
-                echo "Build $declarations_file"
-                echo "$json_data" > "$declarations_file"
             fi
-        done
-        if [[ "$found" == "false" ]] && [[ ! -d "$agent_dir"  ]]; then
+            if [[ "$ok" == "true" ]]; then
+                if [[ -n "$agent_json_data" ]] && [[ -n "$tools_json_data" ]]; then
+                    json_data="$(jq -s '.[0] + .[1]' <(echo "$agent_json_data") <(echo "$tools_json_data"))"
+                elif [[ -n "$agent_json_data" ]]; then
+                    json_data="$agent_json_data" 
+                elif [[ -n "$tools_json_data" ]]; then
+                    json_data="$tools_json_data" 
+                fi
+                if [[ -n "$json_data" ]]; then
+                    echo "Build $declarations_file"
+                    echo "$json_data" > "$declarations_file"
+                fi
+            fi
+        fi
+        if [[ "$found" == "false" ]]; then
             not_found_agents+=("$name")
         fi
     done
@@ -295,7 +331,7 @@ generate-declarations@agent() {
     fi
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    json="$("$cmd" "scripts/build-declarations.$lang" "$tools_path")"
+    json="$("$cmd" "scripts/build-declarations.$lang" "$tools_path" | jq --arg agent "$1" 'map(. + {agent: $agent})')"
     if [[ -n "$argc_oneline" ]]; then
         echo "$json" | jq -r '.[] | .name + ": " + (.description | split("\n"))[0]'
     else
