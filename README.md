@@ -125,6 +125,7 @@ The agent has the following folder structure:
     └── myagent
         ├── functions.json                  # Function declarations file (Auto-generated)
         ├── index.yaml                      # Agent definition file
+        ├── tools.txt                       # Reuse tools
         └── tools.{sh,js,py}                # Agent tools script
 ```
 
