@@ -397,9 +397,10 @@ test-execute-code-tools() {
 test-demo-tools() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
-        echo "---- Test demo_tool.$lang ---"
-        argc build-bin@tool "demo_tool.$lang"
-        argc run@tool demo_tool '{
+        tool="demo_$lang.$lang"
+        echo "---- Test $tool ---"
+        argc build-bin@tool "$tool"
+        argc run@tool $tool '{
      "boolean": true,
      "string": "Hello",
      "string_enum": "foo",
@@ -428,37 +429,24 @@ test@agent() {
     names_file="$tmp_dir/agents.txt"
     argc list@agent > "$names_file"
     argc build@agent --names-file "$names_file"
-    test-todo-agents
+    test-demo-agents
 }
 
-# @cmd Test todo-* agents
-# @alias agent:test-todo
-test-todo-agents() {
-    if _is_win; then
-        ext=".cmd"
-    fi
-    test_cases=( \
-        'add_todo#{"desc":"Add a todo item"}' \
-        'add_todo#{"desc":"Add another todo item"}' \
-        'del_todo#{"id":1}' \
-        'list_todos#{}' \
-        'clear_todos#{}' \
-    )
+# @cmd Test demo agents
+# @alias agent:test-demo
+test-demo-agents() {
+    echo "Test demo agent:"
+    argc run@agent demo get_sysinfo '{}'
     for item in "${LANG_CMDS[@]}"; do
         cmd="${item#*:}"
-        if command -v "$cmd" &> /dev/null; then
-            lang="${item%:*}"
-            agent_name="todo-$lang"
-            rm -rf "cache/$agent_name/todos.json"
-            for test_case in "${test_cases[@]}"; do
-                IFS='#' read -r action data <<<"${test_case}"
-                cmd_path="$BIN_DIR/$agent_name$ext"
-                echo "Test $cmd_path: "
-                "$cmd_path" "$action" "$data"
-            done
+        lang="${item%:*}"
+        echo "Test agents/demo/tools.$lang:"
+        if [[ "$cmd" == "sh" ]]; then
+            "$(argc --argc-shell-path)" ./scripts/run-agent.sh demo get_sysinfo '{}'
+        elif command -v "$cmd" &> /dev/null; then
+            $cmd ./scripts/run-agent.$lang demo get_sysinfo '{}'
         fi
     done
-
 }
 
 # @cmd Clean tools
@@ -475,7 +463,7 @@ clean@agent() {
     _choice_agent | xargs -I{} rm -rf agents/{}/functions.json
 }
 
-# @cmd Symlink web_search tool
+# @cmd Link a tool as web_search tool
 #
 # Example:
 #   argc link-web-search search_bing.sh
@@ -484,7 +472,7 @@ link-web-search() {
     _link_tool $1 web_search
 }
 
-# @cmd Symlink code_interpreter tool
+# @cmd Link a tool as code_interpreter tool
 #
 # Example:
 #   argc link-code-interpreter execute_py_code.py 
@@ -550,6 +538,7 @@ _get_agent_tools_path() {
         entry_file="agents/$name/tools.$lang"
         if [[ -f "agents/$name/tools.$lang" ]]; then
             echo "$entry_file"
+            break
         fi
     done
 }

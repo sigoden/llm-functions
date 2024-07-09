@@ -134,7 +134,7 @@ The agent definition file (`index.yaml`) defines crucial aspects of your agent:
 ```yaml
 name: TestAgent                             
 description: This is test agent
-version: v0.1.0
+version: 0.1.0
 instructions: You are a test ai agent to ... 
 conversation_starters:
   - What can you do?
