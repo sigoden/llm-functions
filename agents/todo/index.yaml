@@ -12,8 +12,7 @@ instructions: |
   - Errors: "Cannot add todo item, missing description.", "Todo item with id {id} not found.", "No todo items to delete."
   Make sure you understand the user request properly before performing any action. If unsure, ask clarifying questions like "Do you want to remove all todos or just a specific one?"
 conversation_starters:
-  - "Add a new todo item 'Finish report'."
-  - "Remove the todo item with id=2."
-  - "Delete all my todos."
+  - "Add a new todo item: "
   - "What todos do I have pending?"
+  - "Delete all my todos."
   - "How can I remove a specific todo item?"
