@@ -35,9 +35,8 @@ execute_command.sh
 - Create a `./agents.txt` file with each agent name on a new line.
 
 ```
-todo-sh
-#todo-js
-#todo-py
+todo
+#demo
 ```
 
 - Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and agents.
