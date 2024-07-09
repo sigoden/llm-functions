@@ -114,7 +114,7 @@ build-bin@tool() {
                 bin_file="$BIN_DIR/$basename" 
                 ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
             fi
-            echo "Build tool $name"
+            echo "Build bin/$basename"
         else
             not_found_tools+=("$name")
         fi
@@ -227,7 +227,7 @@ build-bin@agent() {
                     bin_file="$BIN_DIR/$name" 
                     ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
                 fi
-                echo "Build agent $name"
+                echo "Build bin/$name"
                 tool_names_file="$agent_dir/tools.txt"
                 if [[ -f "$tool_names_file" ]]; then
                     argc build-bin@tool --names-file "${tool_names_file}"
@@ -324,7 +324,7 @@ generate-declarations@agent() {
     fi
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    json="$("$cmd" "scripts/build-declarations.$lang" "$tools_path" | jq --arg agent "$1" 'map(. + {agent: $agent})')"
+    json="$("$cmd" "scripts/build-declarations.$lang" "$tools_path" | jq 'map(. + {agent: true})')"
     if [[ -n "$argc_oneline" ]]; then
         echo "$json" | jq -r '.[] | .name + ": " + (.description | split("\n"))[0]'
     else
