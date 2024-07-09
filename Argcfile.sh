@@ -289,7 +289,7 @@ build-declarations@agent() {
             fi
             if [[ "$ok" == "true" ]]; then
                 if [[ -n "$agent_json_data" ]] && [[ -n "$tools_json_data" ]]; then
-                    json_data="$(jq -s '.[0] + .[1]' <(echo "$agent_json_data") <(echo "$tools_json_data"))"
+                    json_data="$(echo "[$agent_json_data,$tools_json_data]" | jq 'flatten')"
                 elif [[ -n "$agent_json_data" ]]; then
                     json_data="$agent_json_data" 
                 elif [[ -n "$tools_json_data" ]]; then
