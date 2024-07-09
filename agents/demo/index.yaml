@@ -10,7 +10,8 @@ variables:
   - name: lang
     description: Your prefer language
 conversation_starters:
-  - What is the prefer language
+  - What is the prefer language?
+  - What is the llm-functions?
   - Show me the system info
   - Tell me the current time
 documents:
