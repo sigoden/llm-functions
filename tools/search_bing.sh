@@ -13,8 +13,8 @@ main() {
     url="https://api.bing.microsoft.com/v7.0/search?q=$encoded_query&mkt=en-us&textdecorations=true&textformat=raw&count=$BING_MAX_RESULTS&offset=0"
     curl -fsSL "$url" \
         -H "Ocp-Apim-Subscription-Key: $BING_API_KEY" | \
-        jq '[.webPages.value[] | {name: .name, url: .url, snippet: .snippet}]'
+        jq '[.webPages.value[] | {name: .name, url: .url, snippet: .snippet}]' \
+        >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

@@ -2,16 +2,16 @@
 set -e
 
 main() {
-    this_file_name=run-agent.sh
-    parse_argv "$@"
     root_dir="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
+    self_name=run-agent.sh
+    parse_argv "$@"
     setup_env
-    agent_tools_path="$root_dir/agents/$agent_name/tools.sh"
-    run
+    tools_path="$root_dir/agents/$agent_name/tools.sh"
+    run 
 }
 
 parse_argv() {
-    if [[ "$0" == *"$this_file_name" ]]; then
+    if [[ "$0" == *"$self_name" ]]; then
         agent_name="$1"
         agent_func="$2"
         agent_data="$3"
@@ -26,13 +26,28 @@ parse_argv() {
 }
 
 setup_env() {
+    load_env "$root_dir/.env" 
     export LLM_ROOT_DIR="$root_dir"
-    if [[ -f "$LLM_ROOT_DIR/.env" ]]; then
-        set -o allexport && source "$LLM_ROOT_DIR/.env" && set +o allexport
-    fi
     export LLM_AGENT_NAME="$agent_name"
     export LLM_AGENT_ROOT_DIR="$LLM_ROOT_DIR/agents/$agent_name"
     export LLM_AGENT_CACHE_DIR="$LLM_ROOT_DIR/cache/$agent_name"
+}
+
+load_env() {
+    local env_file="$1" env_vars
+    if [[ -f "$env_file" ]]; then
+        while IFS='=' read -r key value; do
+            if [[ "$key" == $'#'* ]] || [[ -z "$key" ]]; then
+                continue
+            fi
+            if [[ -z "${!key+x}" ]]; then
+                env_vars="$env_vars $key=$value"
+            fi
+        done < "$env_file"
+        if [[ -n "$env_vars" ]]; then
+            eval "export $env_vars"
+        fi
+    fi
 }
 
 run() {
@@ -40,15 +55,14 @@ run() {
         die "No JSON data"
     fi
 
-    _jq=jq
     if [[ "$OS" == "Windows_NT" ]]; then
-        _jq="jq -b"
-        agent_tools_path="$(cygpath -w "$agent_tools_path")"
+        set -o igncr
+        tools_path="$(cygpath -w "$tools_path")"
     fi
 
     data="$(
         echo "$agent_data" | \
-        $_jq -r '
+        jq -r '
         to_entries | .[] | 
         (.key | split("_") | join("-")) as $key |
         if .value | type == "array" then
@@ -65,10 +79,18 @@ run() {
         if [[ "$line" == '--'* ]]; then
             args+=("$line")
         else
-            args+=("$(echo "$line" | $_jq -r '.')")
+            args+=("$(echo "$line" | jq -r '.')")
         fi
     done <<< "$data"
-    "$agent_tools_path" "$agent_func" "${args[@]}"
+    no_llm_output=0
+    if [[ -z "$LLM_OUTPUT" ]]; then
+        no_llm_output=1
+        export LLM_OUTPUT="$(mktemp)"
+    fi
+    "$tools_path" "$agent_func" "${args[@]}"
+    if [[ "$no_llm_output" -eq 1 ]]; then
+        cat "$LLM_OUTPUT"
+    fi
 }
 
 die() {

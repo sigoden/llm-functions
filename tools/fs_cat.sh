@@ -9,7 +9,7 @@ set -e
 
 main() {
     path="$FS_BASE_DIR/$argc_path"
-    cat "$path"
+    cat "$path" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

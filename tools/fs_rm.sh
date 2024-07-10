@@ -9,7 +9,7 @@ set -e
 main() {
     path="$FS_BASE_DIR/$argc_path"
     rm -rf "$path"
-    echo "Path removed: $path"
+    echo "Path removed: $path" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

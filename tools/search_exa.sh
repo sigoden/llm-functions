@@ -23,9 +23,8 @@ main() {
         }
     }
 }' | \
-        jq '[.results[] | {title: .title, url: .url, text: .text}]'
+        jq '[.results[] | {title: .title, url: .url, text: .text}]' \
+        >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-
-

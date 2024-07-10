@@ -47,8 +47,8 @@ def parse_argv(this_file_name):
 
 
 def setup_env(root_dir, tool_name):
-    os.environ["LLM_ROOT_DIR"] = root_dir
     load_env(os.path.join(root_dir, ".env"))
+    os.environ["LLM_ROOT_DIR"] = root_dir
     os.environ["LLM_TOOL_NAME"] = tool_name
     os.environ["LLM_TOOL_CACHE_DIR"] = os.path.join(root_dir, "cache", tool_name)
 
@@ -81,20 +81,25 @@ def run(tool_path, tool_func, tool_data):
         raise Exception(f"Not module function '{tool_func}' at '{tool_path}'")
 
     value = getattr(mod, tool_func)(**tool_data)
-    dump_value(value)
+    return_to_llm(value)
 
 
-def dump_value(value):
+def return_to_llm(value):
     if value is None:
         return
 
+    if "LLM_OUTPUT" in os.environ:
+        writer = open(os.environ["LLM_OUTPUT"], "w")
+    else:
+        writer = sys.stdout
+
     value_type = type(value).__name__
     if value_type in ("str", "int", "float", "bool"):
-        print(value)
+        writer.write(value)
     elif value_type == "dict" or value_type == "list":
         value_str = json.dumps(value, indent=2)
         assert value == json.loads(value_str)
-        print(value_str)
+        writer.write(value_str)
 
 
 if __name__ == "__main__":

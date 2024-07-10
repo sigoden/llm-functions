@@ -5,5 +5,5 @@
  * @param {Args} args
  */
 exports.run = function run({ code }) {
-  eval(code);
+  return eval(code);
 }

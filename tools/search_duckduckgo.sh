@@ -9,7 +9,7 @@ set -e
 # @option --query! The query to search for.
 
 main() {
-    ddgr -n $DDG_MAX_RESULTS --json "$argc_query"
+    ddgr -n $DDG_MAX_RESULTS --json "$argc_query" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

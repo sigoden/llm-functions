@@ -18,8 +18,8 @@ main() {
     "search_depth": "advanced",
     "max_results": "'"$TAVILY_MAX_RESULTS"'"
 }' | \
-        jq '[.results[] | {title: .title, url: .url, content: .content}]'
+        jq '[.results[] | {title: .title, url: .url, content: .content}]' \
+        >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

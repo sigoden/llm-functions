@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
 # @describe Demonstrate how to create a tool using Bash and how to use comment tags.
 # @option --string!                  Define a required string property
 # @option --string-enum![foo|bar]    Define a required string property with enum
@@ -9,8 +12,17 @@
 # @option --array-optional*          Define a optional string array property
 
 main() {
-    ( set -o posix ; set ) | grep ^argc_ 
-    printenv | grep '^LLM_'
+    cat <<EOF >> "$LLM_OUTPUT"
+string: ${argc_string}
+string_enum: ${argc_string_enum}
+string_optional: ${argc_string_optional}
+boolean: ${argc_boolean}
+integer: ${argc_integer}
+number: ${argc_number}
+array: ${argc_array[@]}
+array_optional: ${argc_array_optional[@]}
+$(printenv | grep '^LLM_')
+EOF
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

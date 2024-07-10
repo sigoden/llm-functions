@@ -14,8 +14,8 @@ main() {
     curl -fsSL "$url" \
         -H "Accept: application/json" \
         -H "X-Subscription-Token: $BRAVE_API_KEY" | \
-        jq '[.web.results[] | {title: .title, url: .url, description: .description}]'
+        jq '[.web.results[] | {title: .title, url: .url, description: .description}]' \
+        >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

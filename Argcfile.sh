@@ -362,39 +362,12 @@ test@tool() {
     declarations_file="$TMP_DIR/functions.json"
     argc list@tool > "$names_file"
     argc build@tool --names-file "$names_file" --declarations-file "$declarations_file"
-    test-execute-code-tools
-}
-
-# @cmd Test maybe_execute_* tools
-# @alias tool:test-execute-code
-test-execute-code-tools() {
-    if _is_win; then
-        ext=".cmd"
-    fi
-    test_cases=( \
-        'sh#execute_command#{"command":"echo \"✓\""}' \
-        'js#execute_js_code#{"code":"console.log(\"✓\")"}' \
-        'py#execute_py_code#{"code":"print(\"✓\")"}' \
-    )
-
-    for test_case in "${test_cases[@]}"; do
-        IFS='#' read -r lang tool_name data <<<"${test_case}"
-        cmd="$(_lang_to_cmd "$lang")"
-        if command -v "$cmd" &> /dev/null; then
-            cmd_path="$BIN_DIR/$tool_name$ext"
-            echo -n "Test $cmd_path: "
-            "$cmd_path" "$data"
-            if ! _is_win; then
-                echo -n "Test $cmd scripts/run-tool.$lang $tool_name: "
-                "$cmd" "scripts/run-tool.$lang" "$tool_name" "$data"
-            fi
-        fi
-    done
+    test-demo@tool
 }
 
 # @cmd Test demo tools
 # @alias tool:test-demo
-test-demo-tools() {
+test-demo@tool() {
     for item in "${LANG_CMDS[@]}"; do
         lang="${item%:*}"
         tool="demo_$lang.$lang"
@@ -429,22 +402,23 @@ test@agent() {
     names_file="$tmp_dir/agents.txt"
     argc list@agent > "$names_file"
     argc build@agent --names-file "$names_file"
-    test-demo-agents
+    test-demo@agent
 }
 
 # @cmd Test demo agents
 # @alias agent:test-demo
-test-demo-agents() {
-    echo "Test demo agent:"
+test-demo@agent() {
+    echo "---- Test demo agent ---"
     argc run@agent demo get_sysinfo '{}'
     for item in "${LANG_CMDS[@]}"; do
         cmd="${item#*:}"
         lang="${item%:*}"
-        echo "Test agents/demo/tools.$lang:"
+        echo "---- Test agents/demo/tools.$lang ---"
         if [[ "$cmd" == "sh" ]]; then
             "$(argc --argc-shell-path)" ./scripts/run-agent.sh demo get_sysinfo '{}'
         elif command -v "$cmd" &> /dev/null; then
             $cmd ./scripts/run-agent.$lang demo get_sysinfo '{}'
+            echo
         fi
     done
 }
