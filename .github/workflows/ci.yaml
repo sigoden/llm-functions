@@ -40,6 +40,11 @@ jobs:
       with:
         python-version: '3.11' 
 
+    - name: Link web-search and code-interpreter
+      run: |
+        argc link-web-search search_tavily.sh 
+        argc link-code-interpreter execute_py_code.py 
+
     - name: Run Test
       run: argc test
       env:

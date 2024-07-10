@@ -547,6 +547,7 @@ _link_tool() {
     else
         (cd tools && ln -rs $from $to)
     fi
+    (cd tools && ls -l $to)
 }
 
 _ask_json_data() {
