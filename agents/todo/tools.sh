@@ -17,7 +17,7 @@ add_todo() {
         --arg new_desc "$argc_desc" \
         '. += [{"id": $new_id | tonumber, "desc": $new_desc}]' \
         > "$todos_file"
-    echo "Successfully added todo id=$num"
+    echo "Successfully added todo id=$num" >> "$LLM_OUTPUT"
 }
 
 # @cmd Delete an existing todo item
@@ -29,9 +29,9 @@ del_todo() {
         echo "$data" | \
         jq --arg id $argc_id '[.[] | select(.id != ($id | tonumber))]' \
         > "$todos_file"
-        echo "Successfully deleted todo id=$argc_id"
+        echo "Successfully deleted todo id=$argc_id" >> "$LLM_OUTPUT"
     else
-        echo "Empty todo list"
+        echo "Empty todo list" >> "$LLM_OUTPUT"
     fi
 }
 
@@ -39,9 +39,9 @@ del_todo() {
 list_todos() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
-        cat "$todos_file" 
+        cat "$todos_file" >> "$LLM_OUTPUT"
     else
-        echo '[]'
+        echo '[]' >> "$LLM_OUTPUT"
     fi
 }
 
@@ -49,9 +49,9 @@ list_todos() {
 clear_todos() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
-        rm -rf "$todos_file" 
+        rm -rf "$todos_file" >> "$LLM_OUTPUT"
     fi
-    echo "Successfully deleted entry todo list"
+    echo "Successfully deleted entry todo list" >> "$LLM_OUTPUT"
 }
 
 _argc_before() {

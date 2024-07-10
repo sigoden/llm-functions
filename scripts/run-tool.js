@@ -46,8 +46,8 @@ function parseRawData(data) {
 }
 
 function setupEnv(rootDir, toolName) {
-  process.env["LLM_ROOT_DIR"] = rootDir;
   loadEnv(path.resolve(rootDir, ".env"));
+  process.env["LLM_ROOT_DIR"] = rootDir;
   process.env["LLM_TOOL_NAME"] = toolName;
   process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(rootDir, "cache", toolName);
 }
@@ -80,22 +80,26 @@ async function run(toolPath, toolFunc, toolData) {
     throw new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
   }
   const value = await mod[toolFunc](toolData);
-  dumpValue(value);
+  returnToLLM(value);
 }
 
-function dumpValue(value) {
+function returnToLLM(value) {
   if (value === null || value === undefined) {
     return;
   }
+  let writer = process.stdout;
+  if (process.env["LLM_OUTPUT"]) {
+    writer = fs.createWriteStream(process.env["LLM_OUTPUT"]);
+  }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
-    console.log(value);
+    writer.write(value);
   } else if (type === "object") {
     const proto = Object.prototype.toString.call(value);
     if (proto === "[object Object]" || proto === "[object Array]") {
       const valueStr = JSON.stringify(value, null, 2);
       require("assert").deepStrictEqual(value, JSON.parse(valueStr));
-      console.log(valueStr);
+      writer.write(value);
     }
   }
 }

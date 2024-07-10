@@ -14,7 +14,7 @@ main() {
     path="$FS_BASE_DIR/$argc_path"
     mkdir -p "$(dirname "$path")"
     printf "%s" "$argc_contents" > "$path"
-    echo "The contents written to: $path"
+    echo "The contents written to: $path" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

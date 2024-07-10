@@ -4,6 +4,5 @@ const os = require("node:os");
  */
 exports.get_sysinfo = function getSysinfo() {
     return `OS: ${os.type()}
-Arch: ${os.arch()}
-User: ${process.env["USER"]}`
+Arch: ${os.arch()}`
 }

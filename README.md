@@ -77,7 +77,7 @@ set -e
 # @option --command! The command to execute.
 
 main() {
-    eval "$argc_command"
+    eval "$argc_command" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
@@ -95,7 +95,7 @@ Create a new javascript in the [./tools/](./tools/) directory (.e.g. `may_execut
  * @param {Args} args
  */
 exports.main = function main({ code }) {
-  eval(code);
+  return eval(code);
 }
 
 ```
@@ -110,7 +110,7 @@ def main(code: str):
     Args:
         code: Python code to execute, such as `print("hello world")`
     """
-    exec(code)
+    return exec(code)
 
 ```
 

@@ -12,9 +12,9 @@ main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
     url="$SEARXNG_API_BASE/search?q=$encoded_query&categories=general&language=en-US&format=json"
     curl -fsSL "$url" | \
-        jq '[.results[:'"$SEARXNG_MAX_RESULTS"'] | .[] | {url: .url, title: .title, content: .content}]'
+        jq '[.results[:'"$SEARXNG_MAX_RESULTS"'] | .[] | {url: .url, title: .title, content: .content}]' \
+        >> "$LLM_OUTPUT"
 
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

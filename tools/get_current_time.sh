@@ -4,8 +4,7 @@ set -e
 # @describe Get the current time.
 
 main() {
-    date
+    date >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

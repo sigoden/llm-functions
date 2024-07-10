@@ -23,7 +23,7 @@ $argc_body" | \
         --mail-from "$EMAIL_SMTP_USER" \
         --mail-rcpt "$argc_recipient" \
         --upload-file -
-    echo "Email sent successfully"
+    echo "Email sent successfully" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

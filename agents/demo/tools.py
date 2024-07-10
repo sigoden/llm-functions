@@ -8,5 +8,4 @@ def get_sysinfo():
   return "\n".join([
     f"OS: {platform.system()}",
     f"Arch: {platform.machine()}",
-    f"User: {os.environ.get('USER')}"
   ])

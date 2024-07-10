@@ -13,8 +13,8 @@ main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
     url="https://www.googleapis.com/customsearch/v1?key=$GOOGLE_API_KEY&cx=$GOOGLE_CSE_ID&q=$encoded_query"
     curl -fsSL "$url" | \
-        jq '[.items[:'"$GOOGLE_MAX_RESULTS"'] | .[] | {title: .title, link: .link, snippet: .snippet}]'
+        jq '[.items[:'"$GOOGLE_MAX_RESULTS"'] | .[] | {title: .title, link: .link, snippet: .snippet}]' \
+        >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
-

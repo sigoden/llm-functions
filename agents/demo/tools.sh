@@ -3,9 +3,10 @@ set -e
 
 # @cmd Get the system info
 get_sysinfo() {
-    echo "OS: $(uname)"
-    echo "Arch: $(arch)"
-    echo "User: $USER"
+    cat <<EOF >> "$LLM_OUTPUT"
+OS: $(uname)
+Arch: $(arch)
+EOF
 }
 
 # See more details at https://github.com/sigoden/argc

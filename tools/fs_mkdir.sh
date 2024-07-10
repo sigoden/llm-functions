@@ -9,7 +9,7 @@ set -e
 main() {
     path="$FS_BASE_DIR/$argc_path"
     mkdir -p "$path"
-    echo "Directory created: $path"
+    echo "Directory created: $path" >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

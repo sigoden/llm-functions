@@ -20,7 +20,7 @@ main() {
     echo '{
     "link": "https://en.wikipedia.org/wiki/'"$title"'",
     "summary": "'"$summary"'"
-}'
+}' >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
