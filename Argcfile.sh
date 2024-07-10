@@ -259,6 +259,7 @@ build-declarations@agent() {
     fi
     not_found_agents=()
     build_failed_agents=()
+    exist_tools="$(ls -1 tools)"
     for name in "${names[@]}"; do
         agent_dir="agents/$name"
         declarations_file="$agent_dir/functions.json"
@@ -282,6 +283,12 @@ build-declarations@agent() {
                 fi
             done
             if [[ -f "$tool_names_file" ]]; then
+                if grep -q '^web_search\.' "$tool_names_file" && ! grep -q '^web_search\.' <<<"$exist_tools"; then
+                    echo "WARNING: no found web_search tool, please run \`argc link-web-search\` to set one."
+                fi
+                if grep -q '^code_interpreter\.' "$tool_names_file" && ! grep -q '^code_interpreter\.' <<<"$exist_tools"; then
+                    echo "WARNING: no found code_interpreter tool, please run \`argc link-code-interpreter\` to set one."
+                fi
                 tools_json_data="$(argc build-declarations@tool --names-file="$tool_names_file" --declarations-file=-)" || {
                     ok=false
                     build_failed_agents+=("$name")
