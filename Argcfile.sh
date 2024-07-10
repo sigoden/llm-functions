@@ -545,7 +545,7 @@ _link_tool() {
     if _is_win; then
         (cd tools && cmd <<< "mklink $to $from" > /dev/null)
     else
-        (cd tools && ln -rs $from $to)
+        (cd tools && ln -s $from $to)
     fi
     (cd tools && ls -l $to)
 }
