@@ -2,7 +2,7 @@
 set -e
 
 # @describe Send SMS or Twilio Messaging Channels messages using Twilio API.
-# @env TWILIO_ACCOUNT_SID! The twilio accout sid
+# @env TWILIO_ACCOUNT_SID! The twilio account sid
 # @env TWILIO_AUTH_TOKEN! The twilio auth token
 # @env TWILIO_FROM_NUMBER! The twilio from number
 # @option --to-number! The recipient's phone number. Prefix with 'whatsapp:' for WhatsApp messages, e.g. whatsapp:+1234567890
