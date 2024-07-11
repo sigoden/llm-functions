@@ -3,20 +3,20 @@ set -e
 
 # @env FS_BASE_DIR=. The base dir
 
-# @cmd Create a new file at the specified path with content. Use this when you need to create a new file in the project structure.
+# @cmd Create a new file at the specified path with content.
 # @option --path! The path where the file should be created
 # @option --content! The content of the file
-create_file() {
+fs_create() {
     path="$FS_BASE_DIR/$argc_path"
     printf "%s" "$argc_content" > "$path"
     echo "File created: $path" >> "$LLM_OUTPUT"
 }
 
-# @cmd Apply changes to a file. Use this when you need to edit a file.
+# @cmd Edit the file.
 # @option --path! The path of the file to edit
 # @option --content! The new content to apply to the file
 # @meta require-tools git
-edit_and_apply() {
+fs_edit() {
     path="$FS_BASE_DIR/$argc_path"
     if [[ -f "$path" ]]; then
         changed=0
@@ -27,7 +27,8 @@ edit_and_apply() {
             echo "No changes detected." >> "$LLM_OUTPUT"
         else
             if [ -t 1 ]; then
-                read -r -p "Are you sure you want to apply changes? [Y/n] " ans
+                echo
+                read -r -p "Apply changes? [Y/n] " ans
                 if [[ "$ans" == "N" || "$ans" == "n" ]]; then
                     echo "Aborted!"
                     exit 1
