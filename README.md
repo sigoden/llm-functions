@@ -28,30 +28,28 @@ git clone https://github.com/sigoden/llm-functions
 
 ```
 get_current_weather.sh
-execute_command.sh
-#execute_py_code.py
+execute_py_code.py
+search_tavily.sh 
 ```
 
 - Create a `./agents.txt` file with each agent name on a new line.
 
 ```
+coder
 todo
-#demo
 ```
 
-- Run `argc build` to build functions declarations files (`functions.json`) and binaries (`./bin`) for tools and agents.
+- Run `argc build` to build tools and agents
 
 **3. Configure your AIChat:**
 
-Symlink this repo directory to aichat **functions_dir**:
+Symlink this repo directory to AIChat **functions_dir**:
 
 ```sh
 ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
 # OR
 argc install
 ```
-
-AIChat will automatically load `functions.json` and execute commands located in the `./bin` directory based on your prompts.
 
 **4. Start using your functions:**
 
