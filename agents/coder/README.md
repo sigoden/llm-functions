@@ -15,6 +15,6 @@ Assist your coding tasks.
 
 ![image](https://github.com/user-attachments/assets/ad9c9d94-5248-46ba-be30-cc885bda9333)
 
-https://github.com/user-attachments/assets/011496f5-c960-4134-ae9e-c940e707aeb8
+https://github.com/user-attachments/assets/0851b9e7-3ac5-4ec1-ab8b-d845c460446b
 
 https://github.com/user-attachments/assets/df459938-3abf-442b-bc51-42bdb9c72c43
