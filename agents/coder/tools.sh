@@ -12,7 +12,7 @@ fs_create() {
     echo "File created: $path" >> "$LLM_OUTPUT"
 }
 
-# @cmd Apply changes to a file.  Use this when you need to edit an existing file.
+# @cmd Apply changes to a file. Use this when you need to edit an existing file.
 # YOU ALWAYS PROVIDE THE FULL FILE CONTENT WHEN EDITING. NO PARTIAL CONTENT OR COMMENTS.
 # YOU MUST PROVIDE THE FULL FILE CONTENT.
 

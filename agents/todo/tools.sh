@@ -35,7 +35,7 @@ del_todo() {
     fi
 }
 
-# @cmd Display the current todo list in json format.
+# @cmd Display the current todo list in json format
 list_todos() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
@@ -45,7 +45,7 @@ list_todos() {
     fi
 }
 
-# @cmd Delete the entire todo list.
+# @cmd Delete the entire todo list
 clear_todos() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
