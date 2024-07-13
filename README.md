@@ -111,7 +111,7 @@ def main(code: str):
 
 ```
 
-## Writing Agents 
+## Writing Your Own Agents
 
 Agent = Prompt + Tools (Function Callings) + Knowndge (RAG). It's also known as OpenAI's GPTs.
 
@@ -135,7 +135,9 @@ instructions: You are a test ai agent to ...
 conversation_starters:
   - What can you do?
 documents:
-  - files/doc.pdf
+  - local-file.txt
+  - local-dir/
+  - https://example.com/remote-file.txt
 ```
 
 Refer to `./agents/todo-{sh,js,py}` for examples of how to implement a agent.

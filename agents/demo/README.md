@@ -36,9 +36,11 @@ instructions: |
 
 ### documents
 
-Documents are used for RAG.
+Documents are used for RAG, supporting local files/dirs and remote URLs.
 
 ```yaml
 documents:
-  - https://raw.githubusercontent.com/sigoden/llm-functions/main/README.md
+  - local-file.txt
+  - local-dir/
+  - https://example.com/remote-file.txt
 ```
