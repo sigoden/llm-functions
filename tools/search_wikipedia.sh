@@ -8,19 +8,19 @@ set -e
 
 main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
-    search_url="https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=$encoded_query&format=json"
-    title="$(curl -fsSL "$search_url" | jq -r '.query.search[0].title' 2>/dev/null)"
-    if [[ -z "$title" ]]; then
+    base_url="https://en.wikipedia.org/w/api.php"
+    url="$base_url?action=query&list=search&srprop=&srlimit=1&limit=1&srsearch=$encoded_query&srinfo=suggestion&format=json"
+    json="$(curl -fsSL "$url")"
+    suggestion="$(echo "$json" | jq -r '.query.searchinfo.suggestion // empty')"
+    title="$(echo "$json" | jq -r '.query.search[0].title // empty')"
+    pageid="$(echo "$json" | jq -r '.query.search[0].pageid // empty')"
+    if [[ -z "$title" || -z "$pageid" ]]; then
         echo "Error: No results found for '$argc_query'"
         exit 1
     fi
     title="$(echo "$title" | tr ' ' '_')"
-    page_url="https://en.wikipedia.org/api/rest_v1/page/summary/$title"
-    summary="$(curl -fsSL "$page_url"  | jq -r '.extract')"
-    echo '{
-    "link": "https://en.wikipedia.org/wiki/'"$title"'",
-    "summary": "'"$summary"'"
-}' >> "$LLM_OUTPUT"
+    url="$base_url?action=query&prop=extracts&explaintext=&titles=$title&exintro=&format=json"
+    curl -fsSL "$url" | jq -r '.query.pages["'"$pageid"'"].extract' >> "$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
