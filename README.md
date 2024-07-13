@@ -14,34 +14,35 @@ Make sure you have the following tools installed:
 - [argc](https://github.com/sigoden/argc): A bash command-line framewrok and command runner
 - [jq](https://github.com/jqlang/jq): A JSON processor
 
-## Getting Started with AIChat
+## Getting Started with [AIChat](https://github.com/sigoden/aichat)
 
-**1. Clone the repository:**
+### 1. Clone the repository:
 
 ```sh
 git clone https://github.com/sigoden/llm-functions
 ```
 
-**2. Build tools and agents:**
+### 2. Build tools and agents:
 
-- Create a `./tools.txt` file with each tool filename on a new line.
+**I. Create a `./tools.txt` file with each tool filename on a new line.**
 
 ```
 get_current_weather.sh
+#execute_command.sh
 execute_py_code.py
 search_tavily.sh 
-```
+``` 
 
-- Create a `./agents.txt` file with each agent name on a new line.
+**II. Create a `./agents.txt` file with each agent name on a new line.**
 
 ```
 coder
 todo
 ```
 
-- Run `argc build` to build tools and agents
+**III. Run `argc build` to build tools and agents.**
 
-**3. Configure your AIChat:**
+### 3. Install to AIChat:
 
 Symlink this repo directory to AIChat **functions_dir**:
 
@@ -51,17 +52,15 @@ ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
 argc install
 ```
 
-**4. Start using your functions:**
+### 4. Start using the functions:
 
-Now you can interact with your LLM using natural language prompts that trigger your defined functions.
+Done! You can experience the magic of `llm-functions` in AIChat.
 
 ## Writing Your Own Tools
 
-Writing tools is super easy, you only need to write functions with comments.
+Building tools for our platform is remarkably straightforward. You can leverage your existing programming knowledge, as tools are essentially just functions written in your preferred language.
 
-`llm-functions` will automatically generate binaries, function declarations, and so on
-
-Refer to `./tools/demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
+LLM Functions automatically generates the JSON declarations for the tools based on **comments**. Refer to `./tools/demo_tool.{sh,js,py}` for examples of how to use comments for autogeneration of declarations.
 
 ### Bash
 
@@ -120,10 +119,10 @@ The agent has the following folder structure:
 ```
 └── agents
     └── myagent
-        ├── functions.json                  # Function declarations file (Auto-generated)
-        ├── index.yaml                      # Agent definition file
-        ├── tools.txt                       # Reuse tools
-        └── tools.{sh,js,py}                # Agent tools script
+        ├── functions.json                  # Function JSON declarations (Auto-generated)
+        ├── index.yaml                      # Agent definition
+        ├── tools.txt                       # Shared tools from ./tools
+        └── tools.{sh,js,py}                # Agent tools 
 ```
 
 The agent definition file (`index.yaml`) defines crucial aspects of your agent:
