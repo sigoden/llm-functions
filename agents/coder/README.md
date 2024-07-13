@@ -18,3 +18,8 @@ Assist your coding tasks.
 https://github.com/user-attachments/assets/0851b9e7-3ac5-4ec1-ab8b-d845c460446b
 
 https://github.com/user-attachments/assets/df459938-3abf-442b-bc51-42bdb9c72c43
+
+## Reference
+
+- https://github.com/Doriandarko/claude-engineer
+- https://github.com/paul-gauthier/aider
