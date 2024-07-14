@@ -13,6 +13,7 @@ LANG_CMDS=( \
 )
 
 # @cmd Run the tool
+# @option -C --cwd <dir> Change the current working directory
 # @alias tool:run
 # @arg tool![`_choice_tool`] The tool name
 # @arg json The json data
@@ -28,11 +29,14 @@ run@tool() {
     fi
     lang="${argc_tool##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    "$cmd" ./scripts/run-tool.$lang "$argc_tool" "$argc_json"
+    run_tool_script="$PWD/scripts/run-tool.$lang"
+    [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
 }
 
 # @cmd Run the agent
 # @alias agent:run
+# @option -C --cwd <dir> Change the current working directory
 # @arg agent![`_choice_agent`] The agent name
 # @arg action![`_choice_agent_action`] The agent action
 # @arg json The json data
@@ -49,7 +53,9 @@ run@agent() {
     tools_path="$(_get_agent_tools_path "$argc_agent")"
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    "$cmd" ./scripts/run-agent.$lang "$argc_agent" "$argc_action" "$argc_json"
+    run_agent_script="$PWD/scripts/run-agent.$lang"
+    [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
 }
 
 # @cmd Build the project
