@@ -30,7 +30,8 @@ run@tool() {
     lang="${argc_tool##*.}"
     cmd="$(_lang_to_cmd "$lang")"
     run_tool_script="$PWD/scripts/run-tool.$lang"
-    (cd "${argc_cwd:-$ARGC_PWD}" && "$cmd" "$run_tool_script" "$argc_tool" "$argc_json")
+    [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
 }
 
 # @cmd Run the agent
@@ -53,7 +54,8 @@ run@agent() {
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
     run_agent_script="$PWD/scripts/run-agent.$lang"
-    (cd "${argc_cwd:-$ARGC_PWD}" && "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json")
+    [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
 }
 
 # @cmd Build the project
