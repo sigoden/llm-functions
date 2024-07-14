@@ -3,7 +3,7 @@ set -e
 
 # @describe Search arXiv for a query and return the top papers.
 
-# @env ARXIV_MAX_RESULTS=5 The max results to return.
+# @env ARXIV_MAX_RESULTS=3 The max results to return.
 # @option --query! The query to search for.
 
 main() {

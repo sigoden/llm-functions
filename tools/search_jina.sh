@@ -5,7 +5,7 @@ set -e
 # Use this when you need current information or feel a search could provide a better answer.
 
 # @env JINA_API_KEY The api key
-# @env JINA_MAX_RESULTS=5 The max results to return.
+# @env SEARCH_MAX_RESULTS=5 The max results to return.
 # @option --query! The query to search for.
 
 main() {
@@ -15,7 +15,7 @@ main() {
     fi
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
     curl -fsSL "${curl_args[@]}" "https://s.jina.ai/$encoded_query" | \
-        jq '[.data[:'"$JINA_MAX_RESULTS"'] | .[] | {title: .title, url: .url, description: .description}]' \
+        jq '[.data[:'"$SEARCH_MAX_RESULTS"'] | .[] | {link: .url, title: .title, snippet: .description}]' \
         >> "$LLM_OUTPUT"
 }
 
