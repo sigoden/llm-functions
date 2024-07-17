@@ -439,7 +439,7 @@ test-demo@agent() {
 # @cmd Clean tools
 # @alias tool:clean
 clean@tool() {
-    _choice_tool | sed 's/\.\([a-z]\+\)$//' |  xargs -I{} rm -rf "$BIN_DIR/{}"
+    _choice_tool | sed -E 's/\.([a-z]+)$//' |  xargs -I{} rm -rf "$BIN_DIR/{}"
     rm -rf functions.json
 }
 

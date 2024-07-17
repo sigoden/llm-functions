@@ -5,7 +5,7 @@ set -e
 # Use this when you need current information or feel a search could provide a better answer.
 
 # @env EXA_API_KEY! The api key
-# @env EXA_MAX_RESULTS=5 The max results to return.
+# @env SEARCH_MAX_RESULTS=5 The max results to return.
 # @option --query! The query to search for.
 
 main() {
@@ -15,7 +15,7 @@ main() {
         -d '
 {
     "query": "'"$argc_query"'",
-    "numResults": '"$EXA_MAX_RESULTS"',
+    "numResults": '"$SEARCH_MAX_RESULTS"',
     "type": "keyword",
     "contents": {
         "text": {
@@ -23,7 +23,7 @@ main() {
         }
     }
 }' | \
-        jq '[.results[] | {title: .title, url: .url, text: .text}]' \
+        jq '[.results[] | {link: .url, title: .title, snippet: .text}]' \
         >> "$LLM_OUTPUT"
 }
 

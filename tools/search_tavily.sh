@@ -5,7 +5,7 @@ set -e
 # Use this when you need current information or feel a search could provide a better answer.
 
 # @env TAVILY_API_KEY! The api key
-# @env TAVILY_MAX_RESULTS=5 The max results to return.
+# @env SEARCH_MAX_RESULTS=5 The max results to return.
 # @option --query! The query to search for.
 
 main() {
@@ -16,9 +16,9 @@ main() {
     "api_key": "'"$TAVILY_API_KEY"'",
     "query": "'"$argc_query"'",
     "search_depth": "advanced",
-    "max_results": "'"$TAVILY_MAX_RESULTS"'"
+    "max_results": "'"$SEARCH_MAX_RESULTS"'"
 }' | \
-        jq '[.results[] | {title: .title, url: .url, content: .content}]' \
+        jq '[.results[] | {link: .url, title: .title, snippet: .content}]' \
         >> "$LLM_OUTPUT"
 }
 
