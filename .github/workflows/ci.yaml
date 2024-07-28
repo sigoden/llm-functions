@@ -42,7 +42,7 @@ jobs:
 
     - name: Link web-search and code-interpreter
       run: |
-        argc link-web-search search_tavily.sh 
+        argc link-web-search web_search_perplexity.sh 
         argc link-code-interpreter execute_py_code.py 
 
     - name: Run Test

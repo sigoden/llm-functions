@@ -453,8 +453,8 @@ clean@agent() {
 # @cmd Link a tool as web_search tool
 #
 # Example:
-#   argc link-web-search search_bing.sh
-# @arg tool![`_choice_tool`]  The tool work as web_search
+#   argc link-web-search web_search_perplexity.sh
+# @arg tool![`_choice_web_search`]  The tool work as web_search
 link-web-search() {
     _link_tool $1 web_search
 }
@@ -463,7 +463,7 @@ link-web-search() {
 #
 # Example:
 #   argc link-code-interpreter execute_py_code.py 
-# @arg tool![`_choice_tool`]  The tool work as code_interpreter
+# @arg tool![`_choice_code_interpreter`]  The tool work as code_interpreter
 link-code-interpreter() {
     _link_tool $1 code_interpreter
 }
@@ -606,6 +606,14 @@ _choice_tool() {
             ls -1 tools | grep "\.$lang$"
         fi
     done
+}
+
+_choice_web_search() {
+    _choice_tool | grep '^web_search_'
+}
+
+_choice_code_interpreter() {
+    _choice_tool | grep '^execute_.*_code'
 }
 
 _choice_agent() {
