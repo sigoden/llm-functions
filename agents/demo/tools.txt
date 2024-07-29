@@ -1,1 +1,1 @@
-get_current_time.sh
+execute_command.sh

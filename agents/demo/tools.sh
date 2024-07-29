@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-# @cmd Get the system info
-get_sysinfo() {
-    cat <<EOF >> "$LLM_OUTPUT"
-OS: $(uname)
-Arch: $(arch)
-EOF
+# @cmd Get the ip info
+get_ipinfo() {
+    curl -fsSL https://httpbin.org/ip >> "$LLM_OUTPUT"
 }
 
 # See more details at https://github.com/sigoden/argc
