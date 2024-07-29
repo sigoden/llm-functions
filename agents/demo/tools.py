@@ -1,11 +1,9 @@
-import os
-import platform
+import urllib.request
 
-def get_sysinfo():
+def get_ipinfo():
   """
-  Get the system info
+  Get the ip info
   """
-  return "\n".join([
-    f"OS: {platform.system()}",
-    f"Arch: {platform.machine()}",
-  ])
+  with urllib.request.urlopen("https://httpbin.org/ip") as response:
+    data = response.read()
+    return data.decode('utf-8')

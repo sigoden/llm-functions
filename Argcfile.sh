@@ -422,15 +422,16 @@ test@agent() {
 # @alias agent:test-demo
 test-demo@agent() {
     echo "---- Test demo agent ---"
-    argc run@agent demo get_sysinfo '{}'
+    args=(demo get_ipinfo '{}')
+    argc run@agent "${args[@]}"
     for item in "${LANG_CMDS[@]}"; do
         cmd="${item#*:}"
         lang="${item%:*}"
         echo "---- Test agents/demo/tools.$lang ---"
         if [[ "$cmd" == "sh" ]]; then
-            "$(argc --argc-shell-path)" ./scripts/run-agent.sh demo get_sysinfo '{}'
+            "$(argc --argc-shell-path)" ./scripts/run-agent.sh "${args[@]}"
         elif command -v "$cmd" &> /dev/null; then
-            $cmd ./scripts/run-agent.$lang demo get_sysinfo '{}'
+            $cmd ./scripts/run-agent.$lang "${args[@]}"
             echo
         fi
     done

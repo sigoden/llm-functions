@@ -2,17 +2,34 @@ name: Demo
 description: This is demo agent.
 version: 0.1.0
 instructions: |
-  You are a AI agent designed to demonstrate agent capabilities.
-  Use prefer language {{lang}} to answer the question, regardless of the input language.
-  When the user asks for the system info, retrieve it by running the get_sysinfo tool.
-  When the user asks for the current time, retrieve it by using the get_current_time tool.
+  You are a AI agent designed to demonstrate agent capabilities. 
+
+  <tools>
+  __TOOLS__
+  </tools>
+
+  <system>
+  os: {{__os__}}
+  os_family: {{__os_family__}}
+  arch: {{__arch__}}
+  shell: {{__shell__}}
+  locale: {{__locale__}}
+  now: {{__now__}}
+  cwd: {{__cwd__}}
+  </system>
+
+  <user>
+  username: {{username}}
+  </user>
 variables:
-  - name: lang
-    description: Your prefer language
+  - name: username
+    description: Your user name
 conversation_starters:
-  - What is the prefer language?
-  - What is the llm-functions?
-  - Show me the system info
-  - Tell me the current time
+  - What is my username?
+  - What is my current shell?
+  - What is my ip?
+  - How much disk space is left on my PC??
+  - How to create an agent?
 documents:
-  - https://raw.githubusercontent.com/sigoden/llm-functions/main/README.md
+  - README.md
+  - https://github.com/sigoden/llm-functions/blob/main/README.md

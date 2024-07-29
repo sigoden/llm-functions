@@ -1,8 +1,7 @@
-const os = require("node:os");
 /**
  * Get the system info
  */
-exports.get_sysinfo = function getSysinfo() {
-    return `OS: ${os.type()}
-Arch: ${os.arch()}`
+exports.get_ipinfo = async function getIpinfo() {
+   const res = await fetch("https://httpbin.org/ip")
+   return res.json();
 }

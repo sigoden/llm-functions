@@ -1,22 +1,14 @@
 # Demo
 
-This is demo agent.
-
-## tools.{sh,js,py}
-
-You only need one of the `tools.sh`, `tools.js`, or `tools.py` files. All three are provided so that everyone can understand how to implement the tools in each language.
-
-## tools.txt
-
-The `tools.txt` is used to reuse the tools in the `tools/` directory.
+This agent serves as a demo to guide agent development and showcase various agent capabilities.
 
 ## index.yaml
 
-This document is essential as it defines the agent.
+This file defines the agent.
 
 ### variables
 
-Variables are generally used to record a certain behavior or preference of a user.
+Variables are generally used to store information about a user's behavior or preferences.
 
 ```yaml
 variables:
@@ -27,11 +19,23 @@ variables:
     default: val
 ```
 
-Variables can be used in the `instructions`.
+When use define variables, please avoid these built-in variables:
+
+| name          | description                                   | example                  |
+| :------------ | :-------------------------------------------- | :----------------------- |
+| __os__        | Operating system name                         | linux                    |
+| __os_family__ | Operating system family                       | unix                     |
+| __arch__      | System architecture                           | x86_64                   |
+| __shell__     | Current user's default shell                  | bash                     |
+| __locale__    | User's preferred language and region settings | en-US                    |
+| __now__       | Current timestamp in ISO 8601 format          | 2024-07-29T08:11:24.367Z |
+| __cwd__       | Current working directory                     | /tmp                     |
+
+Variables should be used in the `instructions` field.
 
 ```yaml
 instructions: |
-  The instructions can inline {{foo}} and {{bar}} variables.
+  The instructions can inline user defined variables: {{foo}}, {{bar}} and builtin variables {{__shell__}}.
 ```
 
 ### documents
@@ -44,3 +48,13 @@ documents:
   - local-dir/
   - https://example.com/remote-file.txt
 ```
+
+## tools.{sh,js,py}
+
+The tool script implements agent-specific tools.
+
+> You only need one of the `tools.sh`, `tools.js`, or `tools.py`.
+
+## tools.txt
+
+The `tools.txt` file enables tool reuse from the `/tools` folder in this project.
