@@ -111,7 +111,7 @@ function returnToLLM(value) {
     if (proto === "[object Object]" || proto === "[object Array]") {
       const valueStr = JSON.stringify(value, null, 2);
       require("assert").deepStrictEqual(value, JSON.parse(valueStr));
-      writer.write(value);
+      writer.write(valueStr);
     }
   }
 }
