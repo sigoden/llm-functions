@@ -140,7 +140,7 @@ documents:
   - https://example.com/remote-file.txt
 ```
 
-Refer to `./agents/todo-{sh,js,py}` for examples of how to implement a agent.
+Refer to [./agents/demo](https://github.com/sigoden/llm-functions/tree/main/agents/demo) for examples of how to implement a agent.
 
 ## License
 

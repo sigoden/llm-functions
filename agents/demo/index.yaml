@@ -2,10 +2,10 @@ name: Demo
 description: This is demo agent.
 version: 0.1.0
 instructions: |
-  You are a AI agent designed to demonstrate agent capabilities. 
+  You are a AI agent designed to demonstrate agent capabilities.
 
   <tools>
-  __TOOLS__
+  {{__tools__}}
   </tools>
 
   <system>
