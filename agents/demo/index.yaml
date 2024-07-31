@@ -1,5 +1,5 @@
 name: Demo
-description: This is demo agent.
+description: An AI agent that demonstrates agent capabilities
 version: 0.1.0
 instructions: |
   You are a AI agent designed to demonstrate agent capabilities.
