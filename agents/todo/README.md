@@ -2,4 +2,5 @@
 
 An AI agent that helps you manage a todo list.
 
-https://github.com/user-attachments/assets/36bd42ba-cbd6-4e0c-b8b1-bb3e28db9a98
+https://github.com/user-attachments/assets/d6321ab7-3c1b-4149-bde0-90f4d5ed0bf5
+
