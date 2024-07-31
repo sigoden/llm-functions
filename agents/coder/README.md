@@ -1,6 +1,6 @@
 # Coder
 
-Assist your coding tasks.
+A AI agent that assists your coding tasks.
 
 ## Features
 
