@@ -14,6 +14,6 @@ instructions: |
 conversation_starters:
   - "List all todos"
   - "Clean the entire todo list"
-  - "Add a new todo: "
-  - "Done todo id="
-  - "Delete todo id="
+  - "Add a new todo: Buy milk"
+  - "Done todo id=1"
+  - "Delete todo id=1"
