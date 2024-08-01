@@ -2,10 +2,11 @@
 
 This project allows you to enhance large language models (LLMs) with custom tools and agents developed in bash/javascript/python. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
 
-![tool-showcase](https://github.com/sigoden/llm-functions/assets/4012553/41c297cb-b3f7-4e5f-925e-a80d07684b1d)
+**Tool Showcase**
+![llm-function-tool](https://github.com/user-attachments/assets/40c77413-30ba-4f0f-a2c7-19b042a1b507)
 
-![agent-showcase](https://github.com/sigoden/aichat/assets/4012553/7308a423-2ee5-4847-be1b-a53538bc98dc)
-
+**Agent showcase**
+![llm-function-agent](https://github.com/user-attachments/assets/6e380069-8211-4a16-8592-096e909b921d)
 
 ## Prerequisites
 
