@@ -5,6 +5,7 @@ set -e
 # Use this when you need current information or feel a search could provide a better answer.
 
 # @env COHERE_API_KEY! The api key
+# @env COHERE_WEB_SEARCH_MODEL=command-r The LLM model for web search
 # @option --query! The query to search for.
 
 main() {
@@ -14,7 +15,7 @@ main() {
      -H "content-type: application/json" \
      --data '
 {
-    "model": "command-r",
+    "model": "'"$COHERE_WEB_SEARCH_MODEL"'",
     "message": "'"$argc_query"'",
     "connectors": [{"id": "web-search"}]
 }

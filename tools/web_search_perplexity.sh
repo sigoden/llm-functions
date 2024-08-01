@@ -5,6 +5,7 @@ set -e
 # Use this when you need current information or feel a search could provide a better answer.
 
 # @env PERPLEXITY_API_KEY! The api key
+# @env PERPLEXITY_WEB_SEARCH_MODEL=llama-3.1-sonar-small-128k-online The LLM model for web search
 # @option --query! The query to search for.
 
 main() {
@@ -14,7 +15,7 @@ main() {
      -H "content-type: application/json" \
      --data '
 {
-  "model": "llama-3-sonar-small-32k-online",
+  "model": "'"$PERPLEXITY_WEB_SEARCH_MODEL"'",
   "messages": [
     {
       "role": "user",
