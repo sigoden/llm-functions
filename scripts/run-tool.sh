@@ -40,7 +40,7 @@ load_env() {
             if [[ -z "${!key+x}" ]]; then
                 env_vars="$env_vars $key=$value"
             fi
-        done < "$env_file"
+        done < <(cat "$env_file"; echo "")
         if [[ -n "$env_vars" ]]; then
             eval "export $env_vars"
         fi
