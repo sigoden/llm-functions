@@ -1,11 +1,11 @@
 # LLM Functions
 
-This project allows you to enhance large language models (LLMs) with custom tools and agents developed in bash/javascript/python. Imagine your LLM being able to execute system commands, access web APIs, or perform other complex tasks – all triggered by simple, natural language prompts.
+This project helps you easily create LLM tools and agents based on Bash, JavaScript, and Python. Additionally, it offers a comprehensive collection of pre-built tools and agents for your convenience.
 
-**Tool Showcase**
+**Tools Showcase**
 ![llm-function-tool](https://github.com/user-attachments/assets/40c77413-30ba-4f0f-a2c7-19b042a1b507)
 
-**Agent showcase**
+**Agents showcase**
 ![llm-function-agent](https://github.com/user-attachments/assets/6e380069-8211-4a16-8592-096e909b921d)
 
 ## Prerequisites
@@ -29,9 +29,8 @@ git clone https://github.com/sigoden/llm-functions
 
 ```
 get_current_weather.sh
-#execute_command.sh
-execute_py_code.py
-search_tavily.sh 
+execute_command.sh
+#execute_py_code.py
 ``` 
 
 **II. Create a `./agents.txt` file with each agent name on a new line.**
@@ -65,7 +64,7 @@ LLM Functions automatically generates the JSON declarations for the tools based 
 
 ### Bash
 
-Create a new bashscript in the [./tools/](./tools/) directory (.e.g. `may_execute_command.sh`).
+Create a new bashscript in the [./tools/](./tools/) directory (.e.g. `execute_command.sh`).
 
 ```sh
 #!/usr/bin/env bash
@@ -83,7 +82,7 @@ eval "$(argc --argc-eval "$0" "$@")"
 
 ### Javascript
 
-Create a new javascript in the [./tools/](./tools/) directory (.e.g. `may_execute_js_code.js`).
+Create a new javascript in the [./tools/](./tools/) directory (.e.g. `execute_js_code.js`).
 
 ```js
 /**
@@ -100,7 +99,7 @@ exports.main = function main({ code }) {
 
 ### Python
 
-Create a new python script in the [./tools/](./tools/) directory (e.g., `may_execute_py_code.py`).
+Create a new python script in the [./tools/](./tools/) directory (e.g., `execute_py_code.py`).
 
 ```py
 def main(code: str):
@@ -135,6 +134,9 @@ version: 0.1.0
 instructions: You are a test ai agent to ... 
 conversation_starters:
   - What can you do?
+variables:
+  - name: foo
+    description: This is a foo
 documents:
   - local-file.txt
   - local-dir/
