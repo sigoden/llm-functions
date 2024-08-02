@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-# @env FS_BASE_DIR=. The base dir
-
 # @cmd Create a new file at the specified path with content.
 # @option --path! The path where the file should be created
 # @option --content! The content of the file
 fs_create() {
-    path="$FS_BASE_DIR/$argc_path"
-    printf "%s" "$argc_content" > "$path"
-    echo "File created: $path" >> "$LLM_OUTPUT"
+    _guard_path "$argc_path" Create
+    printf "%s" "$argc_content" > "$argc_path"
+    echo "File created: $argc_path" >> "$LLM_OUTPUT"
 }
 
 # @cmd Apply changes to a file. Use this when you need to edit an existing file.
@@ -20,10 +18,10 @@ fs_create() {
 # @option --content! The new content to apply to the file
 # @meta require-tools git
 fs_edit() {
-    path="$FS_BASE_DIR/$argc_path"
-    if [[ -f "$path" ]]; then
+    if [[ -f "$argc_path" ]]; then
+        _guard_path "$argc_path" Edit
         changed=0
-        printf "%s" "$argc_content" | git diff --no-index "$path" - || {
+        printf "%s" "$argc_content" | git diff --no-index "$argc_path" - || {
             changed=1
         }
         if [[ "$changed" -eq 0 ]]; then
@@ -37,11 +35,25 @@ fs_edit() {
                     exit 1
                 fi
             fi
-            printf "%s" "$argc_content" > "$path"
+            printf "%s" "$argc_content" > "$argc_path"
             echo "Applied changes" >> "$LLM_OUTPUT"
         fi
     else
-        echo "Not found file: $path" >> "$LLM_OUTPUT"
+        echo "Not found file: $argc_path" >> "$LLM_OUTPUT"
+    fi
+}
+
+_guard_path() {
+    path="$(realpath "$1")"
+    action="$2"
+    if [[ ! "$path" == "$(pwd)"* ]]; then
+        if [ -t 1 ]; then
+            read -r -p "$action $path? [Y/n] " ans
+            if [[ "$ans" == "N" || "$ans" == "n" ]]; then
+                echo "Aborted!"
+                exit 1
+            fi
+        fi
     fi
 }
 
