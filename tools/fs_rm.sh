@@ -3,7 +3,6 @@ set -e
 
 # @describe Remove the file or directory at the specified path.
 
-# @env FS_BASE_DIR=. The base dir
 # @option --path! The path of the file or directory to remove
 
 main() {
