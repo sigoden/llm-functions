@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Runs the shell command.
+# @describe Execute the shell command.
 # @option --command! The command to execute.
 
 main() {

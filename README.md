@@ -70,7 +70,7 @@ Create a new bashscript in the [./tools/](./tools/) directory (.e.g. `execute_co
 #!/usr/bin/env bash
 set -e
 
-# @describe Runs a shell command.
+# @describe Execute the shell command.
 # @option --command! The command to execute.
 
 main() {
@@ -86,7 +86,7 @@ Create a new javascript in the [./tools/](./tools/) directory (.e.g. `execute_js
 
 ```js
 /**
- * Runs the javascript code in node.js.
+ * Execute the javascript code in node.js.
  * @typedef {Object} Args
  * @property {string} code - Javascript code to execute, such as `console.log("hello world")`
  * @param {Args} args
@@ -99,11 +99,11 @@ exports.main = function main({ code }) {
 
 ### Python
 
-Create a new python script in the [./tools/](./tools/) directory (e.g., `execute_py_code.py`).
+Create a new python script in the [./tools/](./tools/) directory (e.g. `execute_py_code.py`).
 
 ```py
 def main(code: str):
-    """Runs the python code.
+    """Execute the python code.
     Args:
         code: Python code to execute, such as `print("hello world")`
     """
