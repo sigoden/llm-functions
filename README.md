@@ -36,9 +36,12 @@ execute_command.sh
 <details>
 <summary>Where is the web_search tool?</summary>
 
-The normal `web_search` tool does not exist. One needs to run `argc link-web-search <web-search-tool>` to link to one of the available `web_search_*` tools.
+The normal `web_search` tool does not exist. Please run `argc link-web-search <web-search-tool>` to link to one of the available `web_search_*` tools.
 
-![image](https://github.com/user-attachments/assets/559bebb9-fd35-4e21-b13f-29fd13b3586d)
+```
+$ argc link-web-search web_search_<tab>
+web_search_cohere.sh    web_search_perplexity.sh    web_search_tavily.sh    web_search_vertexai.sh     
+```
 
 </details>
 
