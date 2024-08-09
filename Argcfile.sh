@@ -290,10 +290,10 @@ build-declarations@agent() {
             done
             if [[ -f "$tool_names_file" ]]; then
                 if grep -q '^web_search\.' "$tool_names_file" && ! grep -q '^web_search\.' <<<"$exist_tools"; then
-                    echo "WARNING: no found web_search tool, please run \`argc link-web-search\` to set one."
+                    echo "WARNING: no found web_search tool, please run \`argc link-web-search <web-search-tool>\` to set one."
                 fi
                 if grep -q '^code_interpreter\.' "$tool_names_file" && ! grep -q '^code_interpreter\.' <<<"$exist_tools"; then
-                    echo "WARNING: no found code_interpreter tool, please run \`argc link-code-interpreter\` to set one."
+                    echo "WARNING: no found code_interpreter tool, please run \`argc link-code-interpreter <execute-code-tool>\` to set one."
                 fi
                 tools_json_data="$(argc build-declarations@tool --names-file="$tool_names_file" --declarations-file=-)" || {
                     ok=false
@@ -497,6 +497,9 @@ create() {
 # @cmd Show pre-requisite tool versions
 version() {
     uname -a
+    if command -v aichat &> /dev/null; then
+        aichat --version
+    fi
     argc --argc-version
     jq --version
     for item in "${LANG_CMDS[@]}"; do
