@@ -1,6 +1,6 @@
 # LLM Functions
 
-This project helps you easily create LLM tools and agents based on Bash, JavaScript, and Python. Additionally, it offers a comprehensive collection of pre-built tools and agents for your convenience.
+This project helps you easily create LLM tools and agents using Bash/JavaScript/Python, and provides a library of commonly used LLM tools and agents.
 
 **Tools Showcase**
 ![llm-function-tool](https://github.com/user-attachments/assets/40c77413-30ba-4f0f-a2c7-19b042a1b507)
@@ -17,13 +17,15 @@ Make sure you have the following tools installed:
 
 ## Getting Started with [AIChat](https://github.com/sigoden/aichat)
 
-### 1. Clone the repository:
+**Currently, AIChat is the only CLI tool that supports `llm-functions`. We look forward to more tools supporting `llm-functions`.**
+
+### 1. Clone the repository
 
 ```sh
 git clone https://github.com/sigoden/llm-functions
 ```
 
-### 2. Build tools and agents:
+### 2. Build tools and agents
 
 **I. Create a `./tools.txt` file with each tool filename on a new line.**
 
@@ -54,9 +56,9 @@ todo
 
 **III. Run `argc build` to build tools and agents.**
 
-### 3. Install to AIChat:
+### 3. Install to AIChat
 
-Symlink this repo directory to AIChat **functions_dir**:
+Symlink this repo directory to AIChat's **functions_dir**:
 
 ```sh
 ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
@@ -64,9 +66,14 @@ ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{print $2}')"
 argc install
 ```
 
-### 4. Start using the functions:
+### 4. Start using the functions
 
-Done! You can experience the magic of `llm-functions` in AIChat.
+Done! Now you can use the tools and agents with AIChat.
+
+```sh
+aichat --role %functions% what is the weather in Paris?
+aichat --agent todo list all my todos
+```
 
 ## Writing Your Own Tools
 
@@ -125,15 +132,15 @@ def main(code: str):
 
 ## Writing Your Own Agents
 
-Agent = Prompt + Tools (Function Callings) + Knowndge (RAG). It's also known as OpenAI's GPTs.
+Agent = Prompt + Tools (Function Callings) + Documents (RAG), which is equivalent to OpenAI's GPTs.
 
 The agent has the following folder structure:
 ```
 └── agents
     └── myagent
-        ├── functions.json                  # Function JSON declarations (Auto-generated)
+        ├── functions.json                  # JSON declarations for functions (Auto-generated)
         ├── index.yaml                      # Agent definition
-        ├── tools.txt                       # Shared tools from ./tools
+        ├── tools.txt                       # Shared tools
         └── tools.{sh,js,py}                # Agent tools 
 ```
 
