@@ -14,7 +14,7 @@ main() {
 }
 
 _guard_path() {
-    path="$(realpath "$1")"
+    path="$(realpath -m "$1")"
     action="$2"
     if [[ ! "$path" == "$(pwd)"* ]]; then
         if [ -t 1 ]; then

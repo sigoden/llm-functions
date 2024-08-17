@@ -502,6 +502,7 @@ version() {
     fi
     argc --argc-version
     jq --version
+    ls --version 2>&1 | head -n 1
     for item in "${LANG_CMDS[@]}"; do
         cmd="${item#*:}"
         if [[ "$cmd" == "bash" ]]; then

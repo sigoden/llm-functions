@@ -6,6 +6,7 @@ set -e
 # @option --contents! The contents of the file
 fs_create() {
     _guard_path "$argc_path" Create
+    mkdir -p "$(dirname "$argc_path")"
     printf "%s" "$argc_contents" > "$argc_path"
     echo "File created: $argc_path" >> "$LLM_OUTPUT"
 }
@@ -44,7 +45,7 @@ fs_edit() {
 }
 
 _guard_path() {
-    path="$(realpath "$1")"
+    path="$(realpath -m "$1")"
     action="$2"
     if [[ ! "$path" == "$(pwd)"* ]]; then
         if [ -t 1 ]; then
