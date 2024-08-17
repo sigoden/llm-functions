@@ -79,7 +79,7 @@ def to_args:
 [ to_args ] | join(" ")
 EOF
 )"
-    args="$(echo "$tool_data" | jq -r "$jq_script")" || {
+    args="$(echo "$agent_data" | jq -r "$jq_script")" || {
         die "Invalid JSON data"
     }
 
