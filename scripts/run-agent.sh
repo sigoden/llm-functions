@@ -88,7 +88,6 @@ EOF
         no_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
     fi
-    set -x
     eval "'$tools_path' '$agent_func' $args"
     if [[ "$no_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
