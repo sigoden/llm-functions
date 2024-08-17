@@ -79,7 +79,7 @@ def to_args:
 [ to_args ] | join(" ")
 EOF
 )"
-    args="$(echo "$tool_data" | jq -r "$jq_script")" || {
+    args="$(echo "$agent_data" | jq -r "$jq_script")" || {
         die "Invalid JSON data"
     }
 
@@ -88,6 +88,7 @@ EOF
         no_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
     fi
+    set -x
     eval "'$tools_path' '$agent_func' $args"
     if [[ "$no_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
