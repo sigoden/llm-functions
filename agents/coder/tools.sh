@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 set -e
 
-# @cmd Create a new file at the specified path with content.
+# @cmd Create a new file at the specified path with contents.
 # @option --path! The path where the file should be created
-# @option --content! The content of the file
+# @option --contents! The contents of the file
 fs_create() {
     _guard_path "$argc_path" Create
-    printf "%s" "$argc_content" > "$argc_path"
+    printf "%s" "$argc_contents" > "$argc_path"
     echo "File created: $argc_path" >> "$LLM_OUTPUT"
 }
 
 # @cmd Apply changes to a file. Use this when you need to edit an existing file.
-# YOU ALWAYS PROVIDE THE FULL FILE CONTENT WHEN EDITING. NO PARTIAL CONTENT OR COMMENTS.
-# YOU MUST PROVIDE THE FULL FILE CONTENT.
+# YOU ALWAYS PROVIDE THE FULL FILE CONTENTS WHEN EDITING. NO PARTIAL CONTENTS OR COMMENTS.
+# YOU MUST PROVIDE THE FULL FILE CONTENTS.
 
 # @option --path! The path of the file to edit
-# @option --content! The new content to apply to the file
+# @option --contents! The new contents to apply to the file
 # @meta require-tools git
 fs_edit() {
     if [[ -f "$argc_path" ]]; then
         _guard_path "$argc_path" Edit
         changed=0
-        printf "%s" "$argc_content" | git diff --no-index "$argc_path" - || {
+        printf "%s" "$argc_contents" | git diff --no-index "$argc_path" - || {
             changed=1
         }
         if [[ "$changed" -eq 0 ]]; then
@@ -35,7 +35,7 @@ fs_edit() {
                     exit 1
                 fi
             fi
-            printf "%s" "$argc_content" > "$argc_path"
+            printf "%s" "$argc_contents" > "$argc_path"
             echo "Applied changes" >> "$LLM_OUTPUT"
         fi
     else
