@@ -60,34 +60,35 @@ run() {
         tools_path="$(cygpath -w "$tools_path")"
     fi
 
-    data="$(
-        echo "$agent_data" | \
-        jq -r '
-        to_entries | .[] | 
-        (.key | split("_") | join("-")) as $key |
-        if .value | type == "array" then
-            .value | .[] | "--\($key)\n\(. | @json)"
-        elif .value | type == "boolean" then
-            if .value then "--\($key)" else "" end
-        else
-            "--\($key)\n\(.value | @json)"
-        end'
-    )" || {
+    jq_script="$(cat <<-'EOF'
+def escape_shell_word:
+  tostring
+  | gsub("'"; "'\"'\"'")
+  | gsub("\n"; "'$'\\n''")
+  | "'\(.)'";
+def to_args:
+    to_entries | .[] | 
+    (.key | split("_") | join("-")) as $key |
+    if .value | type == "array" then
+        .value | .[] | "--\($key) \(. | escape_shell_word)"
+    elif .value | type == "boolean" then
+        if .value then "--\($key)" else "" end
+    else
+        "--\($key) \(.value | escape_shell_word)"
+    end;
+[ to_args ] | join(" ")
+EOF
+)"
+    args="$(echo "$tool_data" | jq -r "$jq_script")" || {
         die "Invalid JSON data"
     }
-    while IFS= read -r line; do
-        if [[ "$line" == '--'* ]]; then
-            args+=("$line")
-        else
-            args+=("$(echo "$line" | jq -r '.')")
-        fi
-    done <<< "$data"
+
     no_llm_output=0
     if [[ -z "$LLM_OUTPUT" ]]; then
         no_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
     fi
-    "$tools_path" "$agent_func" "${args[@]}"
+    eval "'$tools_path' '$agent_func' $args"
     if [[ "$no_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
     fi
