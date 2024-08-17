@@ -1,6 +1,10 @@
 # LLM Functions
 
-This project helps you easily create LLM tools and agents using Bash/JavaScript/Python, and provides a library of commonly used LLM tools and agents.
+This project empowers you to effortlessly build powerful LLM tools and agents using familiar languages like Bash, JavaScript, and Python. 
+
+Forget complex integrations, **harness the power of [function calling](https://platform.openai.com/docs/guides/function-calling)** to connect your LLMs directly to custom code and unlock a world of possibilities.  Execute system commands, process data, interact with APIs –  the only limit is your imagination.
+
+Kickstart your journey with a **curated library of pre-built LLM [tools](https://github.com/sigoden/llm-functions/tree/main/tools) and [agents](https://github.com/sigoden/llm-functions/tree/main/agents)** ready for immediate use or customization. 
 
 **Tools Showcase**
 ![llm-function-tool](https://github.com/user-attachments/assets/40c77413-30ba-4f0f-a2c7-19b042a1b507)
@@ -27,7 +31,7 @@ git clone https://github.com/sigoden/llm-functions
 
 ### 2. Build tools and agents
 
-**I. Create a `./tools.txt` file with each tool filename on a new line.**
+#### I. Create a `./tools.txt` file with each tool filename on a new line.
 
 ```
 get_current_weather.sh
@@ -37,24 +41,42 @@ execute_command.sh
 
 <details>
 <summary>Where is the web_search tool?</summary>
+<br>
 
-The normal `web_search` tool does not exist. Please run `argc link-web-search <web-search-tool>` to link to one of the available `web_search_*` tools.
+The `web_search` tool itself doesn't exist directly, Instead, you can choose from a variety of web search tools.
 
-```
-$ argc link-web-search web_search_<tab>
-web_search_cohere.sh    web_search_perplexity.sh    web_search_tavily.sh    web_search_vertexai.sh     
-```
+To use one as the `web_search` tool, follow these steps:
+
+1. **Choose a Tool:** Available tools include:
+    * `web_search_cohere.sh`
+    * `web_search_perplexity.sh`
+    * `web_search_tavily.sh`
+    * `web_search_vertexai.sh`
+
+2. **Link Your Choice:** Use the `argc` command to link your chosen tool as `web_search`. For example, to use `web_search_perplexity.sh`:
+
+    ```sh
+    $ argc link-web-search web_search_perplexity.sh
+    ```
+
+    This command creates a symbolic link, making `web_search.sh` point to your selected `web_search_perplexity.sh` tool. 
+
+Now there is a `web_search.sh` ready to be added to your `./tools.txt`.
 
 </details>
 
-**II. Create a `./agents.txt` file with each agent name on a new line.**
+#### II. Create a `./agents.txt` file with each agent name on a new line.
 
 ```
 coder
 todo
 ```
 
-**III. Run `argc build` to build tools and agents.**
+#### III. Build `bin` and `functions.json`
+
+```sh
+argc build
+```
 
 ### 3. Install to AIChat
 
@@ -132,7 +154,7 @@ def main(code: str):
 
 ## Writing Your Own Agents
 
-Agent = Prompt + Tools (Function Callings) + Documents (RAG), which is equivalent to OpenAI's GPTs.
+Agent = Prompt + Tools (Function Calling) + Documents (RAG), which is equivalent to OpenAI's GPTs.
 
 The agent has the following folder structure:
 ```
