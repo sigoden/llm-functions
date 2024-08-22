@@ -63,12 +63,12 @@ build() {
     if [[ -f tools.txt ]]; then
         argc build@tool
     else
-        echo 'Skipped building tools sine tools.txt is missing'
+        echo 'Skipped building tools since tools.txt is missing'
     fi
     if [[ -f agents.txt ]]; then
         argc build@agent
     else
-        echo 'Skipped building agents sine agents.txt is missing'
+        echo 'Skipped building agents since agents.txt is missing'
     fi
 }
 
