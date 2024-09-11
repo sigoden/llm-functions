@@ -2,9 +2,7 @@
 
 This project empowers you to effortlessly build powerful LLM tools and agents using familiar languages like Bash, JavaScript, and Python. 
 
-Forget complex integrations, **harness the power of [function calling](https://platform.openai.com/docs/guides/function-calling)** to connect your LLMs directly to custom code and unlock a world of possibilities.  Execute system commands, process data, interact with APIs –  the only limit is your imagination.
-
-Kickstart your journey with a **curated library of pre-built LLM [tools](https://github.com/sigoden/llm-functions/tree/main/tools) and [agents](https://github.com/sigoden/llm-functions/tree/main/agents)** ready for immediate use or customization. 
+Forget complex integrations, **harness the power of [function calling](https://platform.openai.com/docs/guides/function-calling)** to connect your LLMs directly to custom code and unlock a world of possibilities. Execute system commands, process data, interact with APIs –  the only limit is your imagination.
 
 **Tools Showcase**
 ![llm-function-tool](https://github.com/user-attachments/assets/40c77413-30ba-4f0f-a2c7-19b042a1b507)
