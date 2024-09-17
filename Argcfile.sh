@@ -114,10 +114,10 @@ build-bin@tool() {
         tool_path="tools/$name"
         if [[  -f "$tool_path" ]]; then
             if _is_win; then
-                bin_file="$BIN_DIR/$basename.cmd" 
+                bin_file="$BIN_DIR/$basename.cmd"
                 _build_win_shim tool $lang > "$bin_file"
             else
-                bin_file="$BIN_DIR/$basename" 
+                bin_file="$BIN_DIR/$basename"
                 ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
             fi
             echo "Build bin/$basename"
@@ -227,10 +227,10 @@ build-bin@agent() {
             if [[ -f "$agent_tools_file" ]]; then
                 found=true
                 if _is_win; then
-                    bin_file="$BIN_DIR/$name.cmd" 
+                    bin_file="$BIN_DIR/$name.cmd"
                     _build_win_shim agent $lang > "$bin_file"
                 else
-                    bin_file="$BIN_DIR/$name" 
+                    bin_file="$BIN_DIR/$name"
                     ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
                 fi
                 echo "Build bin/$name"
@@ -304,9 +304,9 @@ build-declarations@agent() {
                 if [[ -n "$agent_json_data" ]] && [[ -n "$tools_json_data" ]]; then
                     json_data="$(echo "[$agent_json_data,$tools_json_data]" | jq 'flatten')"
                 elif [[ -n "$agent_json_data" ]]; then
-                    json_data="$agent_json_data" 
+                    json_data="$agent_json_data"
                 elif [[ -n "$tools_json_data" ]]; then
-                    json_data="$tools_json_data" 
+                    json_data="$tools_json_data"
                 fi
                 if [[ -n "$json_data" ]]; then
                     echo "Build $declarations_file"
@@ -447,7 +447,7 @@ clean@tool() {
 # @cmd Clean agents
 # @alias agent:clean
 clean@agent() {
-    _choice_agent | xargs -I{} rm -rf "$BIN_DIR/{}" 
+    _choice_agent | xargs -I{} rm -rf "$BIN_DIR/{}"
     _choice_agent | xargs -I{} rm -rf agents/{}/functions.json
 }
 
@@ -463,7 +463,7 @@ link-web-search() {
 # @cmd Link a tool as code_interpreter tool
 #
 # Example:
-#   argc link-code-interpreter execute_py_code.py 
+#   argc link-code-interpreter execute_py_code.py
 # @arg tool![`_choice_code_interpreter`]  The tool work as code_interpreter
 link-code-interpreter() {
     _link_tool $1 code_interpreter
@@ -471,7 +471,7 @@ link-code-interpreter() {
 
 # @cmd Install this repo to aichat functions_dir
 install() {
-    functions_dir="$(aichat --info | grep -w functions_dir | awk '{print $2}')"
+    functions_dir="$(aichat --info | grep -w functions_dir | awk '{$1=""; print substr($0,2)}')"
     if [[ -z "$functions_dir" ]]; then
         _die "error: your aichat version don't support function calling"
     fi
@@ -480,7 +480,7 @@ install() {
             current_dir="$(cygpath -w "$(pwd)")"
             cmd <<< "mklink /D \"${functions_dir%/}\" \"${current_dir%/}\"" > /dev/null
         else
-            ln -s "$(pwd)" "$functions_dir" 
+            ln -s "$(pwd)" "$functions_dir"
         fi
         echo "$functions_dir symlinked"
     else
