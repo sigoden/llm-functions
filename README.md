@@ -14,7 +14,7 @@ Forget complex integrations, **harness the power of [function calling](https://p
 
 Make sure you have the following tools installed:
 
-- [argc](https://github.com/sigoden/argc): A bash command-line framewrok and command runner
+- [argc](https://github.com/sigoden/argc): A bash command-line framework and command runner
 - [jq](https://github.com/jqlang/jq): A JSON processor
 
 ## Getting Started with [AIChat](https://github.com/sigoden/aichat)
