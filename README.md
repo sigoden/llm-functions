@@ -119,6 +119,14 @@ main() {
 eval "$(argc --argc-eval "$0" "$@")"
 ```
 
+You can debug the output destined to the LLM by exporting the `$LLM_OUTPUT` variable to `stdout` then manually executing the script:
+```bash
+export LLM_OUTPUT=/dev/stdout
+
+# call your tool manually
+./tools/execute_command.sh --command ls
+```
+
 ### Javascript
 
 Create a new javascript in the [./tools/](./tools/) directory (.e.g. `execute_js_code.js`).
