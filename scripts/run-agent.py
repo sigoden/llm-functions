@@ -100,7 +100,7 @@ def dump_result():
     show_result = False
     agent_name = os.environ["LLM_AGENT_NAME"].upper().replace("-", "_")
     agent_env_name = f"LLM_AGENT_DUMP_RESULT_{agent_name}"
-    agent_env_value = os.getenv(agent_env_name)
+    agent_env_value = os.getenv(agent_env_name, os.getenv("LLM_AGENT_DUMP_RESULT"))
 
     func_name = os.environ["LLM_AGENT_FUNC"].upper().replace("-", "_")
     func_env_name = f"{agent_env_name}_{func_name}"
