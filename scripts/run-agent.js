@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 const path = require("path");
-const fs = require("fs");
+const { createWriteStream } = require("fs");
+const { readFile } = require("fs/promises");
 const os = require("os");
 
 async function main() {
@@ -9,7 +10,7 @@ async function main() {
   const agentData = parseRawData(rawData);
 
   const rootDir = path.resolve(__dirname, "..");
-  setupEnv(rootDir, agentName);
+  await setupEnv(rootDir, agentName, agentFunc);
 
   const agentToolsPath = path.resolve(rootDir, `agents/${agentName}/tools.js`);
   await run(agentToolsPath, agentFunc, agentData);
@@ -48,10 +49,11 @@ function parseRawData(data) {
   }
 }
 
-function setupEnv(rootDir, agentName) {
-  loadEnv(path.resolve(rootDir, ".env"));
+async function setupEnv(rootDir, agentName, agentFunc) {
+  await loadEnv(path.resolve(rootDir, ".env"));
   process.env["LLM_ROOT_DIR"] = rootDir;
   process.env["LLM_AGENT_NAME"] = agentName;
+  process.env["LLM_AGENT_FUNC"] = agentFunc;
   process.env["LLM_AGENT_ROOT_DIR"] = path.resolve(
     rootDir,
     "agents",
@@ -64,9 +66,9 @@ function setupEnv(rootDir, agentName) {
   );
 }
 
-function loadEnv(filePath) {
+async function loadEnv(filePath) {
   try {
-    const data = fs.readFileSync(filePath, "utf-8");
+    const data = await readFile(filePath, "utf-8");
     const lines = data.split("\n");
 
     lines.forEach((line) => {
@@ -75,7 +77,7 @@ function loadEnv(filePath) {
       const [key, ...value] = line.split("=");
       process.env[key.trim()] = value.join("=").trim();
     });
-  } catch {}
+  } catch { }
 }
 
 async function run(agentPath, agentFunc, agentData) {
@@ -93,6 +95,7 @@ async function run(agentPath, agentFunc, agentData) {
   }
   const value = await mod[agentFunc](agentData);
   returnToLLM(value);
+  await dumpResult();
 }
 
 function returnToLLM(value) {
@@ -101,7 +104,7 @@ function returnToLLM(value) {
   }
   let writer = process.stdout;
   if (process.env["LLM_OUTPUT"]) {
-    writer = fs.createWriteStream(process.env["LLM_OUTPUT"]);
+    writer = createWriteStream(process.env["LLM_OUTPUT"]);
   }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
@@ -116,4 +119,48 @@ function returnToLLM(value) {
   }
 }
 
-main();
+async function dumpResult() {
+  if (!process.stdout.isTTY) {
+    return;
+  }
+  if (!process.env["LLM_OUTPUT"]) {
+    return;
+  }
+  let showResult = false;
+  const agentName = process.env["LLM_AGENT_NAME"].toUpperCase().replace(/-/g, '_');
+  const agentEnvName = `LLM_AGENT_DUMP_RESULT_${agentName}`;
+  const agentEnvValue = process.env[agentEnvName];
+
+  const funcName = process.env["LLM_AGENT_FUNC"].toUpperCase().replace(/-/g, '_');
+  const funcEnvName = `${agentEnvName}_${funcName}`;
+  const funcEnvValue = process.env[funcEnvName];
+  if (agentEnvValue === '1' || agentEnvValue === 'true') {
+    if (funcEnvValue !== '0' && funcEnvValue !== 'false') {
+      showResult = true;
+    }
+  } else {
+    if (funcEnvValue === '1' || funcEnvValue === 'true') {
+      showResult = true;
+    }
+  }
+  if (!showResult) {
+    return;
+  }
+
+  let data = "";
+  try {
+    data = await readFile(process.env["LLM_OUTPUT"], "utf-8");
+  } catch {
+    return;
+  }
+  process.stdout.write(`\x1b[2m----------------------\n${data}\n----------------------\x1b[0m\n`);
+}
+
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    console.error(err?.message || err);
+    process.exit(1);
+  }
+})();

@@ -29,6 +29,7 @@ setup_env() {
     load_env "$root_dir/.env" 
     export LLM_ROOT_DIR="$root_dir"
     export LLM_AGENT_NAME="$agent_name"
+    export LLM_AGENT_FUNC="$agent_func"
     export LLM_AGENT_ROOT_DIR="$LLM_ROOT_DIR/agents/$agent_name"
     export LLM_AGENT_CACHE_DIR="$LLM_ROOT_DIR/cache/$agent_name"
 }
@@ -91,7 +92,38 @@ EOF
     eval "'$tools_path' '$agent_func' $args"
     if [[ "$no_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
+    else
+        dump_result
     fi
+}
+
+dump_result() {
+    if [ ! -t 1 ]; then
+        return;
+    fi
+    
+    local agent_env_name agent_env_value func_env_name func_env_value show_result=0
+    agent_env_name="LLM_AGENT_DUMP_RESULT_$(echo "$LLM_AGENT_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
+    agent_env_value="${!agent_env_name}"
+    func_env_name="${agent_env_name}_$(echo "$LLM_AGENT_FUNC" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
+    func_env_value="${!func_env_name}"
+    if [[ "$agent_env_value" == "1" || "$agent_env_value" == "true" ]]; then
+        if [[ "$func_env_value" != "0" && "$func_env_value" != "false" ]]; then
+            show_result=1
+        fi
+    else
+        if [[ "$func_env_value" == "1" || "$func_env_value" == "true" ]]; then
+            show_result=1
+        fi
+    fi
+    if [[ "$show_result" -ne 1 ]]; then
+        return
+    fi
+    cat <<EOF
+$(echo -e "\e[2m")----------------------
+$(cat "$LLM_OUTPUT")
+----------------------$(echo -e "\e[0m")
+EOF
 }
 
 die() {
