@@ -62,7 +62,10 @@ async function loadEnv(filePath) {
       if (line.trim().startsWith("#") || line.trim() === "") return;
 
       const [key, ...value] = line.split("=");
-      process.env[key.trim()] = value.join("=").trim();
+      const envName = key.trim();
+      if (!process.env[envName]) {
+        process.env[envName] = value.join("=").trim();
+      }
     });
   } catch { }
 }

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-# @meta dotenv
-
 BIN_DIR=bin
 TMP_DIR="cache/tmp"
 
