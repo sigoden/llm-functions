@@ -129,7 +129,7 @@ async function dumpResult() {
   let showResult = false;
   const agentName = process.env["LLM_AGENT_NAME"].toUpperCase().replace(/-/g, '_');
   const agentEnvName = `LLM_AGENT_DUMP_RESULT_${agentName}`;
-  const agentEnvValue = process.env[agentEnvName];
+  const agentEnvValue = process.env[agentEnvName] || process.env["LLM_AGENT_DUMP_RESULT"];
 
   const funcName = process.env["LLM_AGENT_FUNC"].toUpperCase().replace(/-/g, '_');
   const funcEnvName = `${agentEnvName}_${funcName}`;

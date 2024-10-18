@@ -104,7 +104,7 @@ dump_result() {
     
     local agent_env_name agent_env_value func_env_name func_env_value show_result=0
     agent_env_name="LLM_AGENT_DUMP_RESULT_$(echo "$LLM_AGENT_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
-    agent_env_value="${!agent_env_name}"
+    agent_env_value="${!agent_env_name:-"$LLM_AGENT_DUMP_RESULT"}"
     func_env_name="${agent_env_name}_$(echo "$LLM_AGENT_FUNC" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
     func_env_value="${!func_env_name}"
     if [[ "$agent_env_value" == "1" || "$agent_env_value" == "true" ]]; then
