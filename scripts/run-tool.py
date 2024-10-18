@@ -62,7 +62,9 @@ def load_env(file_path):
                     continue
 
                 key, *value = line.split("=")
-                os.environ[key.strip()] = "=".join(value).strip()
+                env_name = key.strip()
+                if env_name not in os.environ:
+                    os.environ[env_name] = "=".join(value).strip()
     except FileNotFoundError:
         pass
 
