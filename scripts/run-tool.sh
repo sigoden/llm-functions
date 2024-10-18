@@ -88,7 +88,35 @@ EOF
     eval "'$tool_path' $args"
     if [[ "$no_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
+    else
+        dump_result
     fi
+}
+
+dump_result() {
+    if [ ! -t 1 ]; then
+        return;
+    fi
+    local env_name env_value show_result=0
+    env_name="LLM_TOOL_DUMP_RESULT_$(echo "$LLM_TOOL_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
+    env_value="${!env_name}"
+    if [[ "$LLM_TOOL_DUMP_RESULT" == "1" || "$LLM_TOOL_DUMP_RESULT" == "true" ]]; then
+        if [[ "$env_value" != "0" && "$env_value" != "false" ]]; then
+            show_result=1
+        fi
+    else
+        if [[ "$env_value" == "1" || "$env_value" == "true" ]]; then
+            show_result=1
+        fi
+    fi
+    if [[ "$show_result" -ne 1 ]]; then
+        return
+    fi
+    cat <<EOF
+$(echo -e "\e[2m")----------------------
+$(cat "$LLM_OUTPUT")
+----------------------$(echo -e "\e[0m")
+EOF
 }
 
 die() {

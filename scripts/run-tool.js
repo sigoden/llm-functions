@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 const path = require("path");
-const fs = require("fs");
+const { createWriteStream } = require("fs");
+const { readFile } = require("fs/promises");
 const os = require("os");
 
 async function main() {
@@ -9,7 +10,7 @@ async function main() {
   const toolData = parseRawData(rawData);
 
   const rootDir = path.resolve(__dirname, "..");
-  setupEnv(rootDir, toolName);
+  await setupEnv(rootDir, toolName);
 
   const toolPath = path.resolve(rootDir, `tools/${toolName}.js`);
   await run(toolPath, "run", toolData);
@@ -45,16 +46,16 @@ function parseRawData(data) {
   }
 }
 
-function setupEnv(rootDir, toolName) {
-  loadEnv(path.resolve(rootDir, ".env"));
+async function setupEnv(rootDir, toolName) {
+  await loadEnv(path.resolve(rootDir, ".env"));
   process.env["LLM_ROOT_DIR"] = rootDir;
   process.env["LLM_TOOL_NAME"] = toolName;
   process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(rootDir, "cache", toolName);
 }
 
-function loadEnv(filePath) {
+async function loadEnv(filePath) {
   try {
-    const data = fs.readFileSync(filePath, "utf-8");
+    const data = await readFile(filePath, "utf-8");
     const lines = data.split("\n");
 
     lines.forEach((line) => {
@@ -63,7 +64,7 @@ function loadEnv(filePath) {
       const [key, ...value] = line.split("=");
       process.env[key.trim()] = value.join("=").trim();
     });
-  } catch {}
+  } catch { }
 }
 
 async function run(toolPath, toolFunc, toolData) {
@@ -81,6 +82,7 @@ async function run(toolPath, toolFunc, toolData) {
   }
   const value = await mod[toolFunc](toolData);
   returnToLLM(value);
+  await dumpResult();
 }
 
 function returnToLLM(value) {
@@ -89,7 +91,7 @@ function returnToLLM(value) {
   }
   let writer = process.stdout;
   if (process.env["LLM_OUTPUT"]) {
-    writer = fs.createWriteStream(process.env["LLM_OUTPUT"]);
+    writer = createWriteStream(process.env["LLM_OUTPUT"]);
   }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
@@ -102,6 +104,39 @@ function returnToLLM(value) {
       writer.write(valueStr);
     }
   }
+}
+
+async function dumpResult() {
+  if (!process.stdout.isTTY) {
+    return;
+  }
+  if (!process.env["LLM_OUTPUT"]) {
+    return;
+  }
+  let showResult = false;
+  const toolName = process.env["LLM_TOOL_NAME"].toUpperCase().replace(/-/g, '_');
+  const envName = `LLM_TOOL_DUMP_RESULT_${toolName}`;
+  const envValue = process.env[envName];
+  if (process.env.LLM_TOOL_DUMP_RESULT === '1' || process.env.LLM_TOOL_DUMP_RESULT === 'true') {
+    if (envValue !== '0' && envValue !== 'false') {
+      showResult = true;
+    }
+  } else {
+    if (envValue === '1' || envValue === 'true') {
+      showResult = true;
+    }
+  }
+  if (!showResult) {
+    return;
+  }
+
+  let data = "";
+  try {
+    data = await readFile(process.env["LLM_OUTPUT"], "utf-8");
+  } catch {
+    return;
+  }
+  process.stdout.write(`\x1b[2m----------------------\n${data}\n----------------------\x1b[0m\n`);
 }
 
 (async () => {

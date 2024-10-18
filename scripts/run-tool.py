@@ -82,6 +82,7 @@ def run(tool_path, tool_func, tool_data):
 
     value = getattr(mod, tool_func)(**tool_data)
     return_to_llm(value)
+    dump_result()
 
 
 def return_to_llm(value):
@@ -100,6 +101,37 @@ def return_to_llm(value):
         value_str = json.dumps(value, indent=2)
         assert value == json.loads(value_str)
         writer.write(value_str)
+
+
+def dump_result():
+    if not os.isatty(1):
+        return
+
+    if not os.getenv("LLM_OUTPUT"):
+        return
+
+    show_result = False
+    tool_name = os.environ["LLM_TOOL_NAME"].upper().replace("-", "_")
+    env_name = f"LLM_TOOL_DUMP_RESULT_{tool_name}"
+    env_value = os.getenv(env_name)
+
+    if os.getenv("LLM_TOOL_DUMP_RESULT") in ("1", "true"):
+        if env_value not in ("0", "false"):
+            show_result = True
+    else:
+        if env_value in ("1", "true"):
+            show_result = True
+
+    if not show_result:
+        return
+
+    try:
+        with open(os.environ["LLM_OUTPUT"], "r", encoding="utf-8") as f:
+            data = f.read()
+    except:
+        return
+
+    print(f"\x1b[2m----------------------\n{data}\n----------------------\x1b[0m")
 
 
 if __name__ == "__main__":
