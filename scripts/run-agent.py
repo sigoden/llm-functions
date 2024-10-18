@@ -61,17 +61,29 @@ def setup_env(root_dir, agent_name, agent_func):
 def load_env(file_path):
     try:
         with open(file_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("#") or line == "":
-                    continue
+            lines = f.readlines()
+    except:
+        return
 
-                key, *value = line.split("=")
-                env_name = key.strip()
-                if env_name not in os.environ:
-                    os.environ[env_name] = "=".join(value).strip()
-    except FileNotFoundError:
-        pass
+    env_vars = {}
+
+    for line in lines:
+        line = line.strip()
+        if line.startswith("#") or not line:
+            continue
+
+        key, *value_parts = line.split("=")
+        env_name = key.strip()
+
+        if env_name not in os.environ:
+            env_value = "=".join(value_parts).strip()
+            if env_value.startswith('"') and env_value.endswith('"'):
+                env_value = env_value[1:-1]
+            elif env_value.startswith("'") and env_value.endswith("'"):
+                env_value = env_value[1:-1]
+            env_vars[env_name] = env_value
+
+    os.environ.update(env_vars)
 
 
 def run(agent_path, agent_func, agent_data):

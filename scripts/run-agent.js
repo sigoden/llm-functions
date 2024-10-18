@@ -67,20 +67,38 @@ async function setupEnv(rootDir, agentName, agentFunc) {
 }
 
 async function loadEnv(filePath) {
+  let lines = [];
   try {
     const data = await readFile(filePath, "utf-8");
-    const lines = data.split("\n");
+    lines = data.split("\n");
+  } catch {
+    return;
+  }
 
-    lines.forEach((line) => {
-      if (line.trim().startsWith("#") || line.trim() === "") return;
+  const envVars = new Map();
 
-      const [key, ...value] = line.split("=");
-      const envName = key.trim();
-      if (!process.env[envName]) {
-        process.env[envName] = value.join("=").trim();
+  for (const line of lines) {
+    if (line.trim().startsWith("#") || line.trim() === "") {
+      continue;
+    }
+
+    const [key, ...valueParts] = line.split("=");
+    const envName = key.trim();
+
+    if (!process.env[envName]) {
+      let envValue = valueParts.join("=").trim();
+      if (envValue.startsWith('"') && envValue.endsWith('"')) {
+        envValue = envValue.slice(1, -1);
+      } else if (envValue.startsWith("'") && envValue.endsWith("'")) {
+        envValue = envValue.slice(1, -1);
       }
-    });
-  } catch { }
+      envVars.set(envName, envValue);
+    }
+  }
+
+  for (const [envName, envValue] of envVars.entries()) {
+    process.env[envName] = envValue;
+  }
 }
 
 async function run(agentPath, agentFunc, agentData) {
