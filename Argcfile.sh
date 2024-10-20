@@ -3,6 +3,7 @@ set -e
 
 BIN_DIR=bin
 TMP_DIR="cache/tmp"
+VENV_DIR=".venv"
 
 LANG_CMDS=( \
     "sh:bash" \
@@ -116,7 +117,13 @@ build-bin@tool() {
                 _build_win_shim tool $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename"
-                ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
+                if [[ "$lang" == "py" && -d "$VENV_DIR" ]]; then
+                    rm -rf "$bin_file"
+                    _build_py_shim tool $lang > "$bin_file"
+                    chmod +x "$bin_file"
+                else
+                    ln -s -f "$PWD/scripts/run-tool.$lang" "$bin_file"
+                fi
             fi
             echo "Build bin/$basename"
         else
@@ -229,7 +236,13 @@ build-bin@agent() {
                     _build_win_shim agent $lang > "$bin_file"
                 else
                     bin_file="$BIN_DIR/$name"
-                    ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
+                    if [[ "$lang" == "py" && -d "$VENV_DIR" ]]; then
+                        rm -rf "$bin_file"
+                        _build_py_shim tool $lang > "$bin_file"
+                        chmod +x "$bin_file"
+                    else
+                        ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
+                    fi
                 fi
                 echo "Build bin/$name"
                 tool_names_file="$agent_dir/tools.txt"
@@ -540,7 +553,11 @@ _build_win_shim() {
     if [[ "$lang" == "sh" ]]; then
         run="\"$(argc --argc-shell-path)\" --noprofile --norc"
     else
-        run="\"$(_normalize_path "$(which $cmd)")\""
+        if [[ "$cmd" == "python" && -d "$VENV_DIR" ]]; then
+            run="call \"$(_normalize_path "$PWD/$VENV_DIR/Scripts/activate.bat")\" && python"
+        else
+            run="\"$(_normalize_path "$(which $cmd)")\""
+        fi
     fi
     cat <<-EOF
 @echo off
@@ -554,12 +571,27 @@ $run "%script_dir%scripts\run-$kind.$lang" "%script_name%" %*
 EOF
 }
 
+_build_py_shim() {
+    kind="$1"
+    lang="$2"
+    cat <<-'EOF' | sed -e "s|__ROOT_DIR__|$PWD|g" -e "s|__VENV_DIR__|$VENV_DIR|g" -e "s/__KIND__/$kind/g"
+#!/usr/bin/env bash
+set -e
+
+if [[ -d "__ROOT_DIR__/__VENV_DIR__/bin/activate" ]]; then
+    source "__ROOT_DIR__/__VENV_DIR__/bin/activate"
+fi
+
+python "__ROOT_DIR__/scripts/run-__KIND__.py" "$(basename "$0")" "$@"
+EOF
+}
+
 _link_tool() {
     from="$1"
     to="$2.${1##*.}"
     rm -rf tools/$to
     if _is_win; then
-        (cd tools && cmd <<< "mklink $to $from" > /dev/null)
+        (cd tools && cp -f $from $to)
     else
         (cd tools && ln -s $from $to)
     fi
@@ -598,6 +630,12 @@ _is_win() {
         return 0
     else
         return 1
+    fi
+}
+
+_argc_before() {
+    if [[ -d ".venv/bin/activate" ]]; then
+        source .venv/bin/activate
     fi
 }
 
