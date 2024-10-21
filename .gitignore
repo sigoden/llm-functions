@@ -9,7 +9,7 @@ functions.json
 /tools/code_interpreter.*
 /.env
 __pycache__
-/venv
+/.venv
 node_modules
 /package.json
 /package-lock.json
