@@ -3,4 +3,4 @@ def run(code: str):
     Args:
         code: Python code to execute, such as `print("hello world")`
     """
-    return exec(code)
+    return eval(code)

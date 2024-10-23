@@ -74,9 +74,7 @@ async function loadEnv(filePath) {
 
     if (!process.env[envName]) {
       let envValue = valueParts.join("=").trim();
-      if (envValue.startsWith('"') && envValue.endsWith('"')) {
-        envValue = envValue.slice(1, -1);
-      } else if (envValue.startsWith("'") && envValue.endsWith("'")) {
+      if ((envValue.startsWith('"') && envValue.endsWith('"')) || (envValue.startsWith("'") && envValue.endsWith("'"))) {
         envValue = envValue.slice(1, -1);
       }
       envVars.set(envName, envValue);
@@ -116,7 +114,7 @@ function returnToLLM(value) {
   }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
-    writer.write(value);
+    writer.write(value.toString());
   } else if (type === "object") {
     const proto = Object.prototype.toString.call(value);
     if (proto === "[object Object]" || proto === "[object Array]") {

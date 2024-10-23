@@ -1,3 +1,5 @@
+const vm = require('vm');
+
 /**
  * Execute the javascript code in node.js.
  * @typedef {Object} Args
@@ -5,5 +7,7 @@
  * @param {Args} args
  */
 exports.run = function run({ code }) {
-  return eval(code);
+  const context = vm.createContext({});
+  const script = new vm.Script(code);
+  return script.runInContext(context);
 }
