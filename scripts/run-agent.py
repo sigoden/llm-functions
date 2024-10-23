@@ -77,9 +77,7 @@ def load_env(file_path):
 
         if env_name not in os.environ:
             env_value = "=".join(value_parts).strip()
-            if env_value.startswith('"') and env_value.endswith('"'):
-                env_value = env_value[1:-1]
-            elif env_value.startswith("'") and env_value.endswith("'"):
+            if (env_value.startswith('"') and env_value.endswith('"')) or (env_value.startswith("'") and env_value.endswith("'")):
                 env_value = env_value[1:-1]
             env_vars[env_name] = env_value
 
@@ -150,7 +148,7 @@ def return_to_llm(value):
 
     value_type = type(value).__name__
     if value_type in ("str", "int", "float", "bool"):
-        writer.write(value)
+        writer.write(str(value))
     elif value_type == "dict" or value_type == "list":
         value_str = json.dumps(value, indent=2)
         assert value == json.loads(value_str)
