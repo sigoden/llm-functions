@@ -1,5 +1,3 @@
-const vm = require('vm');
-
 /**
  * Execute the javascript code in node.js.
  * @typedef {Object} Args
@@ -7,7 +5,15 @@ const vm = require('vm');
  * @param {Args} args
  */
 exports.run = function run({ code }) {
-  const context = vm.createContext({});
-  const script = new vm.Script(code);
-  return script.runInContext(context);
+  let log = "";
+  const oldStdoutWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (chunk, _encoding, callback) => {
+    log += chunk;
+    if (callback) callback();
+  };
+
+  eval(code);
+  
+  process.stdout.write = oldStdoutWrite;
+  return log;
 }
