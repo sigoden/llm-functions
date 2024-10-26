@@ -7,10 +7,10 @@ def run(code: str):
         code: Python code to execute, such as `print("hello world")`
     """
     old_stdout = sys.stdout
-    new_stdout = io.StringIO()
-    sys.stdout = new_stdout
+    output = io.StringIO()
+    sys.stdout = output
 
     exec(code)
 
     sys.stdout = old_stdout
-    return new_stdout.getvalue()
+    return output.getvalue()
