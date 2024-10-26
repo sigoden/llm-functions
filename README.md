@@ -130,8 +130,8 @@ Create a new javascript in the [./tools/](./tools/) directory (.e.g. `execute_js
  * @property {string} code - Javascript code to execute, such as `console.log("hello world")`
  * @param {Args} args
  */
-exports.main = function main({ code }) {
-  return eval(code);
+exports.run = function ({ code }) {
+  eval(code);
 }
 
 ```
@@ -141,12 +141,12 @@ exports.main = function main({ code }) {
 Create a new python script in the [./tools/](./tools/) directory (e.g. `execute_py_code.py`).
 
 ```py
-def main(code: str):
+def run(code: str):
     """Execute the python code.
     Args:
         code: Python code to execute, such as `print("hello world")`
     """
-    return exec(code)
+    exec(code)
 
 ```
 
