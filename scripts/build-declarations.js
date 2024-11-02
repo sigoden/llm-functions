@@ -69,7 +69,7 @@ function extractFunctions(contents, isTool) {
             funcName = match[1];
           }
         }
-        if (funcName) {
+        if (funcName && !funcName.startsWith("_")) {
           output.push({ funcName, jsdoc });
         }
       }
