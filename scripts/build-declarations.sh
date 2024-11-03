@@ -59,7 +59,7 @@ build_declarations() {
             parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
         };
     [
-        .[] | parse_declaration | select(.name | startswith("_") | not)
+        .[] | parse_declaration | select(.name | startswith("_") | not) | select(.description != "")
     ]'
 }
 

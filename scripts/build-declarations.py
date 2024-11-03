@@ -22,6 +22,8 @@ def main(is_tool=True):
     for function in functions:
         func_name, docstring, func_args = function
         description, params = parse_docstring(docstring)
+        if not description:
+            continue
         declarations.append(
             build_declaration(func_name, description, params, func_args)
         )
@@ -42,9 +44,9 @@ def extract_functions(contents: str, is_tool: bool):
         if not isinstance(node, ast.FunctionDef):
             continue
         func_name = node.name
-        if func_name.startswith("_"):
-            continue
         if is_tool and func_name != TOOL_ENTRY_FUNC:
+            continue
+        if func_name.startswith("_"):
             continue
         docstring = ast.get_docstring(node) or ""
         func_args = OrderedDict()
