@@ -6,6 +6,8 @@ set -e
 
 # @option --path! The path of the file to read
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     cat "$argc_path" >> "$LLM_OUTPUT"
 }

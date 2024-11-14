@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 # @cmd Add a new todo item
 # @option --desc! The todo description
 add_todo() {

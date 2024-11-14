@@ -2,13 +2,15 @@
 set -e
 
 # @describe Send a email.
+# @option --recipient! The recipient of the email.
+# @option --subject! The subject of the email.
+# @option --body! The body of the email.
+
 # @env EMAIL_SMTP_ADDR! The SMTP Address, e.g. smtps://smtp.gmail.com:465
 # @env EMAIL_SMTP_USER! The SMTP User, e.g. alice@gmail.com
 # @env EMAIL_SMTP_PASS! The SMTP Password
 # @env EMAIL_SENDER_NAME The sender name
-# @option --recipient! The recipient of the email.
-# @option --subject! The subject of the email.
-# @option --body! The body of the email.
+# @env LLM_OUTPUT=/dev/stdout The output path
 
 main() {
     sender_name="${EMAIL_SENDER_NAME:-$(echo "$EMAIL_SMTP_USER" | awk -F'@' '{print $1}')}"

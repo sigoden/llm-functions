@@ -5,6 +5,8 @@ set -e
 
 # @option --path! The path of the file or directory to remove
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     if [[ -f "$argc_path" ]]; then
         _guard_path "$argc_path" Remove

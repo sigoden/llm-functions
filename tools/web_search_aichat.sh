@@ -7,6 +7,7 @@ set -e
 # @option --query! The query to search for.
 
 # @meta require-tools aichat
+
 # @env WEB_SEARCH_MODEL! The model for web-searching.
 #
 # supported aichat models:
@@ -15,6 +16,7 @@ set -e
 #   - perplexity:*-online
 #   - ernie:*
 #   - lingyiwanwu:yi-large-rag
+# @env LLM_OUTPUT=/dev/stdout The output path
 
 main() {
     client="${WEB_SEARCH_MODEL%%:*}"

@@ -11,6 +11,8 @@ set -e
 # @option --array+ <VALUE>           Define a required string array property
 # @option --array-optional*          Define a optional string array property
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     cat <<EOF >> "$LLM_OUTPUT"
 string: ${argc_string}

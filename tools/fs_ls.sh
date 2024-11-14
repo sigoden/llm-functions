@@ -5,6 +5,8 @@ set -e
 
 # @option --path! The path of the directory to list
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     ls -1 "$argc_path" >> "$LLM_OUTPUT"
 }

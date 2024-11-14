@@ -4,6 +4,8 @@ set -e
 # @describe Execute the shell command.
 # @option --command! The command to execute.
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     if [ -t 1 ]; then
         read -r -p "Are you sure you want to continue? [Y/n] " ans
