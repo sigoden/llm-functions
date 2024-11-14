@@ -6,6 +6,8 @@ set -e
 
 # @option --query! The query to search for.
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
     base_url="https://en.wikipedia.org/w/api.php"

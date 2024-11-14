@@ -2,9 +2,10 @@
 set -e
 
 # @describe Extract the content from a given URL.
+# @option --url! The URL to scrape.
 
 # @env JINA_API_KEY The api key
-# @option --url! The URL to scrape.
+# @env LLM_OUTPUT=/dev/stdout The output path
 
 main() {
     curl_args=()

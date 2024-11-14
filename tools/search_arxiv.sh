@@ -3,8 +3,10 @@ set -e
 
 # @describe Search arXiv for a query and return the top papers.
 
-# @env ARXIV_MAX_RESULTS=3 The max results to return.
 # @option --query! The query to search for.
+
+# @env ARXIV_MAX_RESULTS=3 The max results to return.
+# @env LLM_OUTPUT=/dev/stdout The output path
 
 main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"

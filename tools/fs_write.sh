@@ -9,6 +9,8 @@ set -e
 # @option --path! The path of the file to write to
 # @option --contents! The full contents to write to the file
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 main() {
     _guard_path "$argc_path" Write
     mkdir -p "$(dirname "$argc_path")"

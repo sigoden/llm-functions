@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 # @cmd Create a new file at the specified path with contents.
 # @option --path! The path where the file should be created
 # @option --contents! The contents of the file

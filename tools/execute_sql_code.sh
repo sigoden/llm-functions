@@ -4,8 +4,10 @@ set -e
 # @describe Execute the sql code.
 # @option --code! The code to execute.
 
-# @env USQL_DSN! The database url, e.g. pgsql://user:pass@host/dbname
 # @meta require-tools usql
+
+# @env USQL_DSN! The database url, e.g. pgsql://user:pass@host/dbname
+# @env LLM_OUTPUT=/dev/stdout The output path
 
 main() {
     if ! grep -qi '^select' <<<"$argc_code"; then
