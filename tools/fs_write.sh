@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Write the contents to a file at the specified path.
-# If the file exists, only the necessary changes will be applied.
-# If the file doesn't exist, it will be created.
-# Always provide the full intended contents of the file.
+# @describe Write the full file contents to a file at the specified path.
 
 # @option --path! The path of the file to write to
 # @option --contents! The full contents to write to the file
