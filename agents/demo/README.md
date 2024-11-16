@@ -54,6 +54,8 @@ documents:
   - https://example.com/remote-file.txt
 ```
 
+> All local files and directories are relative to the agent directory (where index.yaml is located).
+
 ## tools.{sh,js,py}
 
 The tool script implements agent-specific tools.
