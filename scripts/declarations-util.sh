@@ -63,7 +63,7 @@ end
         fi
     fi
     if [[ -z "$json_type" ]]; then
-        echo "invalid JSON data"
+        echo "error: invalid JSON data" >&2
         exit 1
     fi
 }

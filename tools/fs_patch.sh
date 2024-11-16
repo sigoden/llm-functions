@@ -18,22 +18,16 @@ set -e
 
 # @env LLM_OUTPUT=/dev/stdout The output path
 
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
 main() {
     if [ ! -f "$argc_path" ]; then
         echo "Not found file: $argc_path"
         exit 1
     fi
-    root_dir="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-    new_contents="$(awk -f "$root_dir/utils/patch.awk" "$argc_path" <(printf "%s" "$argc_contents"))"
+    new_contents="$(awk -f "$ROOT_DIR/utils/patch.awk" "$argc_path" <(printf "%s" "$argc_contents"))"
     printf "%s" "$new_contents" | git diff --no-index "$argc_path" - || true
-    if [ -t 1 ]; then
-        echo
-        read -r -p "Apply changes? [Y/n] " ans
-        if [[ "$ans" == "N" || "$ans" == "n" ]]; then
-            echo "Aborted!"
-            exit 1
-        fi
-    fi
+    "$ROOT_DIR/utils/guard_operation.sh" "Apply changes?"
     printf "%s" "$new_contents" > "$argc_path"
 
     echo "The patch applied to: $argc_path" >> "$LLM_OUTPUT"

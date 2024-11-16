@@ -17,7 +17,7 @@ main() {
     title="$(echo "$json" | jq -r '.query.search[0].title // empty')"
     pageid="$(echo "$json" | jq -r '.query.search[0].pageid // empty')"
     if [[ -z "$title" || -z "$pageid" ]]; then
-        echo "Error: No results found for '$argc_query'"
+        echo "error: no results for '$argc_query'" >&2
         exit 1
     fi
     title="$(echo "$title" | tr ' ' '_')"

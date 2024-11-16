@@ -53,7 +53,7 @@ load_env() {
 
 run() {
     if [[ -z "$agent_data" ]]; then
-        die "No JSON data"
+        die "error: no JSON data"
     fi
 
     if [[ "$OS" == "Windows_NT" ]]; then
@@ -81,7 +81,7 @@ def to_args:
 EOF
 )"
     args="$(echo "$agent_data" | jq -r "$jq_script" 2>/dev/null)" || {
-        die "Invalid JSON data"
+        die "error: invalid JSON data"
     }
 
     no_llm_output=0

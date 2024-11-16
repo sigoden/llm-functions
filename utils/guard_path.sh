@@ -2,16 +2,16 @@
 
 main() {
     if [[ "$#" -ne 2 ]]; then
-        echo "Usage: guard_path.sh <path> <confirmation_prompt>"
+        echo "Usage: guard_path.sh <path> <confirmation_prompt>" >&2
         exit 1
     fi
-    path="$(_to_realpath "$1")"
-    confirmation_prompt="$2"
-    if [[ ! "$path" == "$(pwd)"* ]]; then
-        if [ -t 1 ]; then
+    if [ -t 1 ]; then
+        path="$(_to_realpath "$1")"
+        confirmation_prompt="$2"
+        if [[ ! "$path" == "$(pwd)"* ]]; then
             read -r -p "$confirmation_prompt [Y/n] " ans
             if [[ "$ans" == "N" || "$ans" == "n" ]]; then
-                echo "Aborted!"
+                echo "error: aborted!" >&2
                 exit 1
             fi
         fi

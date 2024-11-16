@@ -31,10 +31,10 @@ main() {
         if [[ "$(echo "$body" | jq -r 'has("sid")')" == "true" ]]; then
             echo "Message sent successfully" >> "$LLM_OUTPUT"
         else
-            _die "$body"
+            _die "error: $body"
         fi
     else
-        _die "$body"
+        _die "error: $body"
     fi
 }
 

@@ -55,7 +55,7 @@ END {
     }
 
     if (hunkIndex == 0) {
-        print "No patch" > "/dev/stderr"
+        print "error: no patch" > "/dev/stderr"
         exit 1
     }
 
@@ -90,7 +90,7 @@ END {
     }
 
     if (hunkIndex != totalHunks + 1) {
-        print "Failed to patch the file" > "/dev/stderr"
+        print "error: unable to apply patch" > "/dev/stderr"
         exit 1
     }
 }

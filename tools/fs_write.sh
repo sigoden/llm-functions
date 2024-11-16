@@ -8,9 +8,10 @@ set -e
 
 # @env LLM_OUTPUT=/dev/stdout The output path
 
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
 main() {
-    root_dir="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-    "$root_dir/utils/guard_path.sh" "$argc_path" "Write '$argc_path'?"
+    "$ROOT_DIR/utils/guard_path.sh" "$argc_path" "Write '$argc_path'?"
     mkdir -p "$(dirname "$argc_path")"
     printf "%s" "$argc_contents" > "$argc_path"
     echo "The contents written to: $argc_path" >> "$LLM_OUTPUT"
