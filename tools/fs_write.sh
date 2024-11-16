@@ -8,25 +8,13 @@ set -e
 
 # @env LLM_OUTPUT=/dev/stdout The output path
 
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
 main() {
-    _guard_path "$argc_path" Write
+    "$ROOT_DIR/utils/guard_path.sh" "$argc_path" "Write '$argc_path'?"
     mkdir -p "$(dirname "$argc_path")"
     printf "%s" "$argc_contents" > "$argc_path"
     echo "The contents written to: $argc_path" >> "$LLM_OUTPUT"
-}
-
-_guard_path() {
-    path="$(realpath -m "$1")"
-    action="$2"
-    if [[ ! "$path" == "$(pwd)"* ]]; then
-        if [ -t 1 ]; then
-            read -r -p "$action $path? [Y/n] " ans
-            if [[ "$ans" == "N" || "$ans" == "n" ]]; then
-                echo "Aborted!"
-                exit 1
-            fi
-        fi
-    fi
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

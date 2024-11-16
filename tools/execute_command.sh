@@ -6,14 +6,10 @@ set -e
 
 # @env LLM_OUTPUT=/dev/stdout The output path
 
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
 main() {
-    if [ -t 1 ]; then
-        read -r -p "Are you sure you want to continue? [Y/n] " ans
-        if [[ "$ans" == "N" || "$ans" == "n" ]]; then
-            echo "Aborted!"
-            exit 1
-        fi
-    fi
+    "$ROOT_DIR/utils/guard_operation.sh"
     eval "$argc_command" >> "$LLM_OUTPUT"
 }
 

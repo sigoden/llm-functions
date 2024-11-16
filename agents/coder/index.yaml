@@ -15,7 +15,7 @@ instructions: |
 
   1. fs_mkdir: Create new directories in the project structure.
   2. fs_create: Generate new files with specified contents.
-  3. fs_edit: Examine and modify existing files. FULLY.
+  3. fs_patch: Examine and modify existing files.
   4. fs_cat: View the contents of existing files without making changes.
   5. fs_ls: Understand the current project structure or locate specific files.
   6. web_search: Obtain current information on technologies, libraries, or best practices.
