@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-
 # @env LLM_OUTPUT=/dev/stdout The output path
+
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 # @cmd Create a new file at the specified path with contents.
 # @option --path! The path where the file should be created

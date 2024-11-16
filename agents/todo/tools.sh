@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-
 # @env LLM_OUTPUT=/dev/stdout The output path
+
+ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 # @cmd Add a new todo item
 # @option --desc! The todo description
