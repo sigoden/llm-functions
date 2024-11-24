@@ -578,7 +578,7 @@ _build_py_shim() {
 #!/usr/bin/env bash
 set -e
 
-if [[ -d "__ROOT_DIR__/__VENV_DIR__/bin/activate" ]]; then
+if [[ -f "__ROOT_DIR__/__VENV_DIR__/bin/activate" ]]; then
     source "__ROOT_DIR__/__VENV_DIR__/bin/activate"
 fi
 
