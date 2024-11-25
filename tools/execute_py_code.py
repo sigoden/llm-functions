@@ -1,7 +1,7 @@
 import ast
 import io
-import sys
 from contextlib import redirect_stdout
+
 
 def run(code: str):
     """Execute the python code.
@@ -13,9 +13,10 @@ def run(code: str):
         value = exec_with_return(code, {}, {})
 
         if value is not None:
-            output.write(str(value)) 
+            output.write(str(value))
 
     return output.getvalue()
+
 
 def exec_with_return(code: str, globals: dict, locals: dict):
     a = ast.parse(code)
