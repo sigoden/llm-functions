@@ -12,8 +12,11 @@ exports.run = function run({ code }) {
     if (callback) callback();
   };
 
-  eval(code);
-  
+  const value = eval(code);
+  if (value !== undefined) {
+    output += value;
+  }
+
   process.stdout.write = oldStdoutWrite;
   return output;
 }
