@@ -500,8 +500,9 @@ install() {
 }
 
 # @cmd Create a boilplate tool script
+# @alias tool:create
 # @arg args~
-create() {
+create@tool() {
     ./scripts/create-tool.sh "$@"
 }
 
