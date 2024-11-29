@@ -35,7 +35,7 @@ END {
         }
 
         if (mode == "hunk") {
-            while (patchLineIndex <= totalPatchLines && line ~ /^[-+ ]/ && line !~ /^--- /) {
+            while (patchLineIndex <= totalPatchLines && line ~ /^[-+ ]|^\s*$/ && line !~ /^--- /) {
                 sanitizedLine = substr(line, 2)
                 if (line !~ /^\+/) {
                     hunkTotalOriginalLines[hunkIndex]++;
@@ -68,7 +68,7 @@ END {
         line = lines[lineIndex]
         nextLineIndex = 0
 
-        if (line == hunkOriginalLines[hunkIndex,1]) {
+        if (hunkIndex <= totalHunks && line == hunkOriginalLines[hunkIndex,1]) {
             nextLineIndex = lineIndex + 1
             for (i = 2; i <= hunkTotalOriginalLines[hunkIndex]; i++) {
                 if (lines[nextLineIndex] != hunkOriginalLines[hunkIndex,i]) {
@@ -83,7 +83,7 @@ END {
                 print hunkUpdatedLines[hunkIndex,i]
             }
             hunkIndex++
-            lineIndex = nextLineIndex -1;
+            lineIndex = nextLineIndex - 1;
         } else {
             print line
         }
