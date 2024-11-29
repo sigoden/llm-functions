@@ -170,7 +170,7 @@ build-declarations@tool() {
     if [[ -n "$build_failed_tools" ]]; then
         _die "error: invalid tools: ${build_failed_tools[*]}"
     fi
-    json_data="$(echo "["$(IFS=,; echo "${json_list[*]}")"]"  | jq '.')"
+    json_data="$(echo "${json_list[@]}" | jq -s '.')"
     if [[ "$argc_declarations_file" == "-" ]]; then
         echo "$json_data"
     else
