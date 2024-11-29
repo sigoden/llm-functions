@@ -4,9 +4,9 @@ set -e
 # @describe Create a boilplate tool script
 #
 # Examples:
-#   argc create test.sh foo bar! baz+ qux*
-#   ./scripts/create-tool.sh test.py foo bar! baz+ qux*
+#   ./scripts/create-tool.sh _test.py foo bar! baz+ qux*
 #
+# @option --description <text> The tool description
 # @flag --force Override the exist tool file
 # @arg name! The script file name.
 # @arg params* The script parameters
@@ -17,6 +17,7 @@ main() {
         _die "$output already exists"
     fi
     ext="${argc_name##*.}"
+    description="${argc_description:-"The description for the tool"}"
     support_exts=('.sh' '.js' '.py')
     if [[ "$ext" == "$argc_name" ]]; then
         _die "error: no extension name, pelease add one of ${support_exts[*]}" 
@@ -31,12 +32,12 @@ main() {
 }
 
 create_sh() {
-    cat <<-'EOF' | sed 's/__DESCRIBE_TAG__/# @describe/g' > "$output"
+    cat <<-'EOF' > "$output"
 #!/usr/bin/env bash
 set -e
 
-__DESCRIBE_TAG__
 EOF
+    echo "# @describe $description" >> "$output"
     for param in "${argc_params[@]}"; do
         echo "# @option --$(echo $param | sed 's/-/_/g')" >> "$output"
     done
@@ -70,7 +71,7 @@ create_js() {
     done
     cat <<EOF > "$output"
 /**
- *
+ * ${description}
  * @typedef {Object} Args${properties}
  * @param {Args} args
  */
@@ -132,8 +133,8 @@ create_py() {
     fi
     cat <<EOF > "$output"
 ${imports}
-def main(${required_arguments}${optional_arguments}):
-    """
+def run(${required_arguments}${optional_arguments}):
+    """${description}
     Args:${required_properties}${optional_properties}
     """
     pass

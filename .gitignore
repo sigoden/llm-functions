@@ -4,7 +4,8 @@
 functions.json
 /bin
 /cache
-/tools/test.*
+/agents/_*
+/tools/_*
 /tools/web_search.*
 /tools/code_interpreter.*
 /.env

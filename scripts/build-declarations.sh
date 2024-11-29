@@ -17,7 +17,14 @@ main() {
 }
 
 build_declarations() {
-    jq -r '
+    jq --arg is_tool "$is_tool" -r '
+    def filter_declaration:
+        (if $is_tool == "true" then
+            .
+        else
+            select(.name | startswith("_") | not) 
+        end) | select(.description != "");
+
     def parse_description(flag_option):
         if flag_option.describe == "" then
             {}
@@ -59,7 +66,7 @@ build_declarations() {
             parameters: parse_parameter([.flag_options[] | select(.id != "help" and .id != "version")])
         };
     [
-        .[] | parse_declaration | select(.name | startswith("_") | not) | select(.description != "")
+        .[] | parse_declaration | filter_declaration
     ]'
 }
 
