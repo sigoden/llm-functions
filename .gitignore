@@ -13,5 +13,5 @@ __pycache__
 /.venv
 node_modules
 /package.json
-/package-lock.json
+package-lock.json
 *.lock

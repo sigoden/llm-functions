@@ -180,11 +180,7 @@ async function dumpResult() {
   process.stdout.write(`\x1b[2m----------------------\n${data}\n----------------------\x1b[0m\n`);
 }
 
-(async () => {
-  try {
-    await main();
-  } catch (err) {
-    console.error(err?.message || err);
-    process.exit(1);
-  }
-})();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
