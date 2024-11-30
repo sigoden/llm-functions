@@ -1,7 +1,7 @@
 ---
 name: Add a New AI Agent
 about: Propose an idea or submit a new AI agent for inclusion
-title: ''
+title: '[Agent Request] Add <Agent Name>'
 labels: enhancement
 assignees: ''
 
