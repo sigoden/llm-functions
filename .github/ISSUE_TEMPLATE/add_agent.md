@@ -12,13 +12,13 @@ assignees: ''
 **Agent Description**
 <!-- Summarize the purpose and functionality of the proposed agent in a few concise sentences. -->
 
+**Agent Conversation Starters**
+<!-- Provide examples of natural language prompts a user may use to interact with the agent. -->
+
 **Agent Tools**
 <!-- List and describe the tools (if any) your agent requires or uses. -->
 <!-- foo: Brief description of tool foo -->
 <!-- bar: Brief description of tool bar -->
 
-**Agent Conversation Starters**
-<!-- Provide examples of natural language prompts a user may use to interact with the agent. -->
-
 **Additional context**
-<!-- Include any additional useful details that could help reviewers understand the feature request, such as relevant documentation, use cases, or screenshots. -->
+<!-- Include details to help reviewers understand the feature request, such as relevant documentation, use cases, or screenshots. -->
