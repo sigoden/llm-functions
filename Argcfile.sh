@@ -30,14 +30,14 @@ run@tool() {
     cmd="$(_lang_to_cmd "$lang")"
     run_tool_script="$PWD/scripts/run-tool.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
-    "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
+    exec "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
 }
 
 # @cmd Run the agent
 # @alias agent:run
 # @option -C --cwd <dir> Change the current working directory
 # @arg agent![`_choice_agent`] The agent name
-# @arg action![`_choice_agent_action`] The agent action
+# @arg action![?`_choice_agent_action`] The agent action
 # @arg json The json data
 run@agent() {
     if [[ -z "$argc_json" ]]; then
@@ -54,7 +54,7 @@ run@agent() {
     cmd="$(_lang_to_cmd "$lang")"
     run_agent_script="$PWD/scripts/run-agent.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
-    "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
+    exec "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
 }
 
 # @cmd Build the project
@@ -668,7 +668,7 @@ _choice_agent_action() {
     else
         expr="s/:.*//"
     fi
-    argc generate-declarations@agent "$1" --oneline  | sed "$expr"
+    argc generate-declarations@agent "$1" --oneline | sed "$expr"
 }
 
 _die() {

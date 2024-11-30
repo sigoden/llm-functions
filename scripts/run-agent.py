@@ -32,19 +32,25 @@ def parse_argv(this_file_name):
 
     agent_name = argv[0]
     agent_func = ""
-    agent_data = None
+    agent_data = ""
 
     if agent_name.endswith(this_file_name):
-        agent_name = sys.argv[1]
-        agent_func = sys.argv[2]
-        agent_data = sys.argv[3]
+        if len(sys.argv) > 3:
+            agent_name = sys.argv[1]
+            agent_func = sys.argv[2]
+            agent_data = sys.argv[3]
     else:
-        agent_name = os.path.basename(agent_name)
-        agent_func = sys.argv[1]
-        agent_data = sys.argv[2]
+        if len(sys.argv) > 2:
+            agent_name = os.path.basename(agent_name)
+            agent_func = sys.argv[1]
+            agent_data = sys.argv[2]
 
-    if agent_name.endswith(".py"):
+    if agent_name and agent_name.endswith(".py"):
         agent_name = agent_name[:-3]
+
+    if (not agent_data) or (not agent_func) or (not agent_name):
+        print("Usage: ./run-agent.py <agent-name> <agent-func> <agent-data>", file=sys.stderr)
+        sys.exit(1)   
 
     return agent_name, agent_func, agent_data
 

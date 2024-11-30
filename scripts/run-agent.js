@@ -31,8 +31,13 @@ function parseArgv(thisFileName) {
     agentData = process.argv[3];
   }
 
-  if (agentName.endsWith(".js")) {
+  if (agentName && agentName.endsWith(".js")) {
     agentName = agentName.slice(0, -3);
+  }
+
+  if (!agentData || !agentFunc || !agentName) {
+    console.log(`Usage: ./run-agent.js <agent-name> <agent-func> <agent-data>`);
+    process.exit(1);
   }
 
   return [agentName, agentFunc, agentData];

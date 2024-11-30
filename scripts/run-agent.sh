@@ -23,6 +23,9 @@ parse_argv() {
     if [[ "$agent_name" == *.sh ]]; then
         agent_name="${agent_name:0:$((${#agent_name}-3))}"
     fi
+    if [[ -z "$agent_data" ]] || [[ -z "$agent_func" ]] || [[ -z "$agent_name" ]]; then
+        die "usage: ./run-agent.sh <agent-name> <agent-func> <agent-data>"
+    fi
 }
 
 setup_env() {

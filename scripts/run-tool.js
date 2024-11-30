@@ -28,8 +28,13 @@ function parseArgv(thisFileName) {
     toolData = process.argv[2];
   }
 
-  if (toolName.endsWith(".js")) {
+  if (toolName && toolName.endsWith(".js")) {
     toolName = toolName.slice(0, -3);
+  }
+
+  if (!toolData || !toolName) {
+    console.log(`Usage: ./run-tools.js <tool-name> <tool-data>`);
+    process.exit(1);
   }
 
   return [toolName, toolData];

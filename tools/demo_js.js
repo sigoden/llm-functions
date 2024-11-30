@@ -11,7 +11,7 @@
  * @property {string[]} [array_optional] - Define a optional string array property
  * @param {Args} args
  */
-exports.run = function run(args) {
+exports.run = function (args) {
   let output = `string: ${args.string}
 string_enum: ${args.string_enum}
 string_optional: ${args.string_optional}
