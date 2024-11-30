@@ -31,17 +31,23 @@ def parse_argv(this_file_name):
     argv = sys.argv[:] + [None] * max(0, 3 - len(sys.argv))
 
     tool_name = argv[0]
-    tool_data = None
+    tool_data = ""
 
     if tool_name.endswith(this_file_name):
-        tool_name = argv[1]
-        tool_data = argv[2]
+        if len(sys.argv) > 2:
+            tool_name = argv[1]
+            tool_data = argv[2]
     else:
-        tool_name = os.path.basename(tool_name)
-        tool_data = sys.argv[1]
+        if len(sys.argv) > 1:
+            tool_name = os.path.basename(tool_name)
+            tool_data = sys.argv[1]
 
-    if tool_name.endswith(".py"):
+    if tool_name and tool_name.endswith(".py"):
         tool_name = tool_name[:-3]
+
+    if (not tool_data) or (not tool_name):
+        print("Usage: ./run-tool.py <tool-name> <tool-data>", file=sys.stderr)
+        sys.exit(1)   
 
     return tool_name, tool_data
 

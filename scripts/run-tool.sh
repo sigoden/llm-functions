@@ -21,6 +21,9 @@ parse_argv() {
     if [[ "$tool_name" == *.sh ]]; then
         tool_name="${tool_name:0:$((${#tool_name}-3))}"
     fi
+    if [[ -z "$tool_data" ]] || [[ -z "$tool_name" ]]; then
+        die "usage: ./run-tool.sh <tool-name> <tool-data>"
+    fi
 }
 
 setup_env() {
