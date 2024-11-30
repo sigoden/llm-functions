@@ -1,0 +1,5 @@
+name: JsonViewer
+description: An AI agent to view and filter json data
+version: 0.1.0
+instructions: ""
+dynamic_instructions: true
