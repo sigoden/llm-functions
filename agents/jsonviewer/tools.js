@@ -10,21 +10,20 @@ const input = require("@inquirer/input").default;
 
 exports._instructions = async function () {
   const value = await input({ message: "Enter the json file path or command to generate json", required: true });
-  let json_file_path, json_data;
+  let json_file_path;
   let generate_json_command_context = "";
   try {
     await fs.access(value);
     json_file_path = value;
-    json_data = await fs.readFile(json_file_path, "utf8");
   } catch {
     generate_json_command_context = `command_to_generate_json: \`${value}\`\n`;
     const { stdout } = await promisify(exec)(value, { maxBuffer: 100 * 1024 * 1024});
-    json_data = stdout;
     json_file_path = path.join(tmpdir(), `jsonviewer-${process.pid}.data.json`);
-    await fs.writeFile(json_file_path, json_data);
+    await fs.writeFile(json_file_path, stdout);
     console.log(`ⓘ Generated json data saved to: ${json_file_path}`);
   }
 
+  const json_data = await fs.readFile(json_file_path, "utf8");
   const json_schema = jsonSchemaGenerator(JSON.parse(json_data));
 
   return `You are a AI agent that can view and filter json data with jq.
