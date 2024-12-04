@@ -1,4 +1,4 @@
-# JsonViewer
+# Json-Viewer
 
 An AI agent to view and filter json data
 
@@ -7,4 +7,4 @@ The agent only sends the JSON schema instead of the JSON data to the LLM, which 
 - Less data transmission, faster response speed, and lower token costs.
 - More privacy, as no actual JSON data is transmitted.
 
-![jsonviewer](https://github.com/user-attachments/assets/dea02139-3a59-4ce3-841d-a00f15a8c584)
+![json-viewer](https://github.com/user-attachments/assets/3ae126f4-d741-4929-bf70-640530ccdfd8)

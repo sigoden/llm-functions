@@ -18,7 +18,7 @@ exports._instructions = async function () {
   } catch {
     generate_json_command_context = `command_to_generate_json: \`${value}\`\n`;
     const { stdout } = await promisify(exec)(value, { maxBuffer: 100 * 1024 * 1024});
-    json_file_path = path.join(tmpdir(), `jsonviewer-${process.pid}.data.json`);
+    json_file_path = path.join(tmpdir(), `${process.env.LLM_AGENT_NAME}-${process.pid}.data.json`);
     await fs.writeFile(json_file_path, stdout);
     console.log(`ⓘ Generated json data saved to: ${json_file_path}`);
   }
