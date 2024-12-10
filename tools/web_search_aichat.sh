@@ -11,7 +11,6 @@ set -e
 # @env WEB_SEARCH_MODEL! The model for web-searching.
 #
 # supported aichat models:
-#   - cohere:*
 #   - vertexai:gemini-*
 #   - perplexity:*-online
 #   - ernie:*
@@ -20,14 +19,9 @@ set -e
 
 main() {
     client="${WEB_SEARCH_MODEL%%:*}"
-    case "$client" in
-    cohere)
-        export AICHAT_PATCH_COHERE_CHAT_COMPLETIONS='{".*":{"body":{"connectors":[{"id":"web-search"}]}}}'
-        ;;
-    vertexai)
+    if [[ "$client" == "vertexai" ]]; then
         export AICHAT_PATCH_VERTEXAI_CHAT_COMPLETIONS='{"gemini-.*":{"body":{"tools":[{"googleSearchRetrieval":{}}]}}}'
-        ;;
-    esac
+    fi
     aichat -m "$WEB_SEARCH_MODEL" "$argc_query" >> "$LLM_OUTPUT"
 }
 
