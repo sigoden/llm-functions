@@ -1,0 +1,24 @@
+{
+  "name": "mcp-llm-functions",
+  "version": "1.0.0",
+  "description": "Let LLM-functions tools/agents be used through the Model Context Protocol",
+  "license": "MIT",
+  "author": "sigoden <sigoden@gmail.com>",
+  "homepage": "https://github.com/sigoden/llm-functions/tree/main/mcp/server",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sigoden/llm-functions.git",
+    "directory": "mcp/server"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "mcp-llm-functions": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3",
+    "uuid": "^11.0.3"
+  }
+}
