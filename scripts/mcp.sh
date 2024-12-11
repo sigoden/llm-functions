@@ -15,8 +15,16 @@ start() {
     fi
     stop
     mkdir -p "$MCP_DIR"
-    node "$ROOT_DIR/mcp/bridge/index.js" "$ROOT_DIR" > "$MCP_DIR/mcp-bridge.log" 2>&1 & echo $! > "$MCP_DIR/mcp-bridge.pid"
+    index_js="$ROOT_DIR/mcp/bridge/index.js"
+    llm_functions_dir="$ROOT_DIR"
+    if _is_win; then
+        index_js="$(cygpath -w "$index_js")"
+        llm_functions_dir="$(cygpath -w "$llm_functions_dir")"
+    fi
+    echo "Run MCP Bridge server"
+    nohup node  "$index_js" "$llm_functions_dir" > "$MCP_DIR/mcp-bridge.log" 2>&1 &
     wait-for-server
+    echo "Merge MCP tools into functions.json"
     merge-functions > "$MCP_DIR/functions.json"
     cp -f "$MCP_DIR/functions.json" "$FUNCTIONS_JSON_PATH"
     build-bin
@@ -24,10 +32,14 @@ start() {
 
 # @cmd Stop mcp bridge server
 stop() {
-    if [[ -f "$MCP_DIR/mcp-bridge.pid" ]]; then
-        kill -9 $(cat "$MCP_DIR/mcp-bridge.pid") > /dev/null 2>&1 || true
+    pid="$(get-server-pid)"
+    if [[ -n "$pid" ]]; then
+        if _is_win; then
+            taskkill /PID "$pid" /F > /dev/null 2>&1 || true
+        else
+            kill -9 "$pid" > /dev/null 2>&1 || true
+        fi
     fi
-    rm -f "$MCP_DIR/mcp-bridge.pid"
     mkdir -p "$MCP_DIR"
     unmerge-functions > "$MCP_DIR/functions.original.json"
     cp -f "$MCP_DIR/functions.original.json" "$FUNCTIONS_JSON_PATH"
@@ -72,6 +84,7 @@ build-bin() {
             bin_file="$BIN_DIR/$tool"
             ln -s -f "$ROOT_DIR/scripts/run-mcp-tool.sh" "$bin_file"
         fi
+        echo "Build bin/$tool"
     done
 }
 
@@ -104,6 +117,11 @@ wait-for-server() {
     done
 }
 
+# @cmd
+get-server-pid() {
+    curl -fsSL http://localhost:$MCP_BRIDGE_PORT/pid 2>/dev/null || true
+}
+
 _ask_json_data() {
     declaration="$1"
     echo 'Missing the JSON data but here are its properties:'
@@ -133,7 +151,7 @@ set "bin_dir=%~dp0"
 for %%i in ("%bin_dir:~0,-1%") do set "script_dir=%%~dpi"
 set "script_name=%~n0"
 
-$run "%script_dir%scripts\run-mcp-tool.$sh" "%script_name%" %*
+$run "%script_dir%scripts\run-mcp-tool.sh" "%script_name%" %*
 EOF
 }
 

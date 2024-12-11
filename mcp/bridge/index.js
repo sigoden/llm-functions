@@ -28,20 +28,15 @@ try {
 
 async function startMcpServer(id, serverConfig) {
   console.log(`Starting ${id} server...`);
-  const capabilities = { tools: {} }
+  const capabilities = { tools: {} };
   const transport = new StdioClientTransport({
     ...serverConfig,
-    stderr: "inherit",
   });
   const client = new Client(
     { name: id, version: "1.0.0" },
     { capabilities }
   );
-  try {
-    await client.connect(transport)
-  } catch (err) {
-    console.error(`Failed to connect to ${id} client: ${err}`);
-  }
+  await client.connect(transport);
   const { tools: toolDefinitions } = await client.listTools()
   const tools = toolDefinitions.map(
     ({ name, description, inputSchema }) =>
@@ -51,13 +46,13 @@ async function startMcpServer(id, serverConfig) {
         description,
         parameters: inputSchema,
       },
-      impl: async (args) => {
+      impl: async args => {
         const res = await client.callTool({
           name: name,
           arguments: args,
         });
         const content = res.content;
-        let text = arrayify(content)?.map((c) => {
+        let text = arrayify(content)?.map(c => {
           switch (c.type) {
             case "text":
               return c.text || ""
@@ -68,8 +63,7 @@ async function startMcpServer(id, serverConfig) {
             default:
               return c
           }
-        })
-          .join("\n");
+        }).join("\n");
         if (res.isError) {
           text = `Tool Error\n${text}`;
         }
@@ -80,31 +74,50 @@ async function startMcpServer(id, serverConfig) {
   return {
     tools,
     [Symbol.asyncDispose]: async () => {
-      console.log(`Closing ${id}`)
-      await client.close()
-      await transport.close()
+      try {
+        console.log(`Closing ${id} server...`);
+        await client.close();
+        await transport.close();
+      } catch { }
     },
   }
 }
 
 async function runBridge() {
-  const runningMcpServers = await Promise.all(
+  let hasError = false;
+  let runningMcpServers = await Promise.all(
     Object.entries(mcpServers).map(
-      async ([name, serverConfig]) =>
-        await startMcpServer(name, serverConfig)
+      async ([name, serverConfig]) => {
+        try {
+          return await startMcpServer(name, serverConfig)
+        } catch (err) {
+          hasError = true;
+          console.error(`Failed to start ${name} server; ${err.message}`)
+        }
+      }
     )
   );
-  const stopMcpServers = () => Promise.all(runningMcpServers.map((s) => s[Symbol.asyncDispose]()));
-  const definitions = runningMcpServers.flatMap((s) => s.tools.map(t => t.spec));
+  runningMcpServers = runningMcpServers.filter(s => !!s);
+  const stopMcpServers = () => Promise.all(runningMcpServers.map(s => s[Symbol.asyncDispose]()));
+  if (hasError) {
+    await stopMcpServers();
+    return;
+  }
+
+  const definitions = runningMcpServers.flatMap(s => s.tools.map(t => t.spec));
   const runTool = async (name, args) => {
     for (const server of runningMcpServers) {
-      const tool = server.tools.find((t) => t.spec.name === name);
+      const tool = server.tools.find(t => t.spec.name === name);
       if (tool) {
         return tool.impl(args);
       }
     }
     return `Not found tool '${name}'`;
   };
+
+  app.use((err, _req, res, _next) => {
+    res.status(500).send(err?.message || err);
+  });
 
   app.use(express.json());
 
@@ -120,10 +133,6 @@ async function runBridge() {
 - GET /tools
   \`\`\`
   curl http://localhost:8808/tools
-  \`\`\`
-- GET /health
-  \`\`\`
-  curl http://localhost:8808/health # print \`OK\`
   \`\`\`
   `);
   });
@@ -141,19 +150,25 @@ async function runBridge() {
     }
   });
 
+  app.get("/pid", (_req, res) => {
+    res.send(process.pid.toString());
+  });
+
   app.get("/health", (_req, res) => {
     res.send("OK");
+  });
+
+  app.use((_req, res, _next) => {
+    res.status(404).send("Not found");
   });
 
   const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 
-  return () => {
-    server.close(async () => {
-      await stopMcpServers();
-      process.exit(0);
-    })
+  return async () => {
+    server.close(() => console.log("Http server closed"));
+    await stopMcpServers();
   };
 }
 
@@ -172,7 +187,9 @@ function normalizeToolName(name) {
 
 runBridge()
   .then(stop => {
-    process.on('SIGINT', stop);
-    process.on('SIGTERM', stop);
+    if (stop) {
+      process.on('SIGINT', stop);
+      process.on('SIGTERM', stop);
+    }
   })
   .catch(console.error);
