@@ -2,7 +2,7 @@
 set -e
 
 BIN_DIR=bin
-TMP_DIR="cache/tmp"
+TMP_DIR="cache/__tmp__"
 VENV_DIR=".venv"
 
 LANG_CMDS=( \
@@ -421,9 +421,8 @@ test-demo@tool() {
 # @cmd Test agents
 # @alias agent:test
 test@agent() {
-    tmp_dir="cache/tmp"
-    mkdir -p "$tmp_dir"
-    names_file="$tmp_dir/agents.txt"
+    mkdir -p "$TMP_DIR"
+    names_file="$TMP_DIR/agents.txt"
     argc list@agent > "$names_file"
     argc build@agent --names-file "$names_file"
     test-demo@agent
@@ -497,6 +496,12 @@ install() {
     else
         echo "$functions_dir already exists"
     fi
+}
+
+# @cmd Run mcp command
+# @arg args~[?`_choice_mcp_args`] The mcp command and arguments
+mcp() {
+    bash ./scripts/mcp.sh "$@"
 }
 
 # @cmd Create a boilplate tool script
@@ -669,6 +674,16 @@ _choice_agent_action() {
         expr="s/:.*//"
     fi
     argc generate-declarations@agent "$1" --oneline | sed "$expr"
+}
+
+_choice_mcp_args() {
+    if [[ "$ARGC_COMPGEN" -eq 1 ]]; then
+        args=( "${argc__positionals[@]}" )
+        args[-1]="$ARGC_LAST_ARG"
+        argc --argc-compgen generic scripts/mcp.sh mcp "${args[@]}"
+    else
+        :;
+    fi
 }
 
 _die() {
