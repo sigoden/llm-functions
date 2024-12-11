@@ -53,7 +53,7 @@ function extractFunctions(contents, isTool) {
         continue;
       }
       if (isTool) {
-        if (new RegExp(`function ${TOOL_ENTRY_FUNC}`).test(line)) {
+        if (new RegExp(`^export (async )?function ${TOOL_ENTRY_FUNC}|^exports\.${TOOL_ENTRY_FUNC}`).test(line)) {
           output.push({
             funcName: TOOL_ENTRY_FUNC,
             jsdoc,
