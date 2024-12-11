@@ -162,6 +162,9 @@ build-declarations@tool() {
         json_data="$(generate-declarations@tool "$name" | jq -r '.[0]')" || {
             build_failed_tools+=("$name")
         }
+        if [[ "$json_data" == "null" ]]; then
+            _die "error: failed to build declartions for tool $name"
+        fi
         json_list+=("$json_data")
     done
     if [[ -n "$not_found_tools" ]]; then
