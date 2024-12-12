@@ -87,10 +87,15 @@ EOF
         die "error: invalid JSON data"
     }
     if [[ -z "$LLM_OUTPUT" ]]; then
-        export LLM_OUTPUT="/dev/stdout"
+        is_temp_llm_output=1
+        export LLM_OUTPUT="$(mktemp)"
     fi
     eval "'$tool_path' $args"
-    dump_result "$tool_name"
+    if [[ "$is_temp_llm_output" -eq 1 ]]; then
+        cat "$LLM_OUTPUT"
+    else
+        dump_result "$tool_name"
+    fi
 }
 
 dump_result() {

@@ -92,10 +92,15 @@ EOF
     }
 
     if [[ -z "$LLM_OUTPUT" ]]; then
-        export LLM_OUTPUT="/dev/stdout"
+        is_temp_llm_output=1
+        export LLM_OUTPUT="$(mktemp)"
     fi
     eval "'$tools_path' '$agent_func' $args"
-    dump_result "${LLM_AGENT_NAME}:${LLM_AGENT_FUNC}"
+    if [[ "$is_temp_llm_output" -eq 1 ]]; then
+        cat "$LLM_OUTPUT"
+    else
+        dump_result "${LLM_AGENT_NAME}:${LLM_AGENT_FUNC}"
+    fi
 }
 
 dump_result() {

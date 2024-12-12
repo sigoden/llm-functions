@@ -57,14 +57,19 @@ run() {
     fi
 
     if [[ -z "$LLM_OUTPUT" ]]; then
-        export LLM_OUTPUT="/dev/stdout"
+        is_temp_llm_output=1
+        export LLM_OUTPUT="$(mktemp)"
     fi
     curl -sS "http://localhost:${MCP_BRIDGE_PORT:-8808}/tools/$tool_name" \
         -X POST \
         -H 'content-type: application/json' \
         -d "$tool_data" > "$LLM_OUTPUT"
 
-    dump_result "$tool_name" 
+    if [[ "$is_temp_llm_output" -eq 1 ]]; then
+        cat "$LLM_OUTPUT"
+    else
+        dump_result "$tool_name" 
+    fi
 }
 
 dump_result() {
