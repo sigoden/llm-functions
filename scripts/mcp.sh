@@ -25,8 +25,7 @@ start() {
     nohup node  "$index_js" "$llm_functions_dir" > "$MCP_DIR/mcp-bridge.log" 2>&1 &
     wait-for-server
     echo "Merge MCP tools into functions.json"
-    merge-functions > "$MCP_DIR/functions.json"
-    cp -f "$MCP_DIR/functions.json" "$FUNCTIONS_JSON_PATH"
+    "$0" merge-functions -S
     build-bin
 }
 
@@ -40,15 +39,13 @@ stop() {
             kill -9 "$pid" > /dev/null 2>&1 || true
         fi
     fi
-    mkdir -p "$MCP_DIR"
-    unmerge-functions > "$MCP_DIR/functions.original.json"
-    cp -f "$MCP_DIR/functions.original.json" "$FUNCTIONS_JSON_PATH"
+    "$0" recovery-functions -S
 }
 
-# @cmd Call mcp tool
+# @cmd Run the tool
 # @arg tool![`_choice_tool`] The tool name
 # @arg json The json data
-call() {
+run@tool() {
     if [[ -z "$argc_json" ]]; then
         declaration="$(build-declarations | jq --arg tool "$argc_tool" -r '.[] | select(.name == $tool)')"
         if [[ -n "$declaration" ]]; then
@@ -89,17 +86,29 @@ build-bin() {
 }
 
 # @cmd Merge mcp tools into functions.json
+# @flag -S --save Save to functions.json
 merge-functions() {
-    jq --argjson json1 "$(unmerge-functions)" --argjson json2 "$(build-declarations)" -n '($json1 + $json2)'
+    result="$(jq --argjson json1 "$("$0" recovery-functions)" --argjson json2 "$(build-declarations)" -n '($json1 + $json2)')"
+    if [[ -n "$argc_save" ]]; then
+        printf "%s" "$result" > "$FUNCTIONS_JSON_PATH"
+    else
+        printf "%s" "$result"
+    fi
 }
 
 # @cmd Unmerge mcp tools from functions.json
-unmerge-functions() {
+# @flag -S --save Save to functions.json
+recovery-functions() {
     functions="[]"
     if [[ -f  "$FUNCTIONS_JSON_PATH" ]]; then
         functions="$(cat "$FUNCTIONS_JSON_PATH")"
     fi
-    printf "%s" "$functions" | jq 'map(select(has("mcp") | not))'
+    result="$(printf "%s" "$functions" | jq 'map(select(has("mcp") | not))')"
+    if [[ -n "$argc_save" ]]; then
+        printf "%s" "$result" > "$FUNCTIONS_JSON_PATH"
+    else
+        printf "%s" "$result"
+    fi
 }
 
 # @cmd Build tools to bin

@@ -1,6 +1,6 @@
 # MCP-Bridge
 
-Let MCP tools be used by LLM functions.
+Let external MCP tools be used by LLM-Functions.
 
 ## Get Started
 
@@ -40,3 +40,4 @@ argc mcp start
 ```
 
 > Run `argc mcp stop` to stop the bridge server, recover functions.json
+> Run `argc mcp logs` to check the server's logs.

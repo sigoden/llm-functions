@@ -184,6 +184,11 @@ documents:
 
 Refer to [./agents/demo](https://github.com/sigoden/llm-functions/tree/main/agents/demo) for examples of how to implement a agent.
 
+## MCP (Model Context Protocol)
+
+- [mcp/server](./mcp/server/): Let LLM-Functions tools/agents be used through the Model Context Protocol. 
+- [mcp/bridge](./mcp/bridge/): Let external MCP tools be used by LLM-Functions.
+
 ## License
 
 The project is under the MIT License, Refer to the [LICENSE](https://github.com/sigoden/llm-functions/blob/main/LICENSE) file for detailed information.
