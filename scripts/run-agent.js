@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+// Usage: ./run-agent.js <agent-name> <agent-func> <agent-data>
+
 const path = require("path");
-const { createWriteStream } = require("fs");
-const { readFile } = require("fs/promises");
+const { readFile, writeFile } = require("fs/promises");
 const os = require("os");
 
 async function main() {
@@ -13,7 +14,7 @@ async function main() {
   await setupEnv(rootDir, agentName, agentFunc);
 
   const agentToolsPath = path.resolve(rootDir, `agents/${agentName}/tools.js`);
-  await run(agentToolsPath, agentFunc, agentData);
+  await run(agentName, agentToolsPath, agentFunc, agentData);
 }
 
 function parseArgv(thisFileName) {
@@ -104,7 +105,7 @@ async function loadEnv(filePath) {
   }
 }
 
-async function run(agentPath, agentFunc, agentData) {
+async function run(agentName, agentPath, agentFunc, agentData) {
   let mod;
   if (os.platform() === "win32") {
     agentPath = `file://${agentPath}`;
@@ -118,55 +119,45 @@ async function run(agentPath, agentFunc, agentData) {
     throw new Error(`Not module function '${agentFunc}' at '${agentPath}'`);
   }
   const value = await mod[agentFunc](agentData);
-  returnToLLM(value);
-  await dumpResult();
+  await returnToLLM(value);
+  await dumpResult(`${agentName}:${agentFunc}`);
 }
 
-function returnToLLM(value) {
+async function returnToLLM(value) {
   if (value === null || value === undefined) {
     return;
   }
-  let writer = process.stdout;
-  if (process.env["LLM_OUTPUT"]) {
-    writer = createWriteStream(process.env["LLM_OUTPUT"]);
+  const write = async (value) => {
+    if (process.env["LLM_OUTPUT"]) {
+      await writeFile(process.env["LLM_OUTPUT"], value);
+    } else {
+      process.stdout.write(value);
+    }
   }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
-    writer.write(value.toString());
+    await write(value.toString());
   } else if (type === "object") {
     const proto = Object.prototype.toString.call(value);
     if (proto === "[object Object]" || proto === "[object Array]") {
       const valueStr = JSON.stringify(value, null, 2);
       require("assert").deepStrictEqual(value, JSON.parse(valueStr));
-      writer.write(valueStr);
+      await write(valueStr);
     }
   }
 }
 
-async function dumpResult() {
-  if (!process.stdout.isTTY) {
-    return;
-  }
-  if (!process.env["LLM_OUTPUT"]) {
+async function dumpResult(name) {
+  if (!process.env["LLM_DUMP_RESULTS"] || !process.env["LLM_OUTPUT"] || !process.stdout.isTTY) {
     return;
   }
   let showResult = false;
-  const agentName = process.env["LLM_AGENT_NAME"].toUpperCase().replace(/-/g, '_');
-  const agentEnvName = `LLM_AGENT_DUMP_RESULT_${agentName}`;
-  const agentEnvValue = process.env[agentEnvName] || process.env["LLM_AGENT_DUMP_RESULT"];
+  try {
+    if (new RegExp(`\\b(${process.env["LLM_DUMP_RESULTS"]})\\b`).test(name)) {
+      showResult = true;
+    }
+  } catch { }
 
-  const funcName = process.env["LLM_AGENT_FUNC"].toUpperCase().replace(/-/g, '_');
-  const funcEnvName = `${agentEnvName}_${funcName}`;
-  const funcEnvValue = process.env[funcEnvName];
-  if (agentEnvValue === '1' || agentEnvValue === 'true') {
-    if (funcEnvValue !== '0' && funcEnvValue !== 'false') {
-      showResult = true;
-    }
-  } else {
-    if (funcEnvValue === '1' || funcEnvValue === 'true') {
-      showResult = true;
-    }
-  }
   if (!showResult) {
     return;
   }

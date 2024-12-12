@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+// Usage: ./run-tool.js <tool-name> <tool-data>
+
 const path = require("path");
-const { createWriteStream } = require("fs");
-const { readFile } = require("fs/promises");
+const { readFile, writeFile } = require("fs/promises");
 const os = require("os");
 
 async function main() {
@@ -13,7 +14,7 @@ async function main() {
   await setupEnv(rootDir, toolName);
 
   const toolPath = path.resolve(rootDir, `tools/${toolName}.js`);
-  await run(toolPath, "run", toolData);
+  await run(toolName, toolPath, "run", toolData);
 }
 
 function parseArgv(thisFileName) {
@@ -91,7 +92,7 @@ async function loadEnv(filePath) {
   }
 }
 
-async function run(toolPath, toolFunc, toolData) {
+async function run(toolName, toolPath, toolFunc, toolData) {
   let mod;
   if (os.platform() === "win32") {
     toolPath = `file://${toolPath}`;
@@ -105,51 +106,45 @@ async function run(toolPath, toolFunc, toolData) {
     throw new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
   }
   const value = await mod[toolFunc](toolData);
-  returnToLLM(value);
-  await dumpResult();
+  await returnToLLM(value);
+  await dumpResult(toolName);
 }
 
-function returnToLLM(value) {
+async function returnToLLM(value) {
   if (value === null || value === undefined) {
     return;
   }
-  let writer = process.stdout;
-  if (process.env["LLM_OUTPUT"]) {
-    writer = createWriteStream(process.env["LLM_OUTPUT"]);
+  const write = async (value) => {
+    if (process.env["LLM_OUTPUT"]) {
+      await writeFile(process.env["LLM_OUTPUT"], value);
+    } else {
+      process.stdout.write(value);
+    }
   }
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
-    writer.write(value.toString());
+    await write(value.toString());
   } else if (type === "object") {
     const proto = Object.prototype.toString.call(value);
     if (proto === "[object Object]" || proto === "[object Array]") {
       const valueStr = JSON.stringify(value, null, 2);
       require("assert").deepStrictEqual(value, JSON.parse(valueStr));
-      writer.write(valueStr);
+      await write(valueStr);
     }
   }
 }
 
-async function dumpResult() {
-  if (!process.stdout.isTTY) {
-    return;
-  }
-  if (!process.env["LLM_OUTPUT"]) {
+async function dumpResult(name) {
+  if (!process.env["LLM_DUMP_RESULTS"] || !process.env["LLM_OUTPUT"] || !process.stdout.isTTY) {
     return;
   }
   let showResult = false;
-  const toolName = process.env["LLM_TOOL_NAME"].toUpperCase().replace(/-/g, '_');
-  const envName = `LLM_TOOL_DUMP_RESULT_${toolName}`;
-  const envValue = process.env[envName];
-  if (process.env.LLM_TOOL_DUMP_RESULT === '1' || process.env.LLM_TOOL_DUMP_RESULT === 'true') {
-    if (envValue !== '0' && envValue !== 'false') {
+  try {
+    if (new RegExp(`\\b(${process.env["LLM_DUMP_RESULTS"]})\\b`).test(name)) {
       showResult = true;
     }
-  } else {
-    if (envValue === '1' || envValue === 'true') {
-      showResult = true;
-    }
-  }
+  } catch { }
+
   if (!showResult) {
     return;
   }

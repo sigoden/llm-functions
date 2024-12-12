@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+# Usage: ./run-tool.py <tool-name> <tool-data>
+
 import os
+import re
 import json
 import sys
 import importlib.util
@@ -14,7 +17,7 @@ def main():
     setup_env(root_dir, tool_name)
 
     tool_path = os.path.join(root_dir, f"tools/{tool_name}.py")
-    run(tool_path, "run", tool_data)
+    run(tool_name, tool_path, "run", tool_data)
 
 
 def parse_raw_data(data):
@@ -85,7 +88,7 @@ def load_env(file_path):
     os.environ.update(env_vars)
 
 
-def run(tool_path, tool_func, tool_data):
+def run(tool_name, tool_path, tool_func, tool_data):
     try:
         spec = importlib.util.spec_from_file_location(
             os.path.basename(tool_path), tool_path
@@ -100,7 +103,7 @@ def run(tool_path, tool_func, tool_data):
 
     value = getattr(mod, tool_func)(**tool_data)
     return_to_llm(value)
-    dump_result()
+    dump_result(tool_name)
 
 
 def return_to_llm(value):
@@ -121,24 +124,16 @@ def return_to_llm(value):
         writer.write(value_str)
 
 
-def dump_result():
-    if not os.isatty(1):
-        return
-
-    if not os.getenv("LLM_OUTPUT"):
+def dump_result(name):
+    if (not os.getenv("LLM_DUMP_RESULTS")) or (not os.getenv("LLM_OUTPUT")) or (not os.isatty(1)):
         return
 
     show_result = False
-    tool_name = os.environ["LLM_TOOL_NAME"].upper().replace("-", "_")
-    env_name = f"LLM_TOOL_DUMP_RESULT_{tool_name}"
-    env_value = os.getenv(env_name)
-
-    if os.getenv("LLM_TOOL_DUMP_RESULT") in ("1", "true"):
-        if env_value not in ("0", "false"):
+    try:
+        if re.search(rf'\b({os.environ["LLM_DUMP_RESULTS"]})\b', name):
             show_result = True
-    else:
-        if env_value in ("1", "true"):
-            show_result = True
+    except:
+        pass
 
     if not show_result:
         return

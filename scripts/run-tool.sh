@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Usage: ./run-tool.sh <tool-name> <tool-data>
+
 set -e
 
 main() {
@@ -83,44 +86,29 @@ EOF
     args="$(echo "$tool_data" | jq -r "$jq_script" 2>/dev/null)" || {
         die "error: invalid JSON data"
     }
-
-    no_llm_output=0
     if [[ -z "$LLM_OUTPUT" ]]; then
-        no_llm_output=1
+        is_temp_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
     fi
     eval "'$tool_path' $args"
-    if [[ "$no_llm_output" -eq 1 ]]; then
+    if [[ "$is_temp_llm_output" -eq 1 ]]; then
         cat "$LLM_OUTPUT"
     else
-        dump_result
+        dump_result "$tool_name"
     fi
 }
 
 dump_result() {
-    if [ ! -t 1 ]; then
+    if [[ "$LLM_OUTPUT" == "/dev/stdout" ]] || [[ -z "$LLM_DUMP_RESULTS" ]] ||  [[ ! -t 1 ]]; then
         return;
     fi
-    local env_name env_value show_result=0
-    env_name="LLM_TOOL_DUMP_RESULT_$(echo "$LLM_TOOL_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
-    env_value="${!env_name}"
-    if [[ "$LLM_TOOL_DUMP_RESULT" == "1" || "$LLM_TOOL_DUMP_RESULT" == "true" ]]; then
-        if [[ "$env_value" != "0" && "$env_value" != "false" ]]; then
-            show_result=1
-        fi
-    else
-        if [[ "$env_value" == "1" || "$env_value" == "true" ]]; then
-            show_result=1
-        fi
-    fi
-    if [[ "$show_result" -ne 1 ]]; then
-        return
-    fi
-    cat <<EOF
+    if grep -q -w -E "$LLM_DUMP_RESULTS" <<<"$1"; then
+        cat <<EOF
 $(echo -e "\e[2m")----------------------
 $(cat "$LLM_OUTPUT")
 ----------------------$(echo -e "\e[0m")
 EOF
+    fi
 }
 
 die() {
