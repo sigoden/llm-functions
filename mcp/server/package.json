@@ -1,6 +1,6 @@
 {
   "name": "mcp-llm-functions",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Let LLM-functions tools/agents be used through the Model Context Protocol",
   "license": "MIT",
   "author": "sigoden <sigoden@gmail.com>",
