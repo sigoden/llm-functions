@@ -28,7 +28,7 @@ run@tool() {
     fi
     lang="${argc_tool##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    run_tool_script="$PWD/scripts/run-tool.$lang"
+    run_tool_script="scripts/run-tool.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
     exec "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
 }
@@ -52,7 +52,7 @@ run@agent() {
     tools_path="$(_get_agent_tools_path "$argc_agent")"
     lang="${tools_path##*.}"
     cmd="$(_lang_to_cmd "$lang")"
-    run_agent_script="$PWD/scripts/run-agent.$lang"
+    run_agent_script="scripts/run-agent.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
     exec "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
 }
