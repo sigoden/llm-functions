@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+# Usage: ./run-agent.py <agent-name> <agent-func> <agent-data>
+
 import os
+import re
 import json
 import sys
 import importlib.util
@@ -14,7 +17,7 @@ def main():
     setup_env(root_dir, agent_name, agent_func)
 
     agent_tools_path = os.path.join(root_dir, f"agents/{agent_name}/tools.py")
-    run(agent_tools_path, agent_func, agent_data)
+    run(agent_name, agent_tools_path, agent_func, agent_data)
 
 
 def parse_raw_data(data):
@@ -90,7 +93,7 @@ def load_env(file_path):
     os.environ.update(env_vars)
 
 
-def run(agent_path, agent_func, agent_data):
+def run(agent_name, agent_path, agent_func, agent_data):
     try:
         spec = importlib.util.spec_from_file_location(
             os.path.basename(agent_path), agent_path
@@ -105,42 +108,7 @@ def run(agent_path, agent_func, agent_data):
 
     value = getattr(mod, agent_func)(**agent_data)
     return_to_llm(value)
-    dump_result()
-
-
-def dump_result():
-    if not os.isatty(1):
-        return
-
-    if not os.getenv("LLM_OUTPUT"):
-        return
-
-    show_result = False
-    agent_name = os.environ["LLM_AGENT_NAME"].upper().replace("-", "_")
-    agent_env_name = f"LLM_AGENT_DUMP_RESULT_{agent_name}"
-    agent_env_value = os.getenv(agent_env_name, os.getenv("LLM_AGENT_DUMP_RESULT"))
-
-    func_name = os.environ["LLM_AGENT_FUNC"].upper().replace("-", "_")
-    func_env_name = f"{agent_env_name}_{func_name}"
-    func_env_value = os.getenv(func_env_name)
-
-    if agent_env_value in ("1", "true"):
-        if func_env_value not in ("0", "false"):
-            show_result = True
-    else:
-        if func_env_value in ("1", "true"):
-            show_result = True
-
-    if not show_result:
-        return
-
-    try:
-        with open(os.environ["LLM_OUTPUT"], "r", encoding="utf-8") as f:
-            data = f.read()
-    except:
-        return
-
-    print(f"\x1b[2m----------------------\n{data}\n----------------------\x1b[0m")
+    dump_result(rf'{agent_name}:{agent_func}')
 
 
 def return_to_llm(value):
@@ -159,6 +127,29 @@ def return_to_llm(value):
         value_str = json.dumps(value, indent=2)
         assert value == json.loads(value_str)
         writer.write(value_str)
+
+
+def dump_result(name):
+    if (not os.getenv("LLM_DUMP_RESULTS")) or (not os.getenv("LLM_OUTPUT")) or (not os.isatty(1)):
+        return
+
+    show_result = False
+    try:
+        if re.search(rf'\b({os.environ["LLM_DUMP_RESULTS"]})\b', name):
+            show_result = True
+    except:
+        pass
+
+    if not show_result:
+        return
+
+    try:
+        with open(os.environ["LLM_OUTPUT"], "r", encoding="utf-8") as f:
+            data = f.read()
+    except:
+        return
+
+    print(f"\x1b[2m----------------------\n{data}\n----------------------\x1b[0m")
 
 
 if __name__ == "__main__":
