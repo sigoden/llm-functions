@@ -29,8 +29,9 @@ try {
 async function startMcpServer(id, serverConfig) {
   console.log(`Starting ${id} server...`);
   const capabilities = { tools: {} };
+  const { prefix = true, ...rest } = serverConfig;
   const transport = new StdioClientTransport({
-    ...serverConfig,
+    ...rest,
   });
   const client = new Client(
     { name: id, version: "1.0.0" },
@@ -42,7 +43,7 @@ async function startMcpServer(id, serverConfig) {
     ({ name, description, inputSchema }) =>
     ({
       spec: {
-        name: `${normalizeToolName(`${id}_${name}`)}`,
+        name: `${formatToolName(id, name, prefix)}`,
         description,
         parameters: inputSchema,
       },
@@ -181,7 +182,8 @@ function arrayify(a) {
   return r
 }
 
-function normalizeToolName(name) {
+function formatToolName(serverName, toolName, prefix) {
+  const name = prefix ? `${serverName}_${toolName}` : toolName;
   return name.toLowerCase().replace(/-/g, "_");
 }
 
