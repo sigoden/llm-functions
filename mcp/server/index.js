@@ -33,6 +33,18 @@ try {
   console.error(`Failed to read functions at '${functionsJsonPath}'`);
   process.exit(1);
 }
+const agentToolsOnly = process.env["AGENT_TOOLS_ONLY"] === "true" || process.env["AGENT_TOOLS_ONLY"] === "1";
+functions = functions.filter(f => {
+  if (f.mcp) {
+    return false;
+  }
+  if (agentToolsOnly) {
+    return f.agent;
+  } else {
+    return true;
+  }
+});
+
 const env = Object.assign({}, process.env, {
   PATH: `${path.join(rootDir, "bin")}:${process.env.PATH}`
 });
@@ -114,7 +126,6 @@ function runCommand(command, args, env) {
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("LLM-Functions MCP Server running on stdio");
 }
 
 runServer().catch(console.error);

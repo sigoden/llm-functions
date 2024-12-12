@@ -8,10 +8,10 @@ Let LLM-functions tools/agents be used through the Model Context Protocol.
 {
   "mcpServers": {
     "tools": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "<path-to-llm-functions>/mcp/server/index.js",
-        "<path-to-llm-functions>"
+        "mcp-llm-functions",
+        "<llm-functions-dir>"
       ]
     }
   }
@@ -26,11 +26,15 @@ Let LLM-functions tools/agents be used through the Model Context Protocol.
     "<agent-name>": {
       "command": "node",
       "args": [
-        "<path-to-llm-functions>/mcp/server/index.js",
-        "<path-to-llm-functions>",
+        "mcp-llm-functions",
+        "<llm-functions-dir>"
         "<agent-name>",
       ]
     }
   }
 }
 ```
+
+## Environment Variables
+
+- `AGENT_TOOLS_ONLY`: Set to `true` or `1` to ignore shared tools and display only agent tools.
