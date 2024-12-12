@@ -62,6 +62,7 @@ run() {
     if [[ "$OS" == "Windows_NT" ]]; then
         set -o igncr
         tools_path="$(cygpath -w "$tools_path")"
+        tool_data="$(echo "$tool_data" | sed 's/\\/\\\\/g')"
     fi
 
     jq_script="$(cat <<-'EOF'

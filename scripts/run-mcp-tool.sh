@@ -44,6 +44,15 @@ load_env() {
 }
 
 run() {
+    if [[ -z "$tool_data" ]]; then
+        die "error: no JSON data"
+    fi
+
+    if [[ "$OS" == "Windows_NT" ]]; then
+        set -o igncr
+        tool_data="$(echo "$tool_data" | sed 's/\\/\\\\/g')"
+    fi
+
     no_llm_output=0
     if [[ -z "$LLM_OUTPUT" ]]; then
         no_llm_output=1
