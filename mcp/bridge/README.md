@@ -1,6 +1,6 @@
 # MCP-Bridge
 
-Let external MCP tools be used by LLM functions.
+Let external MCP tools be used by LLM-Functions.
 
 ## Get Started
 

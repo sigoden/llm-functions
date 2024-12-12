@@ -187,7 +187,7 @@ Refer to [./agents/demo](https://github.com/sigoden/llm-functions/tree/main/agen
 ## MCP (Model Context Protocol)
 
 - [mcp/server](./mcp/server/): Let LLM-Functions tools/agents be used through the Model Context Protocol. 
-- [mcp/bridge](./mcp/bridge/): Let external MCP tools be used by LLM functions.
+- [mcp/bridge](./mcp/bridge/): Let external MCP tools be used by LLM-Functions.
 
 ## License
 
