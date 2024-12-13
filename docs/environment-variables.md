@@ -21,6 +21,8 @@
 
 ## Provided by users
 
-| Name               | Description                                                                                   |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| `LLM_DUMP_RESULTS` | Controls whether to print the execution results of the tool, e.g. `get_current_weather\|fs.*\|todo:.*`, `.*` |
+| Name                   | Description                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `LLM_DUMP_RESULTS`     | Controls whether to print the execution results of the tool, e.g. `get_current_weather\|fs.*\|todo:.*`, `.*` |
+| `LLM_MCP_NEED_CONFIRM`| Controls whether to prompt for confirmation before executing certain tools, e.g., `git_commit\|git_reset`, `.*` . |
+| `LLM_MCP_SKIP_CONFIRM`| Controls whether to bypass confirmation requests for certain tools, e.g., `git_status\|git_diff.*`, `.*` . |

@@ -60,6 +60,25 @@ run() {
         is_temp_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
     fi
+
+    if [[ -n "$LLM_MCP_SKIP_CONFIRM" ]]; then
+        if grep -q -w -E "$LLM_MCP_SKIP_CONFIRM" <<<"$tool_name"; then
+            skip_confirm=1
+        fi
+    fi
+    if [[ -n "$LLM_MCP_NEED_CONFIRM" ]]; then
+        if grep -q -w -E "$LLM_MCP_NEED_CONFIRM" <<<"$tool_name"; then
+            skip_confirm=0
+        fi
+    fi
+    if [[ -t 1 ]] && [[ "$skip_confirm" -ne 1 ]]; then
+        read -r -p "Are you sure you want to continue? [Y/n] " ans
+        if [[ "$ans" == "N" || "$ans" == "n" ]]; then
+            echo "error: canceld!" 2>&1
+            exit 1
+        fi
+    fi
+
     curl -sS "http://localhost:${MCP_BRIDGE_PORT:-8808}/tools/$tool_name" \
         -X POST \
         -H 'content-type: application/json' \
