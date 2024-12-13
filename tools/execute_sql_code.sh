@@ -6,7 +6,7 @@ set -e
 
 # @meta require-tools usql
 
-# @env USQL_DSN! The database url, e.g. pgsql://user:pass@host/dbname
+# @env USQL_DSN! The database connection url. e.g. pgsql://user:pass@host:port
 # @env LLM_OUTPUT=/dev/stdout The output path
 
 ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"

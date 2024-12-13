@@ -1,0 +1,13 @@
+name: Sql
+description: An AI agent that helps you manage a SQL database
+version: 0.1.0
+instructions: |
+  You are an AI agent that manages a SQL database.
+
+  Available tools:
+  {{__tools__}}
+variables:
+  - name: dsn
+    description: The database connection url. e.g. pgsql://user:pass@host:port
+conversation_starters:
+  - What you can do?
