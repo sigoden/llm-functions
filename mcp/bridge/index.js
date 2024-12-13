@@ -46,6 +46,7 @@ async function startMcpServer(id, serverConfig) {
         name: `${formatToolName(id, name, prefix)}`,
         description,
         parameters: inputSchema,
+        mcp: id,
       },
       impl: async args => {
         const res = await client.callTool({

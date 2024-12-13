@@ -22,7 +22,7 @@ start() {
         index_js="$(cygpath -w "$index_js")"
         llm_functions_dir="$(cygpath -w "$llm_functions_dir")"
     fi
-    echo "Run MCP Bridge server"
+    echo "Start MCP Bridge server..."
     nohup node  "$index_js" "$llm_functions_dir" > "$MCP_DIR/mcp-bridge.log" 2>&1 &
     wait-for-server
     echo "Merge MCP tools into functions.json"
@@ -114,7 +114,7 @@ recovery-functions() {
 
 # @cmd Generate function declarations for the mcp tools
 generate-declarations() {
-    curl -sS http://localhost:$MCP_BRIDGE_PORT/tools | jq '.[] |= . + {mcp: true}'
+    curl -sS http://localhost:$MCP_BRIDGE_PORT/tools
 }
 
 # @cmd Wait for the mcp bridge server to ready
