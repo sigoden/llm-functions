@@ -8,7 +8,7 @@ set -e
 #
 # @option --description <text> The tool description
 # @flag --force Override the exist tool file
-# @arg name! The script file name.
+# @arg name! The script file name
 # @arg params* The script parameters
 
 main() {

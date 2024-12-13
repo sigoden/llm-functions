@@ -8,7 +8,8 @@ MCP_JSON_PATH="$ROOT_DIR/mcp.json"
 FUNCTIONS_JSON_PATH="$ROOT_DIR/functions.json"
 MCP_BRIDGE_PORT="${MCP_BRIDGE_PORT:-8808}"
 
-# @cmd Start/Restart mcp bridge server
+# @cmd Start/restart the mcp bridge server
+# @alias restart
 start() {
     if [[ ! -f "$MCP_JSON_PATH" ]]; then
         _die "error: not found mcp.json"
@@ -29,7 +30,7 @@ start() {
     build-bin
 }
 
-# @cmd Stop mcp bridge server
+# @cmd Stop the mcp bridge server
 stop() {
     pid="$(get-server-pid)"
     if [[ -n "$pid" ]]; then
@@ -42,12 +43,12 @@ stop() {
     "$0" recovery-functions -S
 }
 
-# @cmd Run the tool
+# @cmd Run the mcp tool
 # @arg tool![`_choice_tool`] The tool name
 # @arg json The json data
 run@tool() {
     if [[ -z "$argc_json" ]]; then
-        declaration="$(build-declarations | jq --arg tool "$argc_tool" -r '.[] | select(.name == $tool)')"
+        declaration="$(generate-declarations | jq --arg tool "$argc_tool" -r '.[] | select(.name == $tool)')"
         if [[ -n "$declaration" ]]; then
             _ask_json_data "$declaration"
         fi
@@ -58,7 +59,7 @@ run@tool() {
     bash "$ROOT_DIR/scripts/run-mcp-tool.sh" "$argc_tool" "$argc_json"
 }
 
-# @cmd Show logs
+# @cmd Show the logs
 # @flag -f --follow Follow mode
 logs() {
     args=""
@@ -72,7 +73,7 @@ logs() {
 
 # @cmd Build tools to bin
 build-bin() {
-    tools=( $(build-declarations | jq -r '.[].name') )
+    tools=( $(generate-declarations | jq -r '.[].name') )
     for tool in "${tools[@]}"; do
         if _is_win; then
             bin_file="$BIN_DIR/$tool.cmd"
@@ -88,7 +89,7 @@ build-bin() {
 # @cmd Merge mcp tools into functions.json
 # @flag -S --save Save to functions.json
 merge-functions() {
-    result="$(jq --argjson json1 "$("$0" recovery-functions)" --argjson json2 "$(build-declarations)" -n '($json1 + $json2)')"
+    result="$(jq --argjson json1 "$("$0" recovery-functions)" --argjson json2 "$(generate-declarations)" -n '($json1 + $json2)')"
     if [[ -n "$argc_save" ]]; then
         printf "%s" "$result" > "$FUNCTIONS_JSON_PATH"
     else
@@ -111,12 +112,12 @@ recovery-functions() {
     fi
 }
 
-# @cmd Build tools to bin
-build-declarations() {
+# @cmd Generate function declarations for the mcp tools
+generate-declarations() {
     curl -sS http://localhost:$MCP_BRIDGE_PORT/tools | jq '.[] |= . + {mcp: true}'
 }
 
-# @cmd Wait for mcp bridge server to ready
+# @cmd Wait for the mcp bridge server to ready
 wait-for-server() {
     while true; do
         if [[ "$(curl -fsS http://localhost:$MCP_BRIDGE_PORT/health 2>&1)" == "OK" ]]; then
@@ -126,7 +127,7 @@ wait-for-server() {
     done
 }
 
-# @cmd
+# @cmd Get the server pid
 get-server-pid() {
     curl -fsSL http://localhost:$MCP_BRIDGE_PORT/pid 2>/dev/null || true
 }
@@ -173,7 +174,7 @@ _is_win() {
 }
 
 _choice_tool() {
-    build-declarations | jq -r '.[].name'
+    generate-declarations | jq -r '.[].name'
 }
 
 _die() {

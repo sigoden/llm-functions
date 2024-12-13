@@ -450,6 +450,13 @@ test-demo@agent() {
     done
 }
 
+# @cmd Clean the project
+clean() {
+    clean@tool
+    clean@agent
+    rm -rf "$BIN_DIR/"*
+}
+
 # @cmd Clean tools
 # @alias tool:clean
 clean@tool() {
@@ -514,7 +521,7 @@ create@tool() {
     ./scripts/create-tool.sh "$@"
 }
 
-# @cmd Show pre-requisite tool versions
+# @cmd Displays version information for required tools
 version() {
     uname -a
     if command -v aichat &> /dev/null; then
