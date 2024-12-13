@@ -74,7 +74,7 @@ run() {
     if [[ -t 1 ]] && [[ "$skip_confirm" -ne 1 ]]; then
         read -r -p "Are you sure you want to continue? [Y/n] " ans
         if [[ "$ans" == "N" || "$ans" == "n" ]]; then
-            echo "error: canceld!" 2>&1
+            echo "error: canceled!" 2>&1
             exit 1
         fi
     fi
