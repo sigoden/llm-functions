@@ -2,10 +2,10 @@
 
 This document guides you on creating custom tools for the LLM Functions framework in Bash, JavaScript, and Python.
 
-## Definition via Comments
+## Defining Tool Parameters
 
-The key to defining the parameters your tool accepts is through specially formatted comments within your tool's source code.
-The `Argcfile.sh` uses these comments to automatically generate the function declaration used by the LLM.
+To define the parameters that your tool accepts, you will use specially formatted comments within your tool's source code.
+The `Argcfile.sh` script utilizes these comments to automatically generate the function declarations needed by the LLM.
 
 ### Json Schema
 
@@ -92,7 +92,7 @@ Use `# @describe`, `# @option`, and `# @flag` comments to define your tool's par
 
 **Example ([tools/demo_sh.sh](https://github.com/sigoden/llm-functions/blob/main/tools/demo_sh.sh)):**
 
-```bash
+```sh file=tools/demo_sh.sh
 #!/usr/bin/env bash
 set -e
 
@@ -129,7 +129,7 @@ Use JSDoc-style comments to define your tool's parameters. The `@typedef` block 
 
 **Example ([tools/demo_js.js](https://github.com/sigoden/llm-functions/blob/main/tools/demo_js.js)):**
 
-```javascript
+```js file=tools/demo_js.js
 /**
  * Demonstrate how to create a tool using Javascript and how to use comments.
  * @typedef {Object} Args
@@ -168,7 +168,7 @@ Use type hints and docstrings to define your tool's parameters.
 
 **Example ([tools/demo_py.py](https://github.com/sigoden/llm-functions/blob/main/tools/demo_py.py)):**
 
-```python
+```py file=tools/demo_py.py
 def run(
     string: str,
     string_enum: Literal["foo", "bar"],
@@ -192,13 +192,79 @@ def run(
     """
     # ... your Python code ...
 ```
+## Common tools
 
-## Quickly create tools
+Common tools can be found in `tools/<tool-name>.{sh,js,py}`. Each script defines a single tool.
+
+## Agent tools
+
+Agents can possess their own toolset scripts located under `agents/<agent-name>/tools.{sh,js,py}`, which can contain multiple tool functions.
+
+The following is an example of git agent:
+
+### Bash
+
+```sh file=agents/git/tools.sh
+# @cmd Shows the working tree status
+git_status() {
+    # ... your bash code ...
+}
+
+# @cmd Shows differences between branches or commits
+# @option --target!   Shows differences between branches or commits 
+git_diff() {
+    # ... your bash code ...
+}
+
+eval "$(argc --argc-eval "$0" "$@")"
+```
+
+> In `tools/<tool-name>.sh`, we use the `@describe` comment tag and a single `main` function, since it has only one function and no subcommands.
+> In `agent/<agent-name>/tools.sh`, we use the `@cmd` comment tag and named functions, since it can have multiple tool functions.
+
+### JavaScript
+
+```js file=agents/git/tools.js
+/**
+ * Shows the working tree status
+ */
+exports.git_status = function() {
+  // ... your JavaScript code ...
+}
+
+/**
+ * Shows differences between branches or commits
+ * @typedef {Object} Args
+ * @property {string} target - Shows differences between branches or commits 
+ * @param {Args} args
+ */
+exports.git_diff = function() {
+  // ... your JavaScript code ...
+}
+```
+
+### Python
+
+```py file=agents/git/tools.py
+def git_status():
+    """Shows the working tree status"""
+    # ... your Python code ...
+
+
+def git_diff(target: str):
+    """Shows differences between branches or commits
+    Args:
+      target: Shows differences between branches or commits 
+    """
+    # ... your Python code ...
+```
+
+## Quickly Create Tools
 
 `Argcfile.sh` provides a tool to quickly create script tools.
 
 ```
-$ argc create@tool --help
+$ argc create@tool -h
 Create a boilplate tool script
 
 Examples:
@@ -218,7 +284,7 @@ OPTIONS:
 ```
 
 ```sh
-argc create@tool foo bar! baz+ qux*
+argc create@tool _test.sh foo bar! baz+ qux*
 ```
 
 The suffixes after property names represent different meanings.
@@ -226,5 +292,4 @@ The suffixes after property names represent different meanings.
 - `!`: The property is required.
 - `*`: The property value must be an array.
 - `+`: The property is required, and its value must be an array.
-- no suffix: The property is optional.
-
+- No suffix: The property is optional.
