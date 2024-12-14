@@ -50,6 +50,7 @@ variables:
     description: This is a bar with default value
     default: val
 ```
+> For sensitive information such as api_key, client_id, client_secret, and token, it's recommended to use environment variables instead of agent variables.
 
 When use define variables, please avoid these built-in variables:
 
@@ -90,7 +91,8 @@ documents:
 
 ### conversation_starters
 
-Predefined prompts or questions that the agent can use to initiate interactions or conversations.
+Define Predefined prompts or questions that users can ask to initiate interactions or conversations with the agent.
+This helps provide guidance for users on how to engage with the agent effectively.
 
  ```yaml
  conversation_starters:

@@ -261,35 +261,68 @@ def git_diff(target: str):
 
 ## Quickly Create Tools
 
-`Argcfile.sh` provides a tool to quickly create script tools.
+### Use argc
 
-```
-$ argc create@tool -h
-Create a boilplate tool script
-
-Examples:
-  ./scripts/create-tool.sh _test.py foo bar! baz+ qux*
-
-USAGE: create-tool [OPTIONS] <NAME> [PARAMS]...
-
-ARGS:
-  <NAME>       The script file name.
-  [PARAMS]...  The script parameters
-
-OPTIONS:
-      --description <TEXT>  The tool description
-      --force               Override the exist tool file
-  -h, --help                Print help
-  -V, --version             Print version
-```
+`Argcfile.sh` provides a tool `create@tool` to quickly create tool scripts.
 
 ```sh
 argc create@tool _test.sh foo bar! baz+ qux*
 ```
 
-The suffixes after property names represent different meanings.
+The argument details
 
-- `!`: The property is required.
-- `*`: The property value must be an array.
-- `+`: The property is required, and its value must be an array.
-- No suffix: The property is optional.
+- `_test.sh`: The name of the tool script you want to create. The file extension can only be `.sh`, `.js`, or `.py`.
+- `foo bar! baz+ qux*`: The parameters for the tool.
+
+The suffixes attached to the tool's parameters define their characteristics:
+
+- `!`: Indicates that the property is required.
+- `*`: Specifies that the property value should be an array.
+- `+`: Marks the property as required, with the value also needing to be an array.
+- No suffix: Denotes that the property is optional.
+
+### Use aichat
+
+AI is smart enough to automatically create tool scripts for us. We just need to provide the documentation and describe the requirements well.
+
+Use aichat to create a common tool script:
+```
+aichat -f docs/tool.md <<-'EOF'
+create tools/get_youtube_transcript.py
+
+description: Extract transcripts from YouTube videos
+parameters:
+   url (required): YouTube video URL or video ID
+   lang (default: "en"): Language code for transcript (e.g., "ko", "en")
+EOF
+```
+
+Use aichat to create a agent tools script:
+```
+aichat -f docs/agent.md -f docs/tool.md <<-'EOF'
+
+create a spotify agent
+
+index.yaml:
+    name: spotify
+    description: An AI agent that works with Spotify
+
+tools.py:
+  search: Search for tracks, albums, artists, or playlists on Spotify
+    query (required): Query term
+    qtype (default: "track"): Type of items to search for (track, album, artist, playlist, or comma-separated combination)
+    limit (default: 10): Maximum number of items to return
+  get_info: Get detailed information about a Spotify item (track, album, artist, or playlist)
+    item_id (required): ID of the item to get information about
+    qtype (default: "track"): Type of item: 'track', 'album', 'artist', or 'playlist'
+  get_queue: Get the playback queue
+  add_queue: Add tracks to the playback queue
+    track_id (required): Track ID to add to queue
+  get_track: Get information about user's current track
+  start: Starts of resumes playback
+    track_id (required): Specifies track to play
+  pause: Pauses current playback
+  skip: Skips current track
+    num_skips (default: 1): Number of tracks to skip
+EOF
+```
