@@ -9,9 +9,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
-  ErrorCode,
   ListToolsRequestSchema,
-  McpError,
 } from "@modelcontextprotocol/sdk/types.js";
 
 let [rootDir, agentName] = process.argv.slice(2);
@@ -74,7 +72,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const functionObj = functions.find((f) => f.name === request.params.name);
   if (!functionObj) {
-    throw new McpError(ErrorCode.InvalidRequest, `Unexpected tool '${request.params.name}'`);
+    throw new Error(`Unknown tool '${request.params.name}'`);
   }
   let command = request.params.name;
   let args = [JSON.stringify(request.params.arguments || {})];
@@ -101,7 +99,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 function runCommand(command, args, env) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const child = spawn(command, args, {
       stdio: ['ignore', 'ignore', 'pipe'],
       env,
@@ -118,7 +116,7 @@ function runCommand(command, args, env) {
     });
 
     child.on('error', (err) => {
-      reject(err);
+      resolve({ exitCode: 1, stderr: `Command execution failed: ${err.message}` });
     });
   });
 }
