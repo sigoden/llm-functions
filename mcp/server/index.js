@@ -90,12 +90,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       output = await fs.promises.readFile(tmpFile, "utf8");
     } catch { };
     return {
-      content: [{ type: "text", value: output }],
-    }
+      content: [{ type: "text", text: output }],
+    };
   } else {
     return {
       isError: true,
-      error: stderr,
+      content: [{ type: "text", text: stderr }],
     };
   }
 });
