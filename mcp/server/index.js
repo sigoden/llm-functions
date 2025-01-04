@@ -76,51 +76,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (!functionObj) {
     throw new McpError(ErrorCode.InvalidRequest, `Unexpected tool '${request.params.name}'`);
   }
-
   let command = request.params.name;
   let args = [JSON.stringify(request.params.arguments || {})];
   if (agentName && functionObj.agent) {
     args.unshift(command);
     command = agentName;
   }
-
   const tmpFile = path.join(os.tmpdir(), `mcp-llm-functions-${process.pid}-eval-${uuid()}`);
-
-  try {
-    const { exitCode, stderr } = await runCommand(command, args, { ...env, LLM_OUTPUT: tmpFile });
-
-    if (exitCode === 0) {
-      let output = '';
-      try {
-        output = await fs.promises.readFile(tmpFile, "utf8");
-      } catch (err) {
-        throw new Error(`Failed to read output file: ${err.message}`);
-      }
-
-      return {
-        content: [{
-          type: "text",
-          text: output
-        }]
-      };
-    } else {
-      // Format error response according to MCP spec
-      return {
-        isError: true,
-        content: [{
-          type: "text",
-          text: `Command execution failed:\n${stderr}`
-        }]
-      };
-    }
-  } catch (error) {
-    // Handle any other errors that might occur
+  const { exitCode, stderr } = await runCommand(command, args, { ...env, LLM_OUTPUT: tmpFile });
+  if (exitCode === 0) {
+    let output = '';
+    try {
+      output = await fs.promises.readFile(tmpFile, "utf8");
+    } catch { };
+    return {
+      content: [{ type: "text", text: output }],
+    };
+  } else {
     return {
       isError: true,
-      content: [{
-        type: "text",
-        text: `Tool execution error: ${error.message}`
-      }]
+      content: [{ type: "text", text: stderr }],
     };
   }
 });
