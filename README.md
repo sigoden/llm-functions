@@ -81,7 +81,7 @@ argc build
 Symlink this repo directory to AIChat's **functions_dir**:
 
 ```sh
-ln -s "$(pwd)" "$(aichat --info | grep -w functions_dir | awk '{$1=""; print substr($0,2)}')"
+ln -s "$(pwd)" "$(aichat --info | sed -n 's/^functions_dir\s\+//p')"
 # OR
 argc install
 ```
@@ -188,6 +188,12 @@ Refer to [./agents/demo](https://github.com/sigoden/llm-functions/tree/main/agen
 
 - [mcp/server](https://github.com/sigoden/llm-functions/tree/main/mcp/server): Let LLM-Functions tools/agents be used through the Model Context Protocol. 
 - [mcp/bridge](https://github.com/sigoden/llm-functions/tree/main/mcp/bridge): Let external MCP tools be used by LLM-Functions.
+
+## Documents
+
+- [Tool Guide](https://github.com/sigoden/llm-functions/blob/main/docs/tool.md)
+- [Agent Guide](https://github.com/sigoden/llm-functions/blob/main/docs/agent.md)
+- [Argc Commands](https://github.com/sigoden/llm-functions/blob/main/docs/argcfile.md)
 
 ## License
 
