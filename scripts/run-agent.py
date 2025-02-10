@@ -94,14 +94,11 @@ def load_env(file_path):
 
 
 def run(agent_name, agent_path, agent_func, agent_data):
-    try:
-        spec = importlib.util.spec_from_file_location(
-            os.path.basename(agent_path), agent_path
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-    except:
-        raise Exception(f"Unable to load agent tools at '{agent_path}'")
+    spec = importlib.util.spec_from_file_location(
+        os.path.basename(agent_path), agent_path
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
 
     if not hasattr(mod, agent_func):
         raise Exception(f"Not module function '{agent_func}' at '{agent_path}'")
