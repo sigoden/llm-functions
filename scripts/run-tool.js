@@ -93,15 +93,10 @@ async function loadEnv(filePath) {
 }
 
 async function run(toolName, toolPath, toolFunc, toolData) {
-  let mod;
   if (os.platform() === "win32") {
     toolPath = `file://${toolPath}`;
   }
-  try {
-    mod = await import(toolPath);
-  } catch {
-    throw new Error(`Unable to load tool at '${toolPath}'`);
-  }
+  const mod = await import(toolPath);
   if (!mod || !mod[toolFunc]) {
     throw new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
   }

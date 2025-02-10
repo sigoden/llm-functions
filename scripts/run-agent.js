@@ -106,15 +106,10 @@ async function loadEnv(filePath) {
 }
 
 async function run(agentName, agentPath, agentFunc, agentData) {
-  let mod;
   if (os.platform() === "win32") {
     agentPath = `file://${agentPath}`;
   }
-  try {
-    mod = await import(agentPath);
-  } catch {
-    throw new Error(`Unable to load agent tools at '${agentPath}'`);
-  }
+  const mod = await import(agentPath);
   if (!mod || !mod[agentFunc]) {
     throw new Error(`Not module function '${agentFunc}' at '${agentPath}'`);
   }
