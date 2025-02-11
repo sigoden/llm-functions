@@ -16,7 +16,7 @@ argc -h                                     # Print help information
 argc <command> -h                           # Print help information for <command>
 
 # -------- Build --------
-# Build
+# Build all
 argc build
 
 # Build all tools
@@ -28,6 +28,20 @@ argc build@tool get_current_weather.sh execute_command.sh
 argc build@agent 
 # Build specific agents
 argc build@agent coder todo
+
+# -------- Check --------
+# Check all
+argc check
+
+# Check all tools
+argc check@tool 
+# Check specific tools
+argc check@tool get_current_weather.sh execute_command.sh 
+
+# Check all agents
+argc check@agent 
+# Check specific agents
+argc check@agent coder todo
 
 # -------- Run --------
 # Run tool

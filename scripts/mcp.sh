@@ -46,6 +46,18 @@ stop() {
     "$0" recovery-functions -S
 }
 
+# @cmd Check the mcp bridge server is running
+check() {
+    if [[ -f "$MCP_JSON_PATH" ]]; then
+        echo "Check mcp/bridge" 
+        pid="$(get-server-pid)"
+        if [[ -z "$pid" ]]; then
+            stop
+            echo "✗ server is not running"
+        fi
+    fi
+}
+
 # @cmd Run the mcp tool
 # @arg tool![`_choice_tool`] The tool name
 # @arg json The json data

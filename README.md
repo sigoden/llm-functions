@@ -76,6 +76,12 @@ todo
 argc build
 ```
 
+#### IV. Ensure that everything is ready (environment variables, Node/Python dependencies, mcp-bridge server)
+
+```sh
+argc check
+```
+
 ### 3. Install to AIChat
 
 Symlink this repo directory to AIChat's **functions_dir**:
