@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# @meta dotenv
+
 BIN_DIR=bin
 TMP_DIR="cache/__tmp__"
 VENV_DIR=".venv"
@@ -231,8 +233,8 @@ build-bin@agent() {
         found=false
         for item in "${LANG_CMDS[@]}"; do
             lang="${item%:*}"
-            agent_tools_file="$agent_dir/tools.$lang"
-            if [[ -f "$agent_tools_file" ]]; then
+            agent_tools_path="$agent_dir/tools.$lang"
+            if [[ -f "$agent_tools_path" ]]; then
                 found=true
                 if _is_win; then
                     bin_file="$BIN_DIR/$name.cmd"
@@ -293,8 +295,8 @@ build-declarations@agent() {
             tools_json_data=""
             for item in "${LANG_CMDS[@]}"; do
                 lang="${item%:*}"
-                agent_tools_file="$agent_dir/tools.$lang"
-                if [[ -f "$agent_tools_file" ]]; then
+                agent_tools_path="$agent_dir/tools.$lang"
+                if [[ -f "$agent_tools_path" ]]; then
                     agent_json_data="$(generate-declarations@agent "$name")" || {
                         ok=false
                         build_failed_agents+=("$name")
@@ -357,6 +359,64 @@ generate-declarations@agent() {
     else
         echo "$json"
     fi
+}
+
+# @cmd Check environment variables, Node/Python dependencies, MCP-Bridge-Server status
+check() {
+    argc check@tool
+    argc check@agent
+    argc mcp check
+}
+
+# @cmd Check dependencies and environment variables for a specific tool
+# @alias tool:check
+# @arg tools*[`_choice_tool`] The tool name
+check@tool() {
+    if [[ "${#argc_tools[@]}" -gt 0 ]]; then
+        tool_names=("${argc_tools[@]}")
+    else
+        tool_names=($(cat tools.txt | grep -v '^#'))
+    fi
+    for name in "${tool_names[@]}"; do
+        tool_path="tools/$name"
+        echo "Check $tool_path"
+        if [[ -f "$tool_path" ]]; then
+            _check_bin "${name%.*}"
+            _check_envs "$tool_path"
+            ./scripts/check-deps.sh "$tool_path"
+        else
+            echo "✗ not found tool file"
+        fi
+    done
+}
+
+# @cmd Check dependencies and environment variables for a specific agent
+# @alias agent:check
+# @arg agents*[`_choice_agent`] The agent name
+check@agent() {
+    if [[ "${#argc_agents[@]}" -gt 0 ]]; then
+        agent_names=("${argc_agents[@]}")
+    else
+        agent_names=($(cat agents.txt | grep -v '^#'))
+    fi
+    for name in "${agent_names[@]}"; do
+        agent_dir="agents/$name"
+        echo "Check $agent_dir"
+        if [[ -d "$agent_dir" ]]; then
+            for item in "${LANG_CMDS[@]}"; do
+                lang="${item%:*}"
+                agent_tools_path="$agent_dir/tools.$lang"
+                if [[ -f "$agent_tools_path" ]]; then
+                    _check_bin "$name"
+                    _check_envs "$agent_tools_path"
+                    ./scripts/check-deps.sh "$agent_tools_path"
+                    break
+                fi
+            done
+        else
+            echo "✗ not found agent dir"
+        fi
+    done
 }
 
 # @cmd List tools which can be put into functions.txt
@@ -600,6 +660,30 @@ fi
 
 python "__ROOT_DIR__/scripts/run-__KIND__.py" "$(basename "$0")" "$@"
 EOF
+}
+
+_check_bin() {
+    bin_name="$1"
+    if _is_win; then
+        bin_name+=".cmd"
+    fi
+    if [[ ! -f "$BIN_DIR/$bin_name" ]]; then
+        echo "✗ missing bin/$bin_name"
+    fi
+}
+
+_check_envs() {
+    script_path="$1"
+    envs=( $(sed -E -n 's/.* @env ([A-Z0-9_]+)!.*/\1/p' $script_path) )
+    missing_envs=()
+    for env in $envs; do
+        if [[ -z "${!env}" ]]; then
+            missing_envs+=("$env")
+        fi
+    done
+    if [[ -n "$missing_envs" ]]; then
+        echo "✗ missing envs ${missing_envs[*]}"
+    fi
 }
 
 _link_tool() {
