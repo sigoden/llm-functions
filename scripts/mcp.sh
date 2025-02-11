@@ -4,6 +4,7 @@ set -e
 ROOT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
 BIN_DIR="$ROOT_DIR/bin"
 MCP_DIR="$ROOT_DIR/cache/__mcp__"
+MCP_LOG_FILE="$MCP_DIR/mcp-bridge.log"
 MCP_JSON_PATH="$ROOT_DIR/mcp.json"
 FUNCTIONS_JSON_PATH="$ROOT_DIR/functions.json"
 MCP_BRIDGE_PORT="${MCP_BRIDGE_PORT:-8808}"
@@ -23,7 +24,9 @@ start() {
         llm_functions_dir="$(cygpath -w "$llm_functions_dir")"
     fi
     echo "Start MCP Bridge server..."
-    nohup node  "$index_js" "$llm_functions_dir" > "$MCP_DIR/mcp-bridge.log" 2>&1 &
+    echo "Install node dependencies..." > "$MCP_LOG_FILE"
+    npm install --prefix "$ROOT_DIR/mcp/bridge" 1>/dev/null 2>> "$MCP_LOG_FILE"
+    nohup node "$index_js" "$llm_functions_dir" >> "$MCP_LOG_FILE" 2>&1 &
     wait-for-server
     echo "Merge MCP tools into functions.json"
     "$0" merge-functions -S
@@ -62,12 +65,13 @@ run@tool() {
 # @cmd Show the logs
 # @flag -f --follow Follow mode
 logs() {
-    args=""
-    if [[ -n "$argc_follow" ]]; then
-        args="$args -f"
+    if [[ ! -f "$MCP_LOG_FILE" ]]; then
+        _die "error: not found log file at '$MCP_LOG_FILE'"
     fi
-    if [[ -f "$MCP_DIR/mcp-bridge.log" ]]; then
-        tail $args "$MCP_DIR/mcp-bridge.log"
+    if [[ -n "$argc_follow" ]]; then
+        tail -f "$MCP_LOG_FILE"
+    else
+        cat "$MCP_LOG_FILE"
     fi
 }
 
