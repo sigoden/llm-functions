@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "@inquirer/input": "^4.0.2",
-    "json-schema-generator": "^2.0.6"
+    "to-json-schema": "^0.2.5"
   }
 }
