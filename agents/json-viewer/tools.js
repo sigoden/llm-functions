@@ -4,7 +4,7 @@ const { promisify } = require("node:util");
 const path = require("node:path");
 const { tmpdir } = require("node:os");
 
-const jsonSchemaGenerator = require("json-schema-generator");
+const toJsonSchema = require('to-json-schema');
 const input = require("@inquirer/input").default;
 
 exports._instructions = async function () {
@@ -23,7 +23,7 @@ exports._instructions = async function () {
   }
 
   const json_data = await fs.readFile(json_file_path, "utf8");
-  const json_schema = jsonSchemaGenerator(JSON.parse(json_data));
+  const json_schema = toJsonSchema(JSON.parse(json_data));
 
   return `You are a AI agent that can view and filter json data with jq.
 
