@@ -4,7 +4,7 @@ Let external MCP tools be used by LLM-Functions.
 
 ## Get Started
 
-### 1. Create a `mpc.json` at `<llm-functions-dir>`.
+### 1. Create a `mcp.json` at `<llm-functions-dir>`.
 
 ```json
 {
