@@ -25,6 +25,7 @@ Make sure you have the following tools installed:
 
 ```sh
 git clone https://github.com/sigoden/llm-functions
+cd llm-functions
 ```
 
 ### 2. Build tools and agents
@@ -82,14 +83,22 @@ argc build
 argc check
 ```
 
-### 3. Install to AIChat
+### 3. Link LLM-functions and AIChat
 
-Symlink this repo directory to AIChat's **functions_dir**:
+AIChat expects LLM-functions to be placed in AIChat's **functions_dir** so that AIChat can use the tools and agents that LLM-functions provides.
+
+You can symlink this repository directory to AIChat's **functions_dir** with:
 
 ```sh
 ln -s "$(pwd)" "$(aichat --info | sed -n 's/^functions_dir\s\+//p')"
 # OR
-argc install
+argc link-to-aichat
+```
+
+Alternatively, you can tell AIChat where the LLM-functions directory is by using an environment variable:
+
+```sh
+export AICHAT_FUNCTIONS_DIR="$(pwd)"
 ```
 
 ### 4. Start using the functions

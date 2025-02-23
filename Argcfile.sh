@@ -549,8 +549,8 @@ link-code-interpreter() {
     _link_tool $1 code_interpreter
 }
 
-# @cmd Install this repo to aichat functions_dir
-install() {
+# @cmd Link this repo to aichat functions_dir
+link-to-aichat() {
     functions_dir="$(aichat --info | grep -w functions_dir | awk '{$1=""; print substr($0,2)}')"
     if [[ -z "$functions_dir" ]]; then
         _die "error: your aichat version don't support function calling"
