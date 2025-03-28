@@ -89,6 +89,7 @@ logs() {
 
 # @cmd Build tools to bin
 build-bin() {
+    mkdir -p "$BIN_DIR"
     tools=( $(generate-declarations | jq -r '.[].name') )
     for tool in "${tools[@]}"; do
         if _is_win; then
