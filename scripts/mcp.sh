@@ -131,7 +131,12 @@ recovery-functions() {
 
 # @cmd Generate function declarations for the mcp tools
 generate-declarations() {
-    curl -sS http://localhost:$MCP_BRIDGE_PORT/tools
+    pid="$(get-server-pid)"
+    if [[ -n "$pid" ]]; then
+        curl -sS http://localhost:$MCP_BRIDGE_PORT/tools
+    else
+        echo "[]"
+    fi
 }
 
 # @cmd Wait for the mcp bridge server to ready

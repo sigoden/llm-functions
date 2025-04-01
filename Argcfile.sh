@@ -71,6 +71,9 @@ build() {
     else
         echo 'Skipped building agents since agents.txt is missing'
     fi
+    if [[ -f mcp.json ]]; then
+        argc mcp merge-functions -S
+    fi
 }
 
 # @cmd Build tools
