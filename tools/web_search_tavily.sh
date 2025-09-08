@@ -10,15 +10,17 @@ set -e
 # @env LLM_OUTPUT=/dev/stdout The output path The output path
 
 main() {
-    curl -fsSL -X POST https://api.tavily.com/search \
-        -H "content-type: application/json" \
-        -d '
-{
-    "api_key": "'"$TAVILY_API_KEY"'",
-    "query": "'"$argc_query"'",
-    "include_answer": true
-}' | \
-    jq -r '.answer' >> "$LLM_OUTPUT"
+    jq -n --arg api_key "$TAVILY_API_KEY" --arg query "$argc_query" \
+        '{
+            "api_key": $api_key,
+            "query": $query,
+            "include_answer": true
+        }' |
+        curl -fsSL -d @- \
+            -X POST https://api.tavily.com/search \
+            -H "content-type: application/json" |
+        jq -r '.answer' \
+            >>"$LLM_OUTPUT"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"
