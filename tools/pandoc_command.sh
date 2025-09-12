@@ -5,9 +5,9 @@ set -e
 
 # @option --from![bibtex|biblatex|bits|commonmark|commonmark_x|creole|csljson|csv|tsv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|markdown|markdown_mmd|markdown_phpextra|markdown_strict|mediawiki|man|mdoc|muse|native|odt|opml|org|pod|ris|rtf|rst|t2t|textile|tikiwiki|twiki|typst|vimwiki|xml] <FORMAT>   Input format (e.g. markdown, html, docx, pdf)
 # @option --to![ansi|asciidoc|asciidoc_legacy|asciidoctor|beamer|bibtex|biblatex|chunkedhtml|commonmark|commonmark_x|context|csljson|djot|docbook|docbook5|docx|dokuwiki|epub|epub2|fb2|gfm|haddock|html|html4|icml|ipynb|jats_archiving|jats_articleauthoring|jats_publishing|jats|jira|json|latex|man|markdown|markdown_mmd|markdown_phpextra|markdown_strict|markua|mediawiki|ms|muse|native|odt|opml|opendocument|org|pdf|plain|pptx|rst|rtf|texinfo|textile|slideous|slidy|dzslides|revealjs|s5|tei|typst|xml|xwiki|zimwiki] <FORMAT>     Output format (e.g. markdown, html, docx, pdf)
-# @option --inputs+ <FILE>   Array of files used input (optional, if omitted use --contents)
-# @option --contents <TEXT>  Raw input text instead of file
-# @option --output <FILE>    Output file path (optional, default: stdout)
+# @option --inputs+    Array of files used input (optional, if omitted use --contents)
+# @option --contents   Raw input text instead of file
+# @option --output     Output file path (optional, default: stdout)
 
 # @env LLM_OUTPUT=/dev/stdout The output path
 
