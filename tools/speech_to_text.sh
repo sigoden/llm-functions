@@ -2,7 +2,7 @@
 
 # @describe Record user's voice, transcribe it via OpenAI-compatible endpoint, and use as LLM prompt input.
 
-# @option --language[af|am|ar|as|az|ba|be|bg|bn|bo|br|bs|ca|cs|cy|da|de|el|en|es|et|eu|fa|fi|fo|fr|gl|gu|ha|haw|he|hi|hr|ht|hu|hy|id|is|it|ja|jw|ka|kk|km|kn|ko|la|lb|ln|lo|lt|lv|mg|mi|mk|ml|mn|mr|ms|mt|my|ne|nl|nn|no|oc|pa|pl|ps|pt|ro|ru|sa|sd|si|sk|sl|sn|so|sq|sr|su|sv|sw|ta|te|tg|th|tk|tl|tr|tt|uk|ur|uz|vi|yi|yo|zh|yue] The spoken language in the audio.
+# @option --language[|af|am|ar|as|az|ba|be|bg|bn|bo|br|bs|ca|cs|cy|da|de|el|en|es|et|eu|fa|fi|fo|fr|gl|gu|ha|haw|he|hi|hr|ht|hu|hy|id|is|it|ja|jw|ka|kk|km|kn|ko|la|lb|ln|lo|lt|lv|mg|mi|mk|ml|mn|mr|ms|mt|my|ne|nl|nn|no|oc|pa|pl|ps|pt|ro|ru|sa|sd|si|sk|sl|sn|so|sq|sr|su|sv|sw|ta|te|tg|th|tk|tl|tr|tt|uk|ur|uz|vi|yi|yo|zh|yue] The spoken language in the audio.
 
 # @env WHISPER_API_BASE! Base URL of your OpenAI-compatible transcription API (e.g. https://api.openai.com/v1, https://speaches_domain/v1/)
 # @env WHISPER_MODEL! Model name to use for transcription (e.g., "whisper-1", "Systran/faster-distil-whisper-large-v3")
@@ -22,6 +22,8 @@ main() {
 
   rec -c 1 --buffer 256 -d "$audio_file" &
   rec_pid=$!
+
+  trap 'kill "$rec_pid" 2>/dev/null; wait "$rec_pid" 2>/dev/null; printf "Recording cancelled via Ctrl+C\n"; exit 1' INT
 
   printf "\033[32m[Recording started — press 's' to stop or 'c' to cancel.]\033[0m\n"
 
