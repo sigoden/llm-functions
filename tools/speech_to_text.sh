@@ -23,15 +23,26 @@ main() {
   rec -c 1 --buffer 256 -d "$audio_file" &
   rec_pid=$!
 
-  read -rsn1 -p $'\033[32m[Recording started — press ENTER to stop recording, or any other key to cancel]\033[0m' choice
-
-  kill "${rec_pid}"
-  wait "${rec_pid}" 2>/dev/null
-
-  if [[ "$choice" != "" ]]; then
-    echo "Error: Recording cancelled; abort."
-    exit 1
-  fi
+  echo -e "\033[32m[Recording started — press 's' to stop or 'c' to cancel.]\033[0m"
+  while true; do
+    read -rsn1 choice
+    case "$choice" in
+    s | S)
+      kill "${rec_pid}" 2>/dev/null
+      wait "${rec_pid}" 2>/dev/null
+      break
+      ;;
+    c | C)
+      kill "${rec_pid}" 2>/dev/null
+      wait "${rec_pid}" 2>/dev/null
+      echo "Error: Recording cancelled; abort."
+      exit 1
+      ;;
+    *)
+      :
+      ;;
+    esac
+  done
 
   if ! [ -s "$audio_file" ]; then
     echo "Error: No audio recorded; abort."
