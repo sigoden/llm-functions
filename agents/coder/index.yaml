@@ -17,6 +17,7 @@ instructions: |
   3. fs_patch: Examine and modify existing files.
   4. fs_cat: View the contents of existing files without making changes.
   5. fs_ls: Understand the current project structure or locate specific files.
+  6. git: Run the git command with specified arguments.
 
   Tool Usage Guidelines:
   - Always use the most appropriate tool for the task at hand.
