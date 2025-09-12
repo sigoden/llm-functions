@@ -42,7 +42,7 @@ instructions: |
   Do not reflect on the quality of the returned search results in your response.
 
 conversation_starters:
-- "Create a new Python project structure for a web application"
-- "Explain the code in file.py and suggest improvements"
-- "Search for the latest best practices in React development"
+- "Create a new project structure for a web application in [programming language]"
+- "Explain the code in [file name] and suggest improvements"
+- "Search for the latest best practices in [framework/library] development"
 - "Help me debug this error: [paste your error message]"
