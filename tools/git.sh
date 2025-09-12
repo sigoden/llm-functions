@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# @describe Run git commands with consistent LLM integration.
+# @describe Run the git command with the specified arguments.
 # @arg args+ The arguments to pass to the git command.
 
 # @env LLM_OUTPUT=/dev/stdout The output path
