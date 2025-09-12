@@ -23,7 +23,8 @@ main() {
   rec -c 1 --buffer 256 -d "$audio_file" &
   rec_pid=$!
 
-  echo -e "\033[32m[Recording started — press 's' to stop or 'c' to cancel.]\033[0m"
+  printf "\033[32m[Recording started — press 's' to stop or 'c' to cancel.]\033[0m\n"
+
   while true; do
     read -rsn1 choice
     case "$choice" in
@@ -35,7 +36,7 @@ main() {
     c | C)
       kill "${rec_pid}" 2>/dev/null
       wait "${rec_pid}" 2>/dev/null
-      echo "Error: Recording cancelled; abort."
+      printf "Error: Recording cancelled; abort.\n"
       exit 1
       ;;
     *)
@@ -45,7 +46,7 @@ main() {
   done
 
   if ! [ -s "$audio_file" ]; then
-    echo "Error: No audio recorded; abort."
+    printf "Error: No audio recorded; abort.\n"
     exit 1
   fi
 
@@ -60,15 +61,16 @@ main() {
   http_status="${response: -3}" # last 3 chars
 
   if [[ "$http_status" != "200" ]]; then
-    echo "Error: Whisper API request failed with status $http_status"
-    echo "Response: $http_body"
+    printf "Error: Whisper API request failed with status %s\n" "$http_status"
+    printf "Response: %s\n" "$http_body"
     exit 1
   fi
 
   transcript=$(echo "$http_body" | jq -r '.text // empty')
 
   if [[ -z "$transcript" ]]; then
-    echo "Error: Transcript is empty or could not be parsed; abort."
+    printf "Error: Transcript is empty or could not be parsed; abort.\n"
+
     exit 1
   fi
 
