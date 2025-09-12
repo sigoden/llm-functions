@@ -11,11 +11,11 @@
 
 main() {
   local model="${WHISPER_MODEL:-"whisper-1"}"
-  local api_key="${WHISPER_API_KEY:-""}"
+  local api_key="${WHISPER_API_KEY:-}"
   local api_base="${WHISPER_API_BASE:-https://api.openai.com/v1}"
   api_base="${api_base%/}"
 
-  local transcription_language="${argc_language:-"en"}"
+  local transcription_language="${argc_language:-}"
 
   local audio_file="$(mktemp --suffix=.wav /tmp/llm_record_audio_XXXXXX)"
   trap "rm -f '$audio_file'" EXIT
@@ -52,13 +52,26 @@ main() {
     exit 1
   fi
 
-  response="$(
-    curl -sS -w "%{http_code}" -X POST "${api_base}/audio/transcriptions" \
-      -H "Authorization: Bearer ${api_key}" \
-      -F model="${model}" \
-      -F language="${transcription_language}" \
-      -F file=@"$audio_file"
-  )"
+  printf "Transcribing...\n"
+
+  local response
+  if [[ -n "$transcription_language" ]]; then
+    response="$(
+      curl -sS -w "%{http_code}" -X POST "${api_base}/audio/transcriptions" \
+        -H "Authorization: Bearer ${api_key}" \
+        -F model="${model}" \
+        -F language="${transcription_language}" \
+        -F file=@"$audio_file"
+    )"
+  else
+    # Whisper auto detects language
+    response="$(
+      curl -sS -w "%{http_code}" -X POST "${api_base}/audio/transcriptions" \
+        -H "Authorization: Bearer ${api_key}" \
+        -F model="${model}" \
+        -F file=@"$audio_file"
+    )"
+  fi
   http_body="${response::-3}"   # all except last 3 chars
   http_status="${response: -3}" # last 3 chars
 
@@ -72,9 +85,10 @@ main() {
 
   if [[ -z "$transcript" ]]; then
     printf "Error: Transcript is empty or could not be parsed; abort.\n"
-
     exit 1
   fi
+
+  printf "Transcription: %s\n" "$transcript"
 
   printf "\n[User Voice Input]\n%s\n" "$transcript" >>"$LLM_OUTPUT"
 }
