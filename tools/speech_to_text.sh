@@ -17,8 +17,9 @@ main() {
 
   local transcription_language="${argc_language:-}"
 
-  local audio_file="$(mktemp --suffix=.wav /tmp/llm_record_audio_XXXXXX)"
-  trap "rm -f '$audio_file'" EXIT
+  local audio_file
+  audio_file="$(mktemp --suffix=.wav /tmp/llm_record_audio_XXXXXX)"
+  trap 'rm -f "$audio_file"' EXIT
 
   rec -c 1 --buffer 256 -d "$audio_file" &
   rec_pid=$!
@@ -52,7 +53,7 @@ main() {
     exit 1
   fi
 
-  printf "Transcribing...\n"
+  printf "Transcribing ... \n"
 
   local response
   if [[ -n "$transcription_language" ]]; then
@@ -72,6 +73,9 @@ main() {
         -F file=@"$audio_file"
     )"
   fi
+
+  local http_body
+  local http_status
   http_body="${response::-3}"   # all except last 3 chars
   http_status="${response: -3}" # last 3 chars
 
@@ -81,6 +85,7 @@ main() {
     exit 1
   fi
 
+  local transcript
   transcript=$(echo "$http_body" | jq -r '.text // empty')
 
   if [[ -z "$transcript" ]]; then
