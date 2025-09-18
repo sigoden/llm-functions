@@ -1,0 +1,5 @@
+web_search_exa.sh
+fetch_url_via_exa.sh
+fs_cat.sh
+fs_write.sh
+execute_openscad.sh
