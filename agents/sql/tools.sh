@@ -2,6 +2,8 @@
 
 set -e
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 # @meta require-tools usql

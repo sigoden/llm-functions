@@ -10,8 +10,8 @@ ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 # @option --contents! The contents to append.
 fs_append() {
   "$ROOT_DIR/utils/guard_path.sh" "$argc_path" "Append to '$argc_path'?"
-  # printf "%s" "$argc_contents" >>"$argc_path"
-  # echo "Appended to: $argc_path" >>"$LLM_OUTPUT"
+  printf "%s" "$argc_contents" >> "$argc_path"
+  echo "Appended to: $argc_path" >> "$LLM_OUTPUT"
 }
 
 # See more details at https://github.com/sigoden/argc

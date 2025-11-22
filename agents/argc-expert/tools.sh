@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# @env LLM_OUTPUT=/dev/stdout The output path
+
 # @cmd Create a new argc script template
 # @option --name!          Script name (without .sh extension)
 # @option --description!   Brief description of what the script does
@@ -25,34 +27,34 @@ create_script() {
     ;;
   esac
 
-  echo "Created argc script: $script_name"
+  echo "Created argc script: $script_name" >> "$LLM_OUTPUT"
 }
 
 # @cmd Validate argc script syntax
 # @arg script_path! Path to the argc script to validate
 validate_script() {
   if [[ ! -f "$argc_script_path" ]]; then
-    echo "Error: Script not found: $argc_script_path"
+    echo "Error: Script not found: $argc_script_path" >> "$LLM_OUTPUT"
     return 1
   fi
 
-  echo "Validating argc script: $argc_script_path"
+  echo "Validating argc script: $argc_script_path" >> "$LLM_OUTPUT"
 
   # Check for required elements
   if ! grep -q "eval.*argc.*argc-eval" "$argc_script_path"; then
-    echo "Warning: Missing argc evaluation line"
+    echo "Warning: Missing argc evaluation line" >> "$LLM_OUTPUT"
   fi
 
   # Check comment tag syntax
   grep -n "^# @" "$argc_script_path" | while read -r line; do
-    echo "Found tag: $line"
+    echo "Found tag: $line" >> "$LLM_OUTPUT"
   done
 
   # Try to parse with argc
   if command -v argc >/dev/null 2>&1; then
-    argc --argc-help "$argc_script_path" >/dev/null 2>&1 && echo "✓ Script parses correctly" || echo "✗ Script has parsing errors"
+    argc --argc-help "$argc_script_path" >/dev/null 2>&1 && echo "✓ Script parses correctly" >> "$LLM_OUTPUT" || echo "✗ Script has parsing errors" >> "$LLM_OUTPUT"
   else
-    echo "Note: argc not installed, cannot validate parsing"
+    echo "Note: argc not installed, cannot validate parsing" >> "$LLM_OUTPUT"
   fi
 }
 
@@ -63,16 +65,17 @@ validate_script() {
 generate_completion() {
   local func_name="_choice_${argc_function_name}"
 
-  cat <<EOF
+  {
+    cat <<EOF
 $func_name() {
 EOF
 
-  if [[ ${#argc_choices[@]} -gt 0 ]]; then
-    printf '    echo "%s"\n' "${argc_choices[@]}"
-  fi
+    if [[ ${#argc_choices[@]} -gt 0 ]]; then
+      printf '    echo "%s"\n' "${argc_choices[@]}"
+    fi
 
-  if [[ "$argc_dynamic" == "1" ]]; then
-    cat <<'EOF'
+    if [[ "$argc_dynamic" == "1" ]]; then
+      cat <<'EOF'
     # Dynamic completion example
     case "$ARGC_CWORD" in
         *.txt|*.md)
@@ -85,9 +88,10 @@ EOF
             ;;
     esac
 EOF
-  fi
+    fi
 
-  echo "}"
+    echo "}"
+  } >> "$LLM_OUTPUT"
 }
 
 # @cmd Show argc best practices
@@ -120,31 +124,33 @@ show_best_practices() {
 # @cmd Debug argc variable access
 # @arg script_path! Path to argc script
 debug_variables() {
-  echo "Debugging argc variables in: $argc_script_path"
+  {
+    echo "Debugging argc variables in: $argc_script_path"
 
-  # Extract variable definitions
-  echo "=== Defined Parameters ==="
-  grep -E "^# @(option|flag|arg)" "$argc_script_path" | while read -r line; do
-    echo "$line"
-  done
+    # Extract variable definitions
+    echo "=== Defined Parameters ==="
+    grep -E "^# @(option|flag|arg)" "$argc_script_path" | while read -r line; do
+      echo "$line"
+    done
 
-  echo -e "\n=== Expected Variables ==="
-  grep -E "^# @(option|flag|arg)" "$argc_script_path" | while read -r line; do
-    case "$line" in
-    *"@option"*)
-      var_name=$(echo "$line" | sed -E 's/.*--([a-zA-Z0-9-]+).*/\1/' | tr '-' '_')
-      echo "argc_$var_name"
-      ;;
-    *"@flag"*)
-      var_name=$(echo "$line" | sed -E 's/.*--([a-zA-Z0-9-]+).*/\1/' | tr '-' '_')
-      echo "argc_$var_name"
-      ;;
-    *"@arg"*)
-      var_name=$(echo "$line" | awk '{print $3}')
-      echo "argc_$var_name"
-      ;;
-    esac
-  done
+    echo -e "\n=== Expected Variables ==="
+    grep -E "^# @(option|flag|arg)" "$argc_script_path" | while read -r line; do
+      case "$line" in
+      *"@option"*)
+        var_name=$(echo "$line" | sed -E 's/.*--([a-zA-Z0-9-]+).*/\1/' | tr '-' '_')
+        echo "argc_$var_name"
+        ;;
+      *"@flag"*)
+        var_name=$(echo "$line" | sed -E 's/.*--([a-zA-Z0-9-]+).*/\1/' | tr '-' '_')
+        echo "argc_$var_name"
+        ;;
+      *"@arg"*)
+        var_name=$(echo "$line" | awk '{print $3}')
+        echo "argc_$var_name"
+        ;;
+      esac
+    done
+  } >> "$LLM_OUTPUT"
 }
 
 create_basic_template() {
@@ -318,7 +324,7 @@ EOF
 }
 
 show_syntax_practices() {
-  cat <<'EOF'
+  cat <<'EOF' >> "$LLM_OUTPUT"
 === Argc Syntax Best Practices ===
 
 1. Comment Tag Placement:
@@ -355,7 +361,7 @@ EOF
 }
 
 show_organization_practices() {
-  cat <<'EOF'
+  cat <<'EOF' >> "$LLM_OUTPUT"
 === Argc Organization Best Practices ===
 
 1. Function Structure:
@@ -401,7 +407,7 @@ EOF
 }
 
 show_validation_practices() {
-  cat <<'EOF'
+  cat <<'EOF' >> "$LLM_OUTPUT"
 === Argc Validation Best Practices ===
 
 1. Input Validation:
@@ -448,7 +454,7 @@ EOF
 }
 
 show_completion_practices() {
-  cat <<'EOF'
+  cat <<'EOF' >> "$LLM_OUTPUT"
 === Argc Completion Best Practices ===
 
 1. Choice Functions:
@@ -486,7 +492,7 @@ EOF
 }
 
 show_performance_practices() {
-  cat <<'EOF'
+  cat <<'EOF' >> "$LLM_OUTPUT"
 === Argc Performance Best Practices ===
 
 1. Script Startup:

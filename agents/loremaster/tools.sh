@@ -54,7 +54,7 @@ manage() {
 # @option --filter="" <FILTER> Filter books by name pattern
 # @alias list_books
 list-books() {
-  _choice_books >>$LLM_OUTPUT
+  _choice_books >> "$LLM_OUTPUT"
 }
 
 # 📖 Chronicle inscriptions
@@ -63,15 +63,15 @@ list-books() {
 # @option --format[=json|yaml] Output format
 # @alias show_book
 show-book() {
-  if [ $argc_book == "list" ]; then
-    _choice_books >>$LLM_OUTPUT
+  if [[ "$argc_book" == "list" ]]; then
+    _choice_books >> "$LLM_OUTPUT"
   else
     local book_json="${BOOKS_DIR}/${argc_book}.json"
 
     if [[ "${argc_format:-json}" == "yaml" ]]; then
-      json2yaml <"$book_json" >>$LLM_OUTPUT
+      json2yaml <"$book_json" >> "$LLM_OUTPUT"
     else
-      cat "$book_json" >>$LLM_OUTPUT
+      cat "$book_json" >> "$LLM_OUTPUT"
     fi
   fi
 }
@@ -80,7 +80,7 @@ show-book() {
 # @cmd 🔮 List them entries yao
 # @alias list_entries
 list-entries() {
-  _choice_entries >>$LLM_OUTPUT
+  _choice_entries >> "$LLM_OUTPUT"
 }
 
 # 📖 Chronicle inscriptions
@@ -92,9 +92,9 @@ show-entry() {
   local entry_json="${ENTRIES_DIR}/${argc_entry}.json"
 
   if [[ "${argc_format:-json}" == "yaml" ]]; then
-    json2yaml <"$entry_json" >>$LLM_OUTPUT
+    json2yaml <"$entry_json" >> "$LLM_OUTPUT"
   else
-    cat "$entry_json" >>$LLM_OUTPUT
+    cat "$entry_json" >> "$LLM_OUTPUT"
   fi
 }
 
@@ -111,11 +111,11 @@ read-book-entries() {
     [[ -f "$entry_file" ]] || continue
 
     if [[ "${argc_format:-json}" == "yaml" ]]; then
-      json2yaml <"$entry_file" >>$LLM_OUTPUT
+      json2yaml <"$entry_file" >> "$LLM_OUTPUT"
     else
-      cat "$entry_file" >>$LLM_OUTPUT
+      cat "$entry_file" >> "$LLM_OUTPUT"
     fi
-    echo "---" >>$LLM_OUTPUT
+    echo "---" >> "$LLM_OUTPUT"
   done
 }
 
@@ -174,7 +174,7 @@ create-entry() {
 }
 EOF
 
-  echo "Created: ${entry_id}" >>$LLM_OUTPUT
+  echo "Created: ${entry_id}" >> "$LLM_OUTPUT"
 }
 
 # 📖 Chronicle inscriptions
@@ -218,7 +218,7 @@ create-book() {
 }
 EOF
 
-  echo "Created: ${book_id}" >>$LLM_OUTPUT
+  echo "Created: ${book_id}" >> "$LLM_OUTPUT"
 }
 
 # 📖 Chronicle inscriptions
@@ -230,7 +230,7 @@ add-to-book() {
   local book_file="${BOOKS_DIR}/${argc_book}.json"
 
   jq ".entries += [\"${argc_entry}\"]" "$book_file" >"${book_file}.tmp" && mv "${book_file}.tmp" "$book_file"
-  echo "Added ${argc_entry} to ${argc_book}" >>$LLM_OUTPUT
+  echo "Added ${argc_entry} to ${argc_book}" >> "$LLM_OUTPUT"
 }
 
 # 📖 Chronicle inscriptions
@@ -245,7 +245,7 @@ link-to-persona() {
   jq ".readers += [\"${argc_persona}\"]" "$book_file" >"${book_file}.tmp" && mv "${book_file}.tmp" "$book_file"
   jq ".knowledge.lore_books += [\"${argc_book}\"]" "$persona_file" >"${persona_file}.tmp" && mv "${persona_file}.tmp" "$persona_file"
 
-  echo "Linked ${argc_book} to ${argc_persona}" >>$LLM_OUTPUT
+  echo "Linked ${argc_book} to ${argc_persona}" >> "$LLM_OUTPUT"
 }
 
 # The sacred argc incantation line - must remain at the end!
