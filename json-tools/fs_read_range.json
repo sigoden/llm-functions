@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "file_path": {
+      "type": "string",
+      "description": "The path to the file to read."
+    },
+    "start_line": {
+      "type": "integer",
+      "description": "The line number to start reading from (1-based index)."
+    },
+    "end_line": {
+      "type": "integer",
+      "description": "The line number to stop reading at."
+    }
+  },
+  "required": [
+    "file_path",
+    "start_line",
+    "end_line"
+  ]
+}

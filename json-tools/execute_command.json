@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "command": {
+      "type": "string",
+      "description": "The command to execute."
+    }
+  },
+  "required": [
+    "command"
+  ]
+}

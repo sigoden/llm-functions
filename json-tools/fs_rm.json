@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The path of the file or directory to remove"
+    }
+  },
+  "required": [
+    "path"
+  ]
+}

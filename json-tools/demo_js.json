@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "properties": {
+    "string": {
+      "type": "string",
+      "description": "Define a required string property"
+    },
+    "string_enum": {
+      "type": "string",
+      "enum": [
+        "foo",
+        "bar"
+      ],
+      "description": "Define a required string property with enum"
+    },
+    "string_optional": {
+      "type": "string",
+      "description": "Define a optional string property"
+    },
+    "boolean": {
+      "type": "boolean",
+      "description": "Define a required boolean property"
+    },
+    "integer": {
+      "type": "integer",
+      "description": "Define a required integer property"
+    },
+    "number": {
+      "type": "number",
+      "description": "Define a required number property"
+    },
+    "array": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Define a required string array property"
+    },
+    "array_optional": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Define a optional string array property"
+    }
+  },
+  "required": [
+    "string",
+    "string_enum",
+    "boolean",
+    "integer",
+    "number",
+    "array"
+  ]
+}

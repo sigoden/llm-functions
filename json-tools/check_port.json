@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "port": {
+      "type": "integer",
+      "description": "The port number to check."
+    },
+    "proto": {
+      "type": "string",
+      "enum": [
+        "tcp",
+        "udp"
+      ],
+      "description": "The protocol to check (default: tcp)."
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Show the process name/PID using the port (requires sudo/permissions often)."
+    }
+  },
+  "required": [
+    "port"
+  ]
+}

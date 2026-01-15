@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The directory to analyze (default: current directory)."
+    },
+    "depth": {
+      "type": "integer",
+      "description": "Display only a total for each directory to this depth (default: 1)."
+    },
+    "human_readable": {
+      "type": "boolean",
+      "description": "Print sizes in human readable format (e.g., 1K 234M 2G)."
+    }
+  },
+  "required": [
+    "path"
+  ]
+}

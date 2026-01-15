@@ -1,0 +1,990 @@
+[
+  {
+    "name": "check_port",
+    "description": "Check if a specific TCP/UDP port is currently in use or listening.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "type": "integer",
+          "description": "The port number to check."
+        },
+        "proto": {
+          "type": "string",
+          "enum": [
+            "tcp",
+            "udp"
+          ],
+          "description": "The protocol to check (default: tcp)."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show the process name/PID using the port (requires sudo/permissions often)."
+        }
+      },
+      "required": [
+        "port"
+      ]
+    }
+  },
+  {
+    "name": "clipboard_read",
+    "description": "Read the current content of the user's system clipboard (Control+C).",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "clipboard_write",
+    "description": "Write text to the system clipboard (Linux/macOS). Useful for passing code/commands to the user.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text content to copy to clipboard."
+        }
+      },
+      "required": [
+        "text"
+      ]
+    }
+  },
+  {
+    "name": "demo_js",
+    "description": "Demonstrate how to create a tool using Javascript and how to use comments.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "Define a required string property"
+        },
+        "string_enum": {
+          "type": "string",
+          "enum": [
+            "foo",
+            "bar"
+          ],
+          "description": "Define a required string property with enum"
+        },
+        "string_optional": {
+          "type": "string",
+          "description": "Define a optional string property"
+        },
+        "boolean": {
+          "type": "boolean",
+          "description": "Define a required boolean property"
+        },
+        "integer": {
+          "type": "integer",
+          "description": "Define a required integer property"
+        },
+        "number": {
+          "type": "number",
+          "description": "Define a required number property"
+        },
+        "array": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a required string array property"
+        },
+        "array_optional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a optional string array property"
+        }
+      },
+      "required": [
+        "string",
+        "string_enum",
+        "boolean",
+        "integer",
+        "number",
+        "array"
+      ]
+    }
+  },
+  {
+    "name": "demo_py",
+    "description": "Demonstrate how to create a tool using Python and how to use comments.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "Define a required string property"
+        },
+        "string_enum": {
+          "type": "string",
+          "enum": [
+            "foo",
+            "bar"
+          ],
+          "description": "Define a required string property with enum"
+        },
+        "boolean": {
+          "type": "boolean",
+          "description": "Define a required boolean property"
+        },
+        "integer": {
+          "type": "integer",
+          "description": "Define a required integer property"
+        },
+        "number": {
+          "type": "number",
+          "description": "Define a required number property"
+        },
+        "array": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a required string array property"
+        },
+        "string_optional": {
+          "type": "string",
+          "description": "Define a optional string property"
+        },
+        "array_optional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a optional string array property"
+        }
+      },
+      "required": [
+        "string",
+        "string_enum",
+        "boolean",
+        "integer",
+        "number",
+        "array"
+      ]
+    }
+  },
+  {
+    "name": "demo_sh",
+    "description": "Demonstrate how to create a tool using Bash and how to use comment tags.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "Define a required string property"
+        },
+        "string_enum": {
+          "type": "string",
+          "enum": [
+            "foo",
+            "bar"
+          ],
+          "description": "Define a required string property with enum"
+        },
+        "string_optional": {
+          "type": "string",
+          "description": "Define a optional string property"
+        },
+        "boolean": {
+          "type": "boolean",
+          "description": "Define a boolean property"
+        },
+        "integer": {
+          "type": "integer",
+          "description": "Define a required integer property"
+        },
+        "number": {
+          "type": "number",
+          "description": "Define a required number property"
+        },
+        "array": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a required string array property"
+        },
+        "array_optional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Define a optional string array property"
+        }
+      },
+      "required": [
+        "string",
+        "string_enum",
+        "integer",
+        "number",
+        "array"
+      ]
+    }
+  },
+  {
+    "name": "desktop_notify",
+    "description": "Send a desktop notification to the user. Use this when a long-running task is complete.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The summary/title of the notification."
+        },
+        "message": {
+          "type": "string",
+          "description": "The body text of the notification."
+        },
+        "urgency": {
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "critical"
+          ],
+          "description": "The urgency level (default: normal)."
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "execute_command",
+    "description": "Execute the shell command.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The command to execute."
+        }
+      },
+      "required": [
+        "command"
+      ]
+    }
+  },
+  {
+    "name": "execute_js_code",
+    "description": "Execute the javascript code in node.js.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Javascript code to execute, such as `console.log(\"hello world\")`"
+        }
+      },
+      "required": [
+        "code"
+      ]
+    }
+  },
+  {
+    "name": "execute_py_code",
+    "description": "Execute the python code.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Python code to execute, such as `print(\"hello world\")`"
+        }
+      },
+      "required": [
+        "code"
+      ]
+    }
+  },
+  {
+    "name": "execute_sql_code",
+    "description": "Execute the sql code.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The code to execute."
+        }
+      },
+      "required": [
+        "code"
+      ]
+    }
+  },
+  {
+    "name": "fetch_url_via_curl",
+    "description": "Extract the content from a given URL.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to scrape."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "fetch_url_via_jina",
+    "description": "Extract the content from a given URL.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to scrape."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "fs_cat",
+    "description": "Read the contents of a file at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the file to read"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "fs_find",
+    "description": "Search for files or directories matching a pattern. Essential for locating code or configs.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The root path to start searching from (e.g., \".\" or \"/var/log\")."
+        },
+        "name": {
+          "type": "string",
+          "description": "The file pattern to match (e.g., \"*.py\", \"config.yaml\")."
+        },
+        "max_depth": {
+          "type": "integer",
+          "description": "Limit the directory traversal depth (default: 5 to prevent infinite loops)."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "f",
+            "d"
+          ],
+          "description": "Filter by file (f) or directory (d)."
+        }
+      },
+      "required": [
+        "path",
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "fs_ls",
+    "description": "List all files and directories at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the directory to list"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "fs_mkdir",
+    "description": "Create a new directory at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the directory to create"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "fs_patch",
+    "description": "Apply a patch to a file at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the file to apply to"
+        },
+        "contents": {
+          "type": "string",
+          "description": "The patch to apply to the file"
+        }
+      },
+      "required": [
+        "path",
+        "contents"
+      ]
+    }
+  },
+  {
+    "name": "fs_read_range",
+    "description": "Read a specific range of lines from a file. Useful for reading large logs or files without overloading context.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "description": "The path to the file to read."
+        },
+        "start_line": {
+          "type": "integer",
+          "description": "The line number to start reading from (1-based index)."
+        },
+        "end_line": {
+          "type": "integer",
+          "description": "The line number to stop reading at."
+        }
+      },
+      "required": [
+        "file_path",
+        "start_line",
+        "end_line"
+      ]
+    }
+  },
+  {
+    "name": "fs_rm",
+    "description": "Remove the file or directory at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the file or directory to remove"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "fs_write",
+    "description": "Write the full file contents to a file at the specified path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path of the file to write to"
+        },
+        "contents": {
+          "type": "string",
+          "description": "The full contents to write to the file"
+        }
+      },
+      "required": [
+        "path",
+        "contents"
+      ]
+    }
+  },
+  {
+    "name": "get_current_time",
+    "description": "Get the current time.",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "get_current_weather",
+    "description": "Get the current weather in a given location.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "The city and optionally the state or country, e.g., \"London\", \"San Francisco, CA\"."
+        }
+      },
+      "required": [
+        "location"
+      ]
+    }
+  },
+  {
+    "name": "git_diff",
+    "description": "Show changes between commits, commit and working tree, etc.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "staged": {
+          "type": "boolean",
+          "description": "Show changes that are staged for commit."
+        },
+        "target": {
+          "type": "string",
+          "description": "The specific file or branch to diff (optional)."
+        }
+      }
+    }
+  },
+  {
+    "name": "git_log",
+    "description": "Show the commit logs.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "max_count": {
+          "type": "integer",
+          "description": "Limit the number of commits to show (default: 5)."
+        },
+        "oneline": {
+          "type": "boolean",
+          "description": "Compress each commit to a single line."
+        },
+        "stat": {
+          "type": "boolean",
+          "description": "Include a diffstat (summary of changed files) for each commit."
+        }
+      }
+    }
+  },
+  {
+    "name": "git_status",
+    "description": "Check the status of the current git repository to see modified, staged, or untracked files.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "short": {
+          "type": "boolean",
+          "description": "Give the output in the short-format."
+        }
+      }
+    }
+  },
+  {
+    "name": "html_to_markdown",
+    "description": "Fetch a webpage and convert it to clean Markdown. Best for reading documentation or articles.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch."
+        },
+        "selector": {
+          "type": "string",
+          "description": "CSS selector to extract (default: 'body', use 'main' or 'article' for better focus)."
+        }
+      },
+      "required": [
+        "url",
+        "selector"
+      ]
+    }
+  },
+  {
+    "name": "json_select",
+    "description": "Parse JSON data/files using jq to extract specific fields.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "json": {
+          "type": "string",
+          "description": "The raw JSON string or path to a JSON file (use @filepath)."
+        },
+        "query": {
+          "type": "string",
+          "description": "The jq query filter (e.g., '.users[].email' or '.status')."
+        },
+        "compact": {
+          "type": "boolean",
+          "description": "Output compact JSON (removes whitespace)."
+        }
+      },
+      "required": [
+        "json",
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "media_get_metadata",
+    "description": "Extract comprehensive metadata from media files (images, video, audio) using exiftool.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "The path to the media file."
+        },
+        "specific": {
+          "type": "boolean",
+          "description": "Extract only common timestamps, duration, and geo-data to save context tokens."
+        }
+      },
+      "required": [
+        "file"
+      ]
+    }
+  },
+  {
+    "name": "search_arxiv",
+    "description": "Search arXiv for a query and return the top papers.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "search_wikipedia",
+    "description": "Search Wikipedia for a query.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "search_wolframalpha",
+    "description": "Get an answer to a question using Wolfram Alpha. Input should the query in English.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "sec_check_users",
+    "description": "List currently logged in users, recent successful logins, and failed login attempts.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "failed": {
+          "type": "boolean",
+          "description": "Show failed login attempts matching recent history (potential intrusion)."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show full detail of current sessions including source IP."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_dns_integrity",
+    "description": "Audit DNS integrity by comparing local resolution vs trusted upstream resolvers (Quad9/Google). Detects /etc/hosts poisoning.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "The reference domain to check (default: google.com)."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show ip comparison details."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_integrity_verify",
+    "description": "Verify integrity of system config files. Scans for files that have changed from the installed package defaults.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "boolean",
+          "description": "Verify all installed packages (Slow! Use with caution)."
+        },
+        "package": {
+          "type": "string",
+          "description": "Limit verification to a specific package (e.g. openssh-server, sudo)."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_list_suid",
+    "description": "Find files with SUID active. These run with root file permissions and are common privilege escalation vectors.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The root path to search (default: /usr/bin). Limit this to verify questionable directories."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_listening_summary",
+    "description": "List network services listening for incoming connections. Distinguishes between local and public exposure.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "public_only": {
+          "type": "boolean",
+          "description": "Show only services listening on 0.0.0.0 or [::] (Exposed to LAN/WAN)."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_process_audit",
+    "description": "Audit processes for tampering indicators like LD_PRELOAD injection or suspicious ptrace tracing.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "full": {
+          "type": "boolean",
+          "description": "Scan all processes (requires elevated privileges/sudo often)."
+        }
+      }
+    }
+  },
+  {
+    "name": "sec_textscan_injection",
+    "description": "Scan text content for potential Prompt Injection or Jailbreak patterns. \nUse before processing untrusted external files/logs with the Agent.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The text string to analyze."
+        }
+      },
+      "required": [
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "send_mail",
+    "description": "Send a email.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "recipient": {
+          "type": "string",
+          "description": "The recipient of the email."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject of the email."
+        },
+        "body": {
+          "type": "string",
+          "description": "The body of the email."
+        }
+      },
+      "required": [
+        "recipient",
+        "subject",
+        "body"
+      ]
+    }
+  },
+  {
+    "name": "send_twilio",
+    "description": "Send SMS or Twilio Messaging Channels messages using Twilio API.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "to_number": {
+          "type": "string",
+          "description": "The recipient's phone number. Prefix with 'whatsapp:' for WhatsApp messages, e.g. whatsapp:+1234567890"
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the message to be sent"
+        }
+      },
+      "required": [
+        "to_number",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "sys_disk_usage",
+    "description": "Estimate file space usage (du). Identifies large directories.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The directory to analyze (default: current directory)."
+        },
+        "depth": {
+          "type": "integer",
+          "description": "Display only a total for each directory to this depth (default: 1)."
+        },
+        "human_readable": {
+          "type": "boolean",
+          "description": "Print sizes in human readable format (e.g., 1K 234M 2G)."
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sys_info",
+    "description": "Get a snapshot of system health including CPU load, memory usage, and disk space.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "verbose": {
+          "type": "boolean",
+          "description": "Include detailed process list (top 5 by CPU)."
+        }
+      }
+    }
+  },
+  {
+    "name": "sys_list_processes",
+    "description": "List currently running processes with optional filtering.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Filter processes by command name."
+        },
+        "full": {
+          "type": "boolean",
+          "description": "Display full command line (wider output)."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Limit the number of results (default: 10)."
+        }
+      }
+    }
+  },
+  {
+    "name": "text_count_tokens",
+    "description": "Count the number of tokens in a text string. Useful for checking if data fits in context window.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text string to analyze."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model encoding to use (default: gpt-4)."
+        }
+      },
+      "required": [
+        "text",
+        "model"
+      ]
+    }
+  },
+  {
+    "name": "web_search_aichat",
+    "description": "Perform a web search to get up-to-date information or additional context.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "web_search_perplexity",
+    "description": "Perform a web search using Perplexity API to get up-to-date information or additional context.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "web_search_tavily",
+    "description": "Perform a web search using Tavily API to get up-to-date information or additional context.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The query to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  }
+]

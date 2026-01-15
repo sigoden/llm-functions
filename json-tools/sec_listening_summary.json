@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "public_only": {
+      "type": "boolean",
+      "description": "Show only services listening on 0.0.0.0 or [::] (Exposed to LAN/WAN)."
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "max_count": {
+      "type": "integer",
+      "description": "Limit the number of commits to show (default: 5)."
+    },
+    "oneline": {
+      "type": "boolean",
+      "description": "Compress each commit to a single line."
+    },
+    "stat": {
+      "type": "boolean",
+      "description": "Include a diffstat (summary of changed files) for each commit."
+    }
+  }
+}

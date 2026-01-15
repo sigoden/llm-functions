@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "The text string to analyze."
+    },
+    "model": {
+      "type": "string",
+      "description": "The model encoding to use (default: gpt-4)."
+    }
+  },
+  "required": [
+    "text",
+    "model"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Filter processes by command name."
+    },
+    "full": {
+      "type": "boolean",
+      "description": "Display full command line (wider output)."
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Limit the number of results (default: 10)."
+    }
+  }
+}

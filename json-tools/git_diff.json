@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "staged": {
+      "type": "boolean",
+      "description": "Show changes that are staged for commit."
+    },
+    "target": {
+      "type": "string",
+      "description": "The specific file or branch to diff (optional)."
+    }
+  }
+}

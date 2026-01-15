@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The path of the directory to create"
+    }
+  },
+  "required": [
+    "path"
+  ]
+}

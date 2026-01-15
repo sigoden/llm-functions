@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "recipient": {
+      "type": "string",
+      "description": "The recipient of the email."
+    },
+    "subject": {
+      "type": "string",
+      "description": "The subject of the email."
+    },
+    "body": {
+      "type": "string",
+      "description": "The body of the email."
+    }
+  },
+  "required": [
+    "recipient",
+    "subject",
+    "body"
+  ]
+}

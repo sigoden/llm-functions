@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "failed": {
+      "type": "boolean",
+      "description": "Show failed login attempts matching recent history (potential intrusion)."
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Show full detail of current sessions including source IP."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The summary/title of the notification."
+    },
+    "message": {
+      "type": "string",
+      "description": "The body text of the notification."
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "critical"
+      ],
+      "description": "The urgency level (default: normal)."
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ]
+}

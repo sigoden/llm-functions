@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "short": {
+      "type": "boolean",
+      "description": "Give the output in the short-format."
+    }
+  }
+}

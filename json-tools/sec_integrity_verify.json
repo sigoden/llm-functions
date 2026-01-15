@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "all": {
+      "type": "boolean",
+      "description": "Verify all installed packages (Slow! Use with caution)."
+    },
+    "package": {
+      "type": "string",
+      "description": "Limit verification to a specific package (e.g. openssh-server, sudo)."
+    }
+  }
+}

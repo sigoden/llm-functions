@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "The URL to fetch."
+    },
+    "selector": {
+      "type": "string",
+      "description": "CSS selector to extract (default: 'body', use 'main' or 'article' for better focus)."
+    }
+  },
+  "required": [
+    "url",
+    "selector"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "The reference domain to check (default: google.com)."
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Show ip comparison details."
+    }
+  }
+}

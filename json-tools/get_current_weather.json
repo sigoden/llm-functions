@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string",
+      "description": "The city and optionally the state or country, e.g., \"London\", \"San Francisco, CA\"."
+    }
+  },
+  "required": [
+    "location"
+  ]
+}

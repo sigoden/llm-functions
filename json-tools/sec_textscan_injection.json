@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The text string to analyze."
+    }
+  },
+  "required": [
+    "content"
+  ]
+}

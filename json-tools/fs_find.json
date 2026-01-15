@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The root path to start searching from (e.g., \".\" or \"/var/log\")."
+    },
+    "name": {
+      "type": "string",
+      "description": "The file pattern to match (e.g., \"*.py\", \"config.yaml\")."
+    },
+    "max_depth": {
+      "type": "integer",
+      "description": "Limit the directory traversal depth (default: 5 to prevent infinite loops)."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "f",
+        "d"
+      ],
+      "description": "Filter by file (f) or directory (d)."
+    }
+  },
+  "required": [
+    "path",
+    "name"
+  ]
+}

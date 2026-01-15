@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "verbose": {
+      "type": "boolean",
+      "description": "Include detailed process list (top 5 by CPU)."
+    }
+  }
+}

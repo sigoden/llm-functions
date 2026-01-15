@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "file": {
+      "type": "string",
+      "description": "The path to the media file."
+    },
+    "specific": {
+      "type": "boolean",
+      "description": "Extract only common timestamps, duration, and geo-data to save context tokens."
+    }
+  },
+  "required": [
+    "file"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "json": {
+      "type": "string",
+      "description": "The raw JSON string or path to a JSON file (use @filepath)."
+    },
+    "query": {
+      "type": "string",
+      "description": "The jq query filter (e.g., '.users[].email' or '.status')."
+    },
+    "compact": {
+      "type": "boolean",
+      "description": "Output compact JSON (removes whitespace)."
+    }
+  },
+  "required": [
+    "json",
+    "query"
+  ]
+}

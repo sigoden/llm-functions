@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The root path to search (default: /usr/bin). Limit this to verify questionable directories."
+    }
+  }
+}
