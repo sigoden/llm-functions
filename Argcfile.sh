@@ -76,6 +76,46 @@ build() {
     fi
 }
 
+# @cmd Build all tools and agents (ignore tools.txt and agents.txt)
+build@all() {
+    mkdir -p "$TMP_DIR"
+    tools_names_file="$TMP_DIR/tools.all.txt"
+    agents_names_file="$TMP_DIR/agents.all.txt"
+
+    # Collect all available tools (for installed runtimes)
+    if [[ -d tools ]]; then
+        _choice_tool > "$tools_names_file" || true
+    else
+        : > "$tools_names_file"
+    fi
+
+    # Collect all available agents (directory names under agents/)
+    if [[ -d agents ]]; then
+        _choice_agent > "$agents_names_file" || true
+    else
+        : > "$agents_names_file"
+    fi
+
+    # Build tools if any discovered
+    if [[ -s "$tools_names_file" ]]; then
+        argc build@tool --names-file "$tools_names_file" --declarations-file functions.json
+    else
+        echo 'Skipped building tools: none found under tools/'
+    fi
+
+    # Build agents if any discovered
+    if [[ -s "$agents_names_file" ]]; then
+        argc build@agent --names-file "$agents_names_file"
+    else
+        echo 'Skipped building agents: none found under agents/'
+    fi
+
+    # Keep existing behavior for MCP merge
+    if [[ -f mcp.json ]]; then
+        argc mcp merge-functions -S
+    fi
+}
+
 # @cmd Build tools
 # @alias tool:build
 # @option --names-file=tools.txt Path to a file containing tool filenames, one per line.
