@@ -38,3 +38,4 @@ Let LLM-functions tools/agents be used through the Model Context Protocol.
 ## Environment Variables
 
 - `AGENT_TOOLS_ONLY`: Set to `true` or `1` to ignore shared tools and display only agent tools.
+- `LLM_BIN`: Path to `<llm-functions-dir>/bin`. Exposed to tool/agent scripts so they can invoke other llm-functions commands via `$LLM_BIN/<name>` without prepending `bin` to `PATH`.

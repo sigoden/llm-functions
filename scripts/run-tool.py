@@ -58,6 +58,7 @@ def parse_argv(this_file_name):
 def setup_env(root_dir, tool_name):
     load_env(os.path.join(root_dir, ".env"))
     os.environ["LLM_ROOT_DIR"] = root_dir
+    os.environ["LLM_BIN"] = os.path.join(root_dir, "bin")
     os.environ["LLM_TOOL_NAME"] = tool_name
     os.environ["LLM_TOOL_CACHE_DIR"] = os.path.join(root_dir, "cache", tool_name)
 

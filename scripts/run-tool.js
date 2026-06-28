@@ -55,6 +55,7 @@ function parseRawData(data) {
 async function setupEnv(rootDir, toolName) {
   await loadEnv(path.resolve(rootDir, ".env"));
   process.env["LLM_ROOT_DIR"] = rootDir;
+  process.env["LLM_BIN"] = path.resolve(rootDir, "bin");
   process.env["LLM_TOOL_NAME"] = toolName;
   process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(rootDir, "cache", toolName);
 }

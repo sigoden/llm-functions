@@ -32,6 +32,7 @@ parse_argv() {
 setup_env() {
     load_env "$root_dir/.env" 
     export LLM_ROOT_DIR="$root_dir"
+    export LLM_BIN="$root_dir/bin"
     export LLM_TOOL_NAME="$tool_name"
     export LLM_TOOL_CACHE_DIR="$LLM_ROOT_DIR/cache/$tool_name"
 }

@@ -43,8 +43,20 @@ functions = functions.filter(f => {
   }
 });
 
+const binDir = path.join(rootDir, "bin");
+
+function resolveBinCommand(command) {
+  if (process.platform === "win32") {
+    const cmdPath = path.join(binDir, `${command}.cmd`);
+    if (fs.existsSync(cmdPath)) {
+      return cmdPath;
+    }
+  }
+  return path.join(binDir, command);
+}
+
 const env = Object.assign({}, process.env, {
-  PATH: `${path.join(rootDir, "bin")}:${process.env.PATH}`
+  LLM_BIN: binDir,
 });
 
 const server = new Server(
@@ -81,7 +93,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     command = agentName;
   }
   const tmpFile = path.join(os.tmpdir(), `mcp-llm-functions-${process.pid}-eval-${uuid()}`);
-  const { exitCode, stderr } = await runCommand(command, args, { ...env, LLM_OUTPUT: tmpFile });
+  const executable = resolveBinCommand(command);
+  const { exitCode, stderr } = await runCommand(executable, args, { ...env, LLM_OUTPUT: tmpFile });
   if (exitCode === 0) {
     let output = '';
     try {
@@ -100,7 +113,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 function runCommand(command, args, env) {
   return new Promise(resolve => {
-    const child = spawn(command, args, {
+    let spawnCmd = command;
+    let spawnArgs = args;
+    if (process.platform === "win32" && command.toLowerCase().endsWith(".cmd")) {
+      spawnCmd = process.env.ComSpec || "cmd.exe";
+      spawnArgs = ["/d", "/s", "/c", command, ...args];
+    }
+    const child = spawn(spawnCmd, spawnArgs, {
       stdio: ['ignore', 'ignore', 'pipe'],
       env,
     });
