@@ -5,6 +5,7 @@
 | Name                  | Description                                                                                                                |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `LLM_ROOT_DIR`        | Path to `<llm-functions-dir>`                                                                                              |
+| `LLM_BIN`             | Path to `<llm-functions-dir>/bin`. Use `$LLM_BIN/<tool-or-agent>` to invoke llm-functions commands without shadowing system binaries on `PATH`. |
 | `LLM_TOOL_NAME`       | Tool name, such as `execute_command`                                                                                       |
 | `LLM_TOOL_CACHE_DIR`  | Path to `<llm-functions-dir>/cache/<tool-name>`,<br>The tool script can use this directory to store some cache data        |
 | `LLM_AGENT_NAME`      | Agent name, such as `todo`                                                                                                 |

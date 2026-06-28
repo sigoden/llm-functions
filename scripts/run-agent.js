@@ -58,6 +58,7 @@ function parseRawData(data) {
 async function setupEnv(rootDir, agentName, agentFunc) {
   await loadEnv(path.resolve(rootDir, ".env"));
   process.env["LLM_ROOT_DIR"] = rootDir;
+  process.env["LLM_BIN"] = path.resolve(rootDir, "bin");
   process.env["LLM_AGENT_NAME"] = agentName;
   process.env["LLM_AGENT_FUNC"] = agentFunc;
   process.env["LLM_AGENT_ROOT_DIR"] = path.resolve(

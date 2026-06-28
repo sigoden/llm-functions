@@ -61,6 +61,7 @@ def parse_argv(this_file_name):
 def setup_env(root_dir, agent_name, agent_func):
     load_env(os.path.join(root_dir, ".env"))
     os.environ["LLM_ROOT_DIR"] = root_dir
+    os.environ["LLM_BIN"] = os.path.join(root_dir, "bin")
     os.environ["LLM_AGENT_NAME"] = agent_name
     os.environ["LLM_AGENT_FUNC"] = agent_func
     os.environ["LLM_AGENT_ROOT_DIR"] = os.path.join(root_dir, "agents", agent_name)
