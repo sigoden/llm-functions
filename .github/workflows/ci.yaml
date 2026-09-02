@@ -45,6 +45,9 @@ jobs:
         argc link-web-search web_search_perplexity.sh 
         argc link-code-interpreter execute_py_code.py 
 
+    - name: Test web search JSON escaping
+      run: ./scripts/test-web-search-json.sh
+
     - name: Run Test
       run: argc test
       env:
