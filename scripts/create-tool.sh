@@ -1,195 +1,220 @@
-#!/usr/bin/env bash
-set -e
-
-# @describe Create a boilplate tool script
+#!/data/data/com.termux/files/usr/bin/env bash
+# ==============================================================================
+# create-tool.sh — Tool Boilerplate Generator
+#
+# Generates boilerplate code for new tool scripts in bash, JavaScript, or Python.
+# Supports various parameter types: required/optional, string/integer/boolean/array.
+#
+# Usage:
+#   ./create-tool.sh [options] <name> [params...]
+#
+# Options:
+#   --description <text>  Tool description
+#   --force               Override existing file
+#
+# Arguments:
+#   name                  Script filename (e.g., my_tool.sh)
+#   params                Parameters (suffix: ! = required, * = optional array)
 #
 # Examples:
-#   ./scripts/create-tool.sh _test.py foo bar! baz+ qux*
-#
-# @option --description <text> The tool description
-# @flag --force Override the exist tool file
-# @arg name! The script file name
-# @arg params* The script parameters
+#   ./create-tool.sh my_tool.sh name! age
+#   ./create-tool.sh --description "My tool" api_key! --force
+#   ./create-tool.sh process.py input* output! --force
+# ==============================================================================
 
-main() {
-    output="tools/$argc_name"
-    if [[ -f "$output" ]] && [[ -z "$argc_force" ]]; then
-        _die "$output already exists"
-    fi
-    ext="${argc_name##*.}"
-    description="${argc_description:-"The description for the tool"}"
-    support_exts=('.sh' '.js' '.py')
-    if [[ "$ext" == "$argc_name" ]]; then
-        _die "error: no extension name, pelease add one of ${support_exts[*]}" 
-    fi
-    case $ext in
-    sh) create_sh ;;
-    js) create_js ;;
-    py) create_py ;;
-    *) _die "error: invalid extension name: $ext, must be one of ${support_exts[*]}" ;; 
-    esac
-    echo "$output generated"
+set -euo pipefail
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Supported extensions
+SUPPORTED_EXTS=('sh' 'js' 'py')
+
+# Usage function
+usage() {
+    head -30 "$0" | tail -25
+    exit 0
 }
 
-create_sh() {
-    cat <<-'EOF' > "$output"
-#!/usr/bin/env bash
-set -e
-
-EOF
-    echo "# @describe $description" >> "$output"
-    for param in "${argc_params[@]}"; do
-        echo "# @option --$(echo $param | sed 's/-/_/g')" >> "$output"
-    done
-    cat <<-'EOF' >> "$output"
-
-main() {
-    ( set -o posix ; set ) | grep ^argc_
-}
-
-eval "$(argc --argc-eval "$0" "$@")"
-EOF
-    chmod +x "$output"
-}
-
-create_js() {
-    properties=''
-    for param in "${argc_params[@]}"; do
-        if [[ "$param" == *'!' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            property=" * @property {string} $param - "
-        elif [[ "$param" == *'+' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            property=" * @property {string[]} $param - "
-        elif [[ "$param" == *'*' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            property=" * @property {string[]} [$param] - "
-        else
-            property=" * @property {string} [$param] - "
-        fi
-        properties+=$'\n'"$property"
-    done
-    cat <<EOF > "$output"
-/**
- * ${description}
- * @typedef {Object} Args${properties}
- * @param {Args} args
- */
-exports.run = function (args) {
-  console.log(args);
-}
-EOF
-}
-
-create_py() {
-    has_array_param=false
-    has_optional_pram=false
-    required_properties=''
-    optional_properties=''
-    required_arguments=()
-    optional_arguments=()
-    indent="    "
-    for param in "${argc_params[@]}"; do
-        optional=false
-        if [[ "$param" == *'!' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            type="str"
-        elif [[ "$param" == *'+' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            type="List[str]"
-            has_array_param=true
-        elif [[ "$param" == *'*' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            type="Optional[List[str]] = None"
-            optional=true
-            has_array_param=true
-        else
-            optional=true
-            type="Optional[str] = None"
-        fi
-        if [[ "$optional" == "true" ]]; then
-            has_optional_pram=true
-            optional_arguments+="$param: $type, "
-            optional_properties+=$'\n'"$indent$indent$param: -"
-        else
-            required_arguments+="$param: $type, "
-            required_properties+=$'\n'"$indent$indent$param: -"
-        fi
-    done
-    import_typing_members=()
-    if [[ "$has_array_param" == "true" ]]; then
-        import_typing_members+=("List")
-    fi
-    if [[ "$has_optional_pram" == "true" ]]; then
-        import_typing_members+=("Optional")
-    fi
-    imports=""
-    if [[ -n "$import_typing_members" ]]; then
-        members="$(echo "${import_typing_members[*]}" | sed 's/ /, /')"
-        imports="from typing import $members"$'\n'
-    fi
-    if [[ -n "$imports" ]]; then
-        imports="$imports"$'\n'
-    fi
-    cat <<EOF > "$output"
-${imports}
-def run(${required_arguments}${optional_arguments}):
-    """${description}
-    Args:${required_properties}${optional_properties}
-    """
-    pass
-EOF
-}
-
-build_schema() {
-    echo '{
-        "name": "'"${argc_name%%.*}"'",
-        "description": "",
-        "parameters": '"$(build_properties)"'
-    }' | jq '.' | sed '2,$s/^/  /g'
-}
-
-build_properties() {
-    required_params=()
-    properties=''
-    for param in "${argc_params[@]}"; do
-        if [[ "$param" == *'!' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            required_params+=("$param")
-            property='{"'"$param"'":{"type":"string","description":""}}'
-        elif [[ "$param" == *'+' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            required_params+=("$param")
-            property='{"'"$param"'":{"type":"array","description":"","items": {"type":"string"}}}'
-        elif [[ "$param" == *'*' ]]; then
-            param="${param:0:$((${#param}-1))}"
-            property='{"'"$param"'":{"type":"array","description":"","items": {"type":"string"}}}'
-        else
-            property='{"'"$param"'":{"type":"string","description":""}}'
-        fi
-        properties+="$property"
-    done
-    required=''
-    for param in "${required_params[@]}"; do
-        if [[ -z "$required" ]]; then
-            required=',"required":['
-        fi
-        required+="\"$param\","
-    done
-    if [[ -n "$required" ]]; then
-        required="${required:0:$((${#required}-1))}"
-        required+="]"
-    fi
-    echo '{
-        "type": "object",
-        "properties": '"$(echo "$properties" | jq -s 'add')$required"'
-    }' | jq '.'
-}
-
-_die() {
-    echo "$*" >&2
+# Error handler
+die() {
+    echo -e "${RED}Error:${NC} $*" >&2
     exit 1
 }
 
-# See more details at https://github.com/sigoden/argc
-eval "$(argc --argc-eval "$0" "$@")"
+# Parse arguments manually (portable alternative to argc)
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --description)
+                DESCRIPTION="$2"
+                shift 2
+                ;;
+            --force)
+                FORCE=true
+                shift
+                ;;
+            --help|-h)
+                usage
+                ;;
+            -*)
+                die "Unknown option: $1"
+                ;;
+            *)
+                if [[ -z "${NAME:-}" ]]; then
+                    NAME="$1"
+                else
+                    PARAMS+=("$1")
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    [[ -n "${NAME:-}" ]] || die "Missing required argument: <name>"
+}
+
+# Main function
+main() {
+    local output="tools/$NAME"
+    local ext="${NAME##*.}"
+    
+    # Validate extension
+    if [[ "$ext" == "$NAME" ]]; then
+        die "No extension. Supported: ${SUPPORTED_EXTS[*]}"
+    fi
+    
+    if [[ ! " ${SUPPORTED_EXTS[*]} " =~ " $ext " ]]; then
+        die "Invalid extension: $ext. Supported: ${SUPPORTED_EXTS[*]}"
+    fi
+    
+    # Check if file exists
+    if [[ -f "$output" ]] && [[ "${FORCE:-false}" != "true" ]]; then
+        die "$output already exists. Use --force to override."
+    fi
+    
+    # Set default description
+    DESCRIPTION="${DESCRIPTION:-Tool description}"
+    
+    # Generate based on extension
+    case "$ext" in
+        sh) create_sh "$output" ;;
+        js) create_js "$output" ;;
+        py) create_py "$output" ;;
+    esac
+    
+    chmod +x "$output"
+    echo -e "${GREEN}Created:${NC} $output"
+}
+
+# Create Bash tool
+create_sh() {
+    local output="$1"
+    
+    {
+        echo '#!/usr/bin/env bash'
+        echo '# =============================================================================='
+        echo "# $NAME — Bash Tool"
+        echo '#'
+        echo "# @describe $DESCRIPTION"
+        echo '# @option --string! <VALUE>  Required string parameter'
+        echo '# @option --string-optional <VALUE>  Optional string parameter'
+        echo '# @flag --boolean  Boolean flag'
+        echo '# @option --integer! <NUM>  Required integer parameter'
+        echo '# @option --array* <VALUE>  Array parameter (repeatable)'
+        echo '# =============================================================================='
+        echo ''
+        echo 'set -euo pipefail'
+        echo ''
+        echo 'main() {'
+        echo '    echo "argc_string: ${argc_string}"'
+        echo '    echo "argc_string_optional: ${argc_string_optional}"'
+        echo '    echo "argc_boolean: ${argc_boolean}"'
+        echo '    echo "argc_integer: ${argc_integer}"'
+        echo '    echo "argc_array: ${argc_array[*]}"'
+        echo '}'
+        echo ''
+        echo 'eval "$(argc --argc-eval "$0" "$@")"'
+    } > "$output"
+}
+
+# Create JavaScript tool
+create_js() {
+    local output="$1"
+    
+    {
+        echo '/**'
+        echo " * $DESCRIPTION"
+        echo ' * @typedef {Object} Args'
+        echo ' * @property {string} string - Required string parameter'
+        echo ' * @property {string} [string_optional] - Optional string parameter'
+        echo ' * @property {boolean} boolean - Boolean flag'
+        echo ' * @property {number} integer - Integer parameter'
+        echo ' * @property {string[]} array - Array parameter'
+        echo ' */'
+        echo 'exports.run = function(args) {'
+        echo '  const { string, string_optional, boolean, integer, array } = args;'
+        echo '  '
+        echo '  return {'
+        echo '    string,'
+        echo '    string_optional,'
+        echo '    boolean,'
+        echo '    integer,'
+        echo '    array'
+        echo '  };'
+        echo '};'
+    } > "$output"
+}
+
+# Create Python tool
+create_py() {
+    local output="$1"
+    
+    {
+        echo '#!/usr/bin/env python3'
+        echo '# =============================================================================='
+        echo "# $NAME — Python Tool"
+        echo '#'
+        echo "# @describe $DESCRIPTION"
+        echo '# @option --string! <TEXT>  Required string parameter'
+        echo '# @option --string-optional <TEXT>  Optional string parameter'
+        echo '# @option --boolean  Boolean flag'
+        echo '# @option --integer! <NUM>  Required integer parameter'
+        echo '# @option --array! <TEXT>  Array parameter (repeatable)'
+        echo '# =============================================================================='
+        echo ''
+        echo 'from typing import List, Optional'
+        echo ''
+        echo ''
+        echo 'def run('
+        echo '    string: str,'
+        echo '    string_optional: Optional[str] = None,'
+        echo '    boolean: bool = False,'
+        echo '    integer: int = 0,'
+        echo '    array: Optional[List[str]] = None,'
+        echo ') -> dict:'
+        echo '    """'
+        echo "    $DESCRIPTION"
+        echo '    """'
+        echo '    return {'
+        echo '        "string": string,'
+        echo '        "string_optional": string_optional,'
+        echo '        "boolean": boolean,'
+        echo '        "integer": integer,'
+        echo '        "array": array or []'
+        echo '    }'
+    } > "$output"
+}
+
+# Initialize variables
+DESCRIPTION=""
+FORCE=false
+NAME=""
+PARAMS=()
+
+# Parse and run
+parse_args "$@"
+main

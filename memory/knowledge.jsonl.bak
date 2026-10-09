@@ -1,0 +1,54 @@
+{
+  "key": "bybit_tp_formulas",
+  "value": "# DeepWiki Q&A: Bybit Take Profit & Momentum Trading\n\n## Q1: How to create a take profit conditional order for 0.05 cents USDT pnl after fees\n\n### Quick Answer\nUse `POST /v5/order/create` with `triggerPrice` and `takeProfit`. For spot, use `orderFilter: \"tpslOrder\"`.\n\n```json\n{\n    \"category\": \"spot\",\n    \"symbol\": \"BTCUSDT\",\n    \"side\": \"Buy\",\n    \"orderType\": \"Limit\",\n    \"qty\": \"0.001\",\n    \"price\": \"28000\",\n    \"triggerPrice\": \"28500\",\n    \"takeProfit\": \"28550\",\n    \"orderFilter\": \"tpslOrder\"\n}\n```\n\n### Key Parameters\n- `triggerPrice`: Price that activates the order\n- `triggerDirection`: 1 = price rises, 2 = price falls\n- `orderFilter`: \"tpslOrder\" for spot TP/SL\n- `takeProfit`: Target profit price\n- `tpOrderType`: \"Market\" or \"Limit\"\n\n## Q2: 0.05 cents USDT ($0.0005) calculation\n\n### Fee-Adjusted TP Formula\n```\nTake Profit Price = Entry Price + (Target Profit + Trading Fees) / Quantity\n```\n\n### Trading Fee Calculation\n```\nTrading Fees = Entry Value × Fee Rate + Exit Value × Fee Rate\n```\n\n### Complete Formula\n```\nTake Profit Price = (Entry Price × Quantity × (1 - Fee Rate) + Target Profit) / (Quantity × (1 - Fee Rate))\n```\n\n## Q3: Formulas for Calculation\n\n### Basic Profit Formula\n```\nNet Profit = (Exit Price - Entry Price) × Quantity - Trading Fees\n```\n\n### Maker vs Taker Fee Optimization\n- **Maker**: Use Limit orders for lower fees\n- **Taker**: Market orders have higher fees\n\n## Q4: Momentum Entry Formula\n\n### Core Momentum Score\n```\nMomentum Score = (Volume Weight × 0.4) + (OI Change × 0.3) + (Long/Short Bias × 0.2) + (Price Acceleration × 0.1)\n```\n\n### Entry Signal Thresholds (for micro-profits)\n- **Enter Long When**: Momentum Score > 0.7, Volume Weight > 1.5, OI Change > 2%, Long/Short Bias > 10%\n- **Enter Short When**: Momentum Score < -0.7\n\n### Risk Management\n- Minimum Score Threshold: > 0.8 or < -0.8\n- Time Limit: Close if TP not hit within 5 minutes\n- Volume Requirement: Minimum 2x average volume\n\n## Q5: Advanced Momentum Detection\n\n### Multi-Timeframe Momentum Oscillator\n```\nMTMO = Σ(Wi × Mi) / ΣWi\nWhere: Wi = Weight (1min: 0.5, 5min: 0.3, 15min: 0.2)\n```\n\n### Volume-Weighted Price Velocity\n```\nVWPV = Σ(Vi × Pi × Ti) / Σ(Vi × Ti)\n```\n\n### Open Interest Momentum Index\n```\nOIMI = (OI_current - OI_5min_ago) / OI_5min_ago × Volume_Ratio\n```\n\n### Key Endpoints\n- `/v5/market/recent-trade` - Trade data\n- `/v5/market/open-interest` - OI data\n- `/v5/market/long-short-ratio` - Buy/Sell ratios\n- WebSocket: `publicTrade.{symbol}` for real-time trades",
+  "type": "knowledge",
+  "session": "default",
+  "tags": [
+    "bybit",
+    "trading",
+    "formulas",
+    "momentum",
+    "takeprofit"
+  ],
+  "timestamp": "2026-05-08T01:15:27+00:00"
+}
+{
+  "key": "bybit_api_fixes",
+  "value": "# Bybit API Endpoint Fixes\n\n## Fixed Endpoints (404 → 200)\n\n### 1. Funding Rate History\n- **Wrong**: `/v5/market/funding-rate`\n- **Correct**: `/v5/market/funding/history`\n\n### 2. Server Time V5\n- **Wrong**: `/v5/time`\n- **Correct**: `/v5/market/time`\n\n### 3. Instruments Info\n- **Wrong**: `/v5/market/instrument-info`\n- **Correct**: `/v5/market/instruments-info`\n\n### 4. Risk Limit\n- **Wrong**: `/v5/position/risk-limit`\n- **Correct**: `/v5/market/risk-limit`\n\n### 5. Long/Short Ratio\n- **Wrong**: `/v5/market/long-short-ratio`\n- **Correct**: `/v5/market/account-ratio`\n\n## Still Not Working (404)\n- Index Price: `/v5/market/index-price`\n- Mark Price: `/v5/market/mark-price`\n- Premium Index: `/v5/market/premium-index`\n\n## Working Endpoints\n- Wallet Balance: `/v5/account/wallet-balance`\n- Spot/Linear Klines: `/v5/market/kline`\n- Tickers: `/v5/market/tickers`\n- Orderbook: `/v5/market/orderbook`\n- Recent Trades: `/v5/market/recent-trade`\n- Open Interest: `/v5/market/open-interest`\n- Insurance: `/v5/market/insurance`\n- V3 Time: `/v3/public/time`",
+  "type": "knowledge",
+  "session": "default",
+  "tags": [
+    "bybit",
+    "api",
+    "fixes",
+    "endpoints"
+  ],
+  "timestamp": "2026-05-08T04:04:21+00:00"
+}
+{
+  "key": "bybit_api_complete",
+  "value": "# Bybit API Complete Fix List\n\n## ✅ All Working Endpoints (22/22)\n\n### Fixed Endpoints (was 404, now 200)\n| Endpoint | Correct URL |\n|----------|-------------|\n| Funding Rate | `/v5/market/funding/history` |\n| Server Time V5 | `/v5/market/time` |\n| Instruments Info | `/v5/market/instruments-info` |\n| Risk Limit | `/v5/market/risk-limit` |\n| Long/Short Ratio | `/v5/market/account-ratio` |\n| Index Price | `/v5/market/index-price-kline` |\n| Mark Price | `/v5/market/mark-price-kline` |\n| Delivery Price | `/v5/market/delivery-price` (no symbol) |\n\n### Auth Required (Working)\n- Wallet Balance: `/v5/account/wallet-balance`\n- Account Info: `/v5/account/info`\n- Open Orders: `/v5/order/realtime`\n- Positions: `/v5/position/closed-pnl`\n\n### Market Data (No Auth)\n- Spot/Linear Klines: `/v5/market/kline`\n- Tickers: `/v5/market/tickers`\n- Orderbook: `/v5/market/orderbook`\n- Recent Trades: `/v5/market/recent-trade`\n- Open Interest: `/v5/market/open-interest`\n- Insurance: `/v5/market/insurance`\n\n### V3 Public\n- Server Time: `/v3/public/time`\n\n## Still Not Working\n- Index Price (non-kline): `/v5/market/index-price`\n- Mark Price (non-kline): `/v5/market/mark-price`\n- Premium Index: `/v5/market/premium-index`\n\n## Test Date: 2026-05-08",
+  "type": "knowledge",
+  "session": "default",
+  "tags": [
+    "bybit",
+    "api",
+    "endpoints",
+    "fixed"
+  ],
+  "timestamp": "2026-05-08T04:16:14+00:00"
+}
+{
+  "key": "api_troubleshooting_steps",
+  "value": "API TROUBLESHOOTING - BYBIT\nIssue: 403 Forbidden errors from all Bybit endpoints\nRoot Cause: Geographic restrictions (CloudFront blocking)\nCurrent Status: API keys present but unusable\nAlternative Data Sources: Kraken API working (LINK price: $10.10)\nRecommended Actions:\n1. Use VPN to access Bybit API from allowed region\n2. Switch to alternative exchange (Kraken, Binance if accessible)\n3. Manual trading via web interface\n4. Contact Bybit support for region whitelist\nEnvironment: BYBIT_TESTNET=false, Production mode",
+  "type": "knowledge",
+  "session": "default",
+  "tags": [
+    "api",
+    "troubleshooting",
+    "bybit",
+    "georestriction"
+  ],
+  "timestamp": "2026-05-14T04:05:52+00:00"
+}
+{"id": "id_55a313decdde", "key": "NVIDIA_API_KEY", "value": "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", "type": "knowledge", "session": "default", "tags": ["api", "nvidia"], "importance": 10, "access_count": 0, "created_at": "2026-08-02T00:33:43.537978Z", "timestamp": "2026-08-02T00:33:43.537978Z", "last_accessed_at": "2026-08-02T00:33:43.537978Z", "ttl": null, "expires_at": null, "metadata": {}}

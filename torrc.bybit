@@ -1,0 +1,17 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Minimal hardened torrc for bybit_trader.py
+# Usage: tor -f /path/to/torrc.bybit
+# ──────────────────────────────────────────────────────────────────────────────
+
+# SOCKS listener — Python connects here
+SocksPort 9050 IsolateDestAddr
+
+# Control port — stem uses this for NEWNYM / bootstrap checks
+ControlPort 9051
+
+# Reduce fingerprinting: disable unused features
+ClientOnly 1
+AvoidDiskWrites 1
+
+# Log to stderr only — no disk traces
+Log notice stderr

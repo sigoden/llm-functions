@@ -1,0 +1,6 @@
+--- test_edit.txt
++++ test_edit.txt
+@@ -16,7 +16,7 @@
+ Appended line.
+- Original content.
++ Modified content.

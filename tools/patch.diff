@@ -1,0 +1,6 @@
+--- patch_test.txt
++++ patch_test.txt
+@@ -1,2 +1,3 @@
+ Original content line 1.
+ Original content line 2.
++Added line after patch.

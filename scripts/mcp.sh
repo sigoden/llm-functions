@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/bash
 set -e
 
 ROOT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
@@ -12,6 +12,7 @@ MCP_BRIDGE_PORT="${MCP_BRIDGE_PORT:-8808}"
 # @cmd Start/restart the mcp bridge server
 # @alias restart
 start() {
+    export PATH="/data/data/com.termux/files/usr/bin:$PATH"
     if [[ ! -f "$MCP_JSON_PATH" ]]; then
         _die "error: not found mcp.json"
     fi

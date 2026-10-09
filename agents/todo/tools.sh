@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 set -e
 
-# @env LLM_OUTPUT=/dev/stdout The output path
+# @env LLM_OUTPUT=/dev/fd/1 The output path
 
 ROOT_DIR="${LLM_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
@@ -20,7 +20,7 @@ add_todo() {
     jq --arg new_id $num --arg new_desc "$argc_desc" \
         '. += [{"id": $new_id | tonumber, "desc": $new_desc, "done": false}]' \
         > "$todos_file"
-    echo "Successfully added todo id=$num" >> "$LLM_OUTPUT"
+    echo "Successfully added todo id=$num" >>> "$LLM_OUTPUT"1
 }
 
 # @cmd Delete an todo item
@@ -32,9 +32,9 @@ del_todo() {
         echo "$data" | \
         jq '[.[] | select(.id != '$argc_id')]' \
         > "$todos_file"
-        echo "Successfully deleted todo id=$argc_id" >> "$LLM_OUTPUT"
+        echo "Successfully deleted todo id=$argc_id" >>> "$LLM_OUTPUT"1
     else
-        echo "The operation failed because the todo list is currently empty." >> "$LLM_OUTPUT"
+        echo "The operation failed because the todo list is currently empty." >>> "$LLM_OUTPUT"1
     fi
 }
 
@@ -47,9 +47,9 @@ done_todo() {
         echo "$data" | \
         jq '. |= map(if .id == '$argc_id' then .done = true else . end)' \
         > "$todos_file"
-        echo "Successfully mark todo id=$argc_id as done" >> "$LLM_OUTPUT"
+        echo "Successfully mark todo id=$argc_id as done" >>> "$LLM_OUTPUT"1
     else
-        echo "The operation failed because the todo list is currently empty." >> "$LLM_OUTPUT"
+        echo "The operation failed because the todo list is currently empty." >>> "$LLM_OUTPUT"1
     fi
 }
 
@@ -57,9 +57,9 @@ done_todo() {
 list_todos() {
     todos_file="$(_get_todos_file)"
     if [[ -f "$todos_file" ]]; then
-        cat "$todos_file" >> "$LLM_OUTPUT"
+        cat "$todos_file" >>> "$LLM_OUTPUT"1
     else
-        echo '[]' >> "$LLM_OUTPUT"
+        echo '[]' >>> "$LLM_OUTPUT"1
     fi
 }
 
@@ -69,9 +69,9 @@ clear_todos() {
     if [[ -f "$todos_file" ]]; then
         "$ROOT_DIR/utils/guard_operation.sh" "Clean the entire todo list?"
         rm -rf "$todos_file"
-        echo "Successfully cleaned the entire todo list" >> "$LLM_OUTPUT"
+        echo "Successfully cleaned the entire todo list" >>> "$LLM_OUTPUT"1
     else
-        echo "The operation failed because the todo list is currently empty." >> "$LLM_OUTPUT"
+        echo "The operation failed because the todo list is currently empty." >>> "$LLM_OUTPUT"1
     fi
 }
 

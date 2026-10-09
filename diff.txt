@@ -1,0 +1,826 @@
+--- tools/bybit_smart_order.py	2026-07-23 18:44:28.540000169 +0000
++++ tools/bybit_smart_order.py.bad	2026-07-23 18:44:28.344000169 +0000
+@@ -1,150 +1,160 @@
++
+ #!/usr/bin/env python3
+-# @describe Place a smart order with automatic position sizing and risk management.
+-# @option --symbol BTCUSDT Trading pair (e.g. BTCUSDT).
+-# @option --side Buy Buy or Sell.
+-# @option --order-type Market Market or Limit (default: Market).
+-# @option --entry-price <NUM> Entry price (required if order-type is Limit).
+-# @option --leverage <NUM> Set account leverage before placing order.
+-# @option --risk-pct <NUM> % of balance to risk (default: 1.0).
+-# @option --sl-dist <NUM> Stop loss distance in price.
+-# @option --sl-price <NUM> Absolute Stop Loss price.
+-# @option --tp-price <NUM> Absolute Take Profit price.
+-# @option --rr-ratio <NUM> Risk to Reward ratio for Take Profit calculation (default: 2.0).
+-# @option --tp-usdt <NUM> Target Take Profit in absolute USDT value (calculates exact exit price).
+-# @option --sl-usdt <NUM> Maximum Risk in absolute USDT value (overrides --risk-pct).
+-# @option --trailing-stop <NUM> Trailing Stop activation distance in price.
+-# @option --trailing-activation <NUM> Trailing Stop activation price (requires --trailing-stop).
+-# @option --reduce-only <BOOL> Submit order as reduce-only (close position only).
+-# @option --margin-mode <STR> Margin mode: isolated or cross (sets before leverage if provided).
+-# @option --position-idx <NUM> Position index: 0=One-Way, 1=Buy hedge, 2=Sell hedge (default: 0).
+-# @option --time-in-force <STR> Time in force: GTC, IOC, FOK, PostOnly (default: GTC).
+-# @option --sl-trigger-by <STR> SL trigger price type: Mark, Index, Last (default: Mark).
+-# @option --tp-trigger-by <STR> TP trigger price type: Mark, Index, Last (default: Mark).
+-# @option --order-link-id <STR> Custom order link ID (max 36 chars) for idempotency.
+-# @option --dry-run <BOOL> Calculate everything and return the order payload without submitting.
+-# @option --max-position-usdt <NUM> Safety cap: refuse if notional > this USDT value.
++# ==============================================================================
++# bybit_smart_micro_trader.py — Micro-Profit Estimator & Smart Order Engine (v5.1)
++#
++# @describe Integrated Micro-Profit Estimator & Smart Order Execution Engine.
++# @option --symbol BTCUSDT             Trading pair (e.g. BTCUSDT).
++# @option --side Buy                   Buy or Sell.
++# @option --order_type Market          Market or Limit (default: Market).
++# @option --qty 0.0                    Explicit quantity (base asset).
++# @option --target 5.0                 Target net profit in USDT.
++# @option --leverage 1                 Leverage multiplier.
++# @option --maker_fee 0.0002           Maker fee rate.
++# @option --taker_fee 0.00055          Taker fee rate.
++# @option --funding_rate 0.0001        Funding rate per interval.
++# @option --risk_reward 2.0            Risk/reward ratio.
++# @option --kelly_win 0.55             Estimated win rate for Kelly sizing.
++# @option --depth 40                   Order book depth to analyze.
++# @option --account_balance 0.0        Account balance for auto-sizing.
++# @option --risk_percent 1.0           Percentage of balance to risk.
++# @option --sl_dist <NUM>              Stop loss distance in price.
++# @option --sl_price <NUM>             Absolute Stop Loss price.
++# @option --tp_price <NUM>             Absolute Take Profit price.
++# @option --trailing_stop <NUM>        Trailing Stop activation distance in price.
++# @option --use_vwap_entry             Use VWAP entry price instead of best bid/ask.
++# @option --execute_order              Submit/execute order to exchange.
++# @option --dry_run                    Simulate order placement without sending to exchange.
++# @option --limit_entry                Use limit order for entry price.
++# @option --verbose                    Enable verbose debug logging.
++# ==============================================================================
+ 
+-"""Place a smart order with automatic position sizing and risk management."""
+ import os
+ import sys
+ import json
+ import logging
++import requests
+ from pathlib import Path
+-from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP, InvalidOperation
+-from typing import Any, Dict, Optional, Tuple
++from dataclasses import dataclass, field, asdict
++from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP, InvalidOperation, getcontext
++from typing import Any, Dict, List, Optional, Tuple
++
++# 24-digit precision for robust crypto arithmetic
++getcontext().prec = 24
++
++# Terminal Escape Colors with Colorama Fallback
++try:
++    from colorama import Fore, Style, init
++    init(autoreset=True)
++    C_GREEN = Fore.GREEN
++    C_RED = Fore.RED
++    C_CYAN = Fore.CYAN
++    C_YELLOW = Fore.YELLOW
++    C_RESET = Style.RESET_ALL
++except ImportError:
++    C_GREEN = "\033[92m"
++    C_RED = "\033[91m"
++    C_CYAN = "\033[96m"
++    C_YELLOW = "\033[93m"
++    C_RESET = "\033[0m"
+ 
+-# Add current directory to path to import modular bybit package
++# Add current directory to path for modular imports
+ sys.path.append(str(Path(__file__).parent))
+ 
+ try:
+     import bybit_core
+ except ImportError:
+-    # If standard import fails, try relative import for sub-agent environment
+-    from . import bybit_core
+-
+-# Module-level logger; falls back to a basic config if no handlers exist.
+-log = logging.getLogger("bybit.smart_order")
+-if not log.handlers and os.environ.get("BYBIT_SMART_ORDER_LOG"):
+-    logging.basicConfig(level=os.environ.get("BYBIT_SMART_ORDER_LOG", "INFO"),
+-                        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
++    bybit_core = None
+ 
++log = logging.getLogger("bybit.smart_micro_trader")
+ 
+ # ---------------------------------------------------------------------------
+-# Utility helpers
++# Utility & Arithmetic Helpers
+ # ---------------------------------------------------------------------------
+ 
+-def format_precision(value, step, rounding_mode=ROUND_HALF_UP) -> str:
+-    """Round a numeric value to a given step and return a non-scientific string.
+-
+-    Uses Decimal throughout to avoid binary float drift on small steps.
+-    """
+-    if step is None or step <= 0:
+-        return format(Decimal(str(value)), "f")
+-
++def _d(value: Any) -> Decimal:
++    """Sanitize and convert input to Decimal safely (Upgrade #13)."""
++    if value is None:
++        return Decimal(0)
++    s = str(value).replace('\x00', '').strip()
+     try:
+-        val_d = Decimal(str(value))
+-        step_d = Decimal(str(step))
++        return Decimal(s) if s else Decimal(0)
++    except InvalidOperation:
++        return Decimal(0)
++
++def _round_f(value: Decimal, places: int = 8) -> float:
++    """Round a Decimal value to specified places and return float."""
++    return float(value.quantize(Decimal(10)**-places, rounding=ROUND_HALF_UP))
++
++def format_precision(value: Any, step: Any, rounding_mode=ROUND_HALF_UP) -> str:
++    """Round a numeric value to a given step and return a non-scientific string (Upgrade #10)."""
++    if step is None or _d(step) <= 0:
++        return format(_d(value), "f")
++    try:
++        val_d = _d(value)
++        step_d = _d(step)
+         quantized = val_d.quantize(step_d, rounding=rounding_mode)
+-        return format(quantized, "f")
++        if step_d == step_d.to_integral_value():
++            return str(int(quantized))
++        return format(quantized.normalize() if quantized != 0 else quantized, "f")
+     except (InvalidOperation, ValueError):
+         return str(value)
+ 
++# ---------------------------------------------------------------------------
++# Core Dataclasses & Micro-Profit Solvers
++# ---------------------------------------------------------------------------
+ 
+-def calculate_exit_price_by_pnl(entry_price: float, qty: float, side: str, pnl_usdt: float) -> float:
+-    """Inverse of PnL: returns the exit price that produces `pnl_usdt` for a linear contract."""
+-    if qty <= 0:
+-        return entry_price
+-    if side.lower() == "buy":
+-        return entry_price + (pnl_usdt / qty)
+-    return entry_price - (pnl_usdt / qty)
+-
+-
+-def calculate_pnl_by_exit_price(entry_price: float, exit_price: float, qty: float, side: str) -> float:
+-    """Linear (USDT-margined) contract PnL in USDT for the given exit price."""
+-    if side.lower() == "buy":
+-        return qty * (exit_price - entry_price)
+-    return qty * (entry_price - exit_price)
+-
+-
+-def _atr_wilder(highs, lows, closes, period: int = 14) -> Optional[float]:
+-    """Wilder's smoothing ATR (more accurate than SMA on the same window)."""
+-    if len(highs) < period + 1:
+-        return None
+-    trs = []
+-    for i in range(1, len(highs)):
+-        tr = max(
+-            highs[i] - lows[i],
+-            abs(highs[i] - closes[i - 1]),
+-            abs(lows[i] - closes[i - 1]),
+-        )
+-        trs.append(tr)
+-    if len(trs) < period:
+-        return None
+-    # Seed with SMA of first `period` TRs, then Wilder's smoothing.
+-    atr = sum(trs[:period]) / period
+-    for tr in trs[period:]:
+-        atr = (atr * (period - 1) + tr) / period
+-    return atr
+-
+-
+-def _atr_sma(highs, lows, closes, period: int = 14) -> Optional[float]:
+-    """Plain SMA ATR (kept for backward compatibility / fallback)."""
+-    if len(highs) < period + 1:
+-        return None
+-    trs = [
+-        max(highs[i] - lows[i],
+-            abs(highs[i] - closes[i - 1]),
+-            abs(lows[i] - closes[i - 1]))
+-        for i in range(1, len(highs))
+-    ]
+-    return sum(trs[-period:]) / period
+-
++@dataclass
++class TradeMetrics:
++    symbol: str; side: str; requested_qty: float; recommended_qty: float
++    best_bid: float; best_ask: float; spread_usdt: float; spread_bps: float
++    entry_price: float; target_exit_price: float; stop_loss_price: float
++    liquidation_price: float; gross_profit_usdt: float; estimated_fees_usdt: float
++    funding_cost_usdt: float; net_profit_usdt: float; margin_required: float
++    risk_amount_usdt: float; kelly_fraction: float; half_kelly_fraction: float
++    book_imbalance_ratio: float; book_depth_bid_usdt: float; book_depth_ask_usdt: float
++    confidence_score: float; signal: str; leverage: int; fee_scenario: str
++    warnings: List[str] = field(default_factory=list)
++
++def _get_book_execution_price(levels: list, qty: Decimal) -> Decimal:
++    """Calculate volume-weighted average price (VWAP) for entry from order book levels (Upgrade #3)."""
++    accumulated_qty = Decimal(0)
++    accumulated_value = Decimal(0)
++    for level in levels:
++        if len(level) < 2:
++            continue
++        p = _d(level[0])
++        s = _d(level[1])
++        if accumulated_qty + s >= qty:
++            remaining = qty - accumulated_qty
++            accumulated_value += remaining * p
++            accumulated_qty = qty
++            break
++        else:
++            accumulated_value += s * p
++            accumulated_qty += s
++    if accumulated_qty > 0:
++        return accumulated_value / accumulated_qty
++    return Decimal(0)
+ 
+ # ---------------------------------------------------------------------------
+-# API helper wrappers (each returns parsed dict, never raises)
++# API Integration
+ # ---------------------------------------------------------------------------
+ 
+-def _safe_api(method: str, path: str, params: Optional[Dict] = None, signed: bool = False,
+-              default: Any = None) -> Dict:
+-    try:
+-        return bybit_core.api_request(method, path, params=params, signed=signed)
+-    except Exception as e:  # pragma: no cover - defensive
+-        log.exception("API call %s %s failed", method, path)
+-        return {"retCode": -1, "retMsg": f"Exception: {e}",
+-                "result": default if default is not None else {}}
+-
++def _safe_api(method: str, path: str, params: Optional[Dict] = None, signed: bool = False, default: Any = None) -> Dict:
++    """Safe wrapper for API calls with exception isolation (Upgrade #4)."""
++    if bybit_core and hasattr(bybit_core, 'api_request'):
++        try:
++            return bybit_core.api_request(method, path, params=params, signed=signed)
++        except Exception as e:
++            return {"retCode": -1, "retMsg": f"Exception: {e}", "result": default if default is not None else {}}
++    return {"retCode": -1, "retMsg": "bybit_core module unavailable", "result": default if default is not None else {}}
+ 
+ def get_instrument_info(symbol: str) -> Tuple[Dict, float, float, float, float, float]:
+-    """Fetch instrument info; returns (info_dict, qty_step, tick_size, min_qty, min_price, min_notional)."""
+-    qty_step = 0.001
+-    tick_size = 0.01
+-    min_qty = 0.0
+-    min_price = 0.0
+-    min_notional = 0.0
++    """Retrieve instrument rules (qty step, tick size, min lot, min notional) (Upgrade #9)."""
++    qty_step, tick_size, min_qty, min_price, min_notional = 0.001, 0.01, 0.0, 0.0, 0.0
+     info: Dict = {}
+-
+-    data = _safe_api("GET", "/v5/market/instruments-info",
+-                     params={"category": "linear", "symbol": symbol}, signed=False)
++    data = _safe_api("GET", "/v5/market/instruments-info", params={"category": "linear", "symbol": symbol}, signed=False)
+     if data.get("retCode") == 0:
+         lst = data.get("result", {}).get("list", [])
+         if lst:
+@@ -154,34 +164,24 @@
+             qty_step = float(lot.get("qtyStep", qty_step) or qty_step)
+             tick_size = float(price.get("tickSize", tick_size) or tick_size)
+             min_qty = float(lot.get("minOrderQty", 0) or 0)
+-            # Bybit publishes minPrice on some instruments
+             min_price = float(price.get("minPrice", 0) or 0)
+-            # Some payloads include minNotionalValue / minOrderAmt on the leverage filter
+             lev_filter = info.get("leverageFilter", {}) or {}
+-            for key in ("minNotionalValue", "minOrderAmt", "notionalValue"):
+-                if lev_filter.get(key):
+-                    try:
+-                        min_notional = float(lev_filter[key])
+-                        break
+-                    except (TypeError, ValueError):
+-                        pass
++            for source in (lot, lev_filter):
++                for key in ("minNotionalValue", "minOrderAmt", "notionalValue"):
++                    if source.get(key):
++                        try:
++                            min_notional = float(source[key])
++                            break
++                        except (TypeError, ValueError):
++                            pass
++                if min_notional > 0:
++                    break
+     return info, qty_step, tick_size, min_qty, min_price, min_notional
+ 
+-
+-def get_ticker(symbol: str) -> Optional[Dict]:
+-    data = _safe_api("GET", "/v5/market/tickers",
+-                     params={"category": "linear", "symbol": symbol}, signed=False)
+-    if data.get("retCode") != 0:
+-        return None
+-    lst = data.get("result", {}).get("list", [])
+-    return lst[0] if lst else None
+-
+-
+ def get_wallet_balance() -> Tuple[float, Optional[Dict]]:
+-    """Return (usdt_equity, raw_response). Tries UNIFIED then CONTRACT."""
++    """Retrieve account balance for sizing."""
+     for acct in ("UNIFIED", "CONTRACT"):
+-        data = _safe_api("GET", "/v5/account/wallet-balance",
+-                         params={"accountType": acct}, signed=True)
++        data = _safe_api("GET", "/v5/account/wallet-balance", params={"accountType": acct}, signed=True)
+         if data.get("retCode") == 0:
+             coins = data.get("result", {}).get("list", [{}])[0].get("coin", [])
+             usdt = next((c for c in coins if c.get("coin") == "USDT"), {})
+@@ -189,196 +189,247 @@
+             return equity, data
+     return 0.0, None
+ 
+-
+-def get_klines(symbol: str, interval: str = "60", limit: int = 100):
+-    data = _safe_api("GET", "/v5/market/klines",
+-                     params={"category": "linear", "symbol": symbol,
+-                             "interval": interval, "limit": str(limit)},
+-                     signed=False)
+-    if data.get("retCode") != 0:
+-        return []
+-    klines = data.get("result", {}).get("list", [])
+-    klines.reverse()  # chronological order
+-    return klines
+-
+-
+-def get_position(symbol: str) -> Optional[Dict]:
+-    """Returns the linear position record (or None) for the symbol."""
+-    data = _safe_api("GET", "/v5/position/list",
+-                     params={"category": "linear", "symbol": symbol}, signed=True)
+-    if data.get("retCode") != 0:
+-        return None
+-    for p in data.get("result", {}).get("list", []):
+-        if p.get("symbol") == symbol:
+-            return p
+-    return None
+-
+-
+ # ---------------------------------------------------------------------------
+-# Main entry point
+-# ---------------------------------------------------------------------------
+-
+-def run(
+-    symbol: str = "BTCUSDT",
+-    side: str = "Buy",
+-    order_type: str = "Market",
+-    entry_price: Optional[float] = None,
+-    leverage: Optional[int] = None,
+-    risk_pct: float = 1.0,
+-    sl_dist: Optional[float] = None,
+-    sl_price: Optional[float] = None,
+-    tp_price: Optional[float] = None,
+-    rr_ratio: float = 2.0,
+-    tp_usdt: Optional[float] = None,
+-    sl_usdt: Optional[float] = None,
+-    trailing_stop: Optional[float] = None,
+-    # --- New optional flags (all default to legacy behaviour) ---
+-    trailing_activation: Optional[float] = None,
+-    reduce_only: bool = False,
+-    margin_mode: Optional[str] = None,        # "isolated" or "cross"
+-    position_idx: int = 0,                    # 0=one-way, 1=buy hedge, 2=sell hedge
+-    time_in_force: str = "GTC",
+-    sl_trigger_by: str = "Mark",
+-    tp_trigger_by: str = "Mark",
+-    order_link_id: Optional[str] = None,
+-    dry_run: bool = False,
+-    max_position_usdt: Optional[float] = None,
+-):
+-    """Place a smart order with automatic position sizing and risk management."""
++# Micro Profit Analytics & Smart Execution Engine
++# ---------------------------------------------------------------------------
+ 
+-    # ---------------------------------------------------------------------
+-    # 0. Input validation
+-    # ---------------------------------------------------------------------
+-    symbol = (symbol or "BTCUSDT").upper().strip()
+-    side_norm = side.capitalize() if side.lower() in ("buy", "sell") else None
+-    if side_norm not in ("Buy", "Sell"):
+-        return {"success": False, "error": f"Invalid --side '{side}'. Use 'Buy' or 'Sell'."}
+-    side = side_norm
+-
+-    order_type_norm = order_type.capitalize() if order_type.lower() in ("market", "limit") else None
+-    if order_type_norm not in ("Market", "Limit"):
+-        return {"success": False, "error": f"Invalid --order-type '{order_type}'."}
+-    order_type = order_type_norm
+-
+-    if risk_pct is not None and not (0 < risk_pct <= 100):
+-        return {"success": False, "error": f"--risk-pct must be in (0, 100], got {risk_pct}."}
+-    if rr_ratio is not None and rr_ratio <= 0:
+-        return {"success": False, "error": f"--rr-ratio must be > 0, got {rr_ratio}."}
+-    if sl_usdt is not None and sl_usdt <= 0:
+-        return {"success": False, "error": f"--sl-usdt must be > 0, got {sl_usdt}."}
+-    if tp_usdt is not None and tp_usdt <= 0:
+-        return {"success": False, "error": f"--tp-usdt must be > 0, got {tp_usdt}."}
+-    if order_link_id is not None and len(order_link_id) > 36:
+-        return {"success": False, "error": "--order-link-id must be <= 36 characters."}
+-    if trailing_stop is not None and trailing_stop <= 0:
+-        return {"success": False, "error": "--trailing-stop must be > 0."}
+-    if trailing_activation is not None and trailing_stop is None:
+-        return {"success": False, "error": "--trailing-activation requires --trailing-stop."}
+-    if margin_mode is not None and margin_mode.lower() not in ("isolated", "cross"):
+-        return {"success": False, "error": "--margin-mode must be 'isolated' or 'cross'."}
+-    if position_idx not in (0, 1, 2):
+-        return {"success": False, "error": "--position-idx must be 0, 1 or 2."}
+-    if time_in_force not in ("GTC", "IOC", "FOK", "PostOnly"):
+-        return {"success": False, "error": f"--time-in-force invalid: {time_in_force}"}
+-    if sl_trigger_by not in ("Mark", "Index", "Last"):
+-        return {"success": False, "error": f"--sl-trigger-by invalid: {sl_trigger_by}"}
+-    if tp_trigger_by not in ("Mark", "Index", "Last"):
+-        return {"success": False, "error": f"--tp-trigger-by invalid: {tp_trigger_by}"}
++def calculate_micro_profit(**kwargs) -> Dict[str, Any]:
++    # 1. Inputs & Sanitization (Upgrade #1)
++    s = str(kwargs.get('symbol', 'BTCUSDT')).upper().strip()
++    side = str(kwargs.get('side', 'Buy')).lower().strip()
++    q = _d(kwargs.get('qty', 0))
++    lev = max(Decimal(1), _d(kwargs.get('leverage', 1)))
++    target = _d(kwargs.get('target', 5.0))
++    mk = _d(kwargs.get('maker_fee', 0.0002))
++    tk = _d(kwargs.get('taker_fee', 0.00055))
++    fr = _d(kwargs.get('funding_rate', 0.0001))
++    
++    # 2. Market Data Parsing & Depth Analytics (Upgrade #14)
++    bids_raw = str(kwargs.get('bids_json', '[]')).strip()
++    asks_raw = str(kwargs.get('asks_json', '[]')).strip()
++    try:
++        bids = json.loads(bids_raw) if bids_raw else []
++    except json.JSONDecodeError:
++        bids = []
++    try:
++        asks = json.loads(asks_raw) if asks_raw else []
++    except json.JSONDecodeError:
++        asks = []
++    
++    if (not bids or not asks) and s:
++        try:
++            depth = int(kwargs.get('depth', 40))
++            url = f"https://api.bybit.com/v5/market/orderbook?category=linear&symbol={s}&limit={depth}"
++            r = requests.get(url, timeout=5)
++            if r.status_code == 200:
++                data = r.json()
++                if data.get("retCode") == 0:
++                    result = data.get("result", {})
++                    bids = result.get("b", [])
++                    asks = result.get("a", [])
++        except Exception:
++            pass
++
++    bid_depth_val = sum(_d(p[0]) * _d(p[1]) for p in bids[:20] if len(p) >= 2)
++    ask_depth_val = sum(_d(p[0]) * _d(p[1]) for p in asks[:20] if len(p) >= 2)
++    total_depth = bid_depth_val + ask_depth_val
++    imbalance = bid_depth_val / total_depth if total_depth > 0 else Decimal("0.5")  # Upgrade #6
++
++    best_bid = _d(bids[0][0] if bids else 0)
++    best_ask = _d(asks[0][0] if asks else 0)
++    
++    if kwargs.get('use_vwap_entry') and q > 0:
++        entry = _get_book_execution_price(asks if side == 'buy' else bids, q) or (best_ask if side == 'buy' else best_bid)
++    else:
++        entry = best_ask if side == 'buy' else best_bid
+ 
+-    # ---------------------------------------------------------------------
+-    # 1. Instrument precision
+-    # ---------------------------------------------------------------------
+-    inst_info, qty_step, tick_size, min_qty, min_price, min_notional = get_instrument_info(symbol)
+-    log.info("Instrument %s: qtyStep=%s tickSize=%s minQty=%s minNotional=%s",
+-             symbol, qty_step, tick_size, min_qty, min_notional)
++    if entry <= 0:  # Upgrade #7
++        entry = _d(kwargs.get('entry_price', 1.0))
+ 
+-    # ---------------------------------------------------------------------
+-    # 2. Margin mode (optional, must be set BEFORE leverage in hedge mode)
+-    # ---------------------------------------------------------------------
+-    if margin_mode is not None:
+-        mm_data = _safe_api(
+-            "POST", "/v5/position/set-margin-mode",
+-            params={"category": "linear", "symbol": symbol,
+-                    "tradeMode": 0 if margin_mode.lower() == "isolated" else 1},
+-            signed=True,
+-        )
+-        if mm_data.get("retCode") not in (0, 110043):
+-            return {"success": False,
+-                    "error": f"Failed to set margin mode: {mm_data.get('retMsg')}",
+-                    "retCode": mm_data.get("retCode")}
+-
+-    # ---------------------------------------------------------------------
+-    # 3. Leverage
+-    # ---------------------------------------------------------------------
+-    if leverage is not None:
+-        lev_params: Dict[str, Any] = {
++    margin_per_unit = (entry / lev) + (entry * (mk + tk + fr)) if lev > 0 else entry
++    kelly_win = _d(kwargs.get('kelly_win', 0.55))
++    rr_ratio = _d(kwargs.get('risk_reward', 2.0))
++    kelly = kelly_win - (1 - kelly_win) / rr_ratio if rr_ratio > 0 else Decimal(0)
++    kelly_bounded = max(Decimal(0), min(Decimal(1), kelly))  # Upgrade #8
++    
++    acc_bal = _d(kwargs.get('account_balance', 0))
++    rec_qty = q
++    if acc_bal > 0 and margin_per_unit > 0:
++        rec_qty = (acc_bal * (kelly_bounded / 2)) / margin_per_unit
++    
++    trading_qty = q if q > 0 else rec_qty
++    
++    # 3. Analytical Exit Solver (Closed-form)
++    if trading_qty > 0:
++        if side == "buy":
++            exit_p = ((target/trading_qty) + entry * (1 + tk + fr)) / (1 - mk)
++        else:
++            exit_p = (entry * (1 - tk - fr) - (target/trading_qty)) / (1 + mk)
++    else:
++        exit_p = entry
++    
++    # 4. Risk Calculations
++    risk_amt = target / rr_ratio if rr_ratio > 0 else target / Decimal(2)
++    if trading_qty > 0:
++        sl_p = entry - (risk_amt / trading_qty) if side == 'buy' else entry + (risk_amt / trading_qty)
++    else:
++        sl_p = entry - (entry * Decimal("0.01")) if side == 'buy' else entry + (entry * Decimal("0.01"))
++        
++    mmr = Decimal("0.005")  # 0.5% Maintenance Margin Rate
++    if side == 'buy':
++        liq = entry * (Decimal(1) - (Decimal(1) / lev) + mmr)
++    else:
++        liq = entry * (Decimal(1) + (Decimal(1) / lev) - mmr)
++    liq = max(Decimal(0), liq)  # Upgrade #5
++    
++    warnings = []
++    if not bids or not asks:
++        warnings.append("Order book is empty; metrics might be inaccurate or missing")
++        
++    spread_bps_val = ((best_ask - best_bid) / best_bid) * 10000 if best_bid > 0 else Decimal(0)
++    if spread_bps_val > Decimal(15):
++        warnings.append("High bid-ask spread; execution slippage risk increased")
++    if side == "buy" and imbalance < Decimal("0.45"):
++        warnings.append("Bearish book imbalance; downward price pressure expected")
++    elif side == "sell" and imbalance > Decimal("0.55"):
++        warnings.append("Bullish book imbalance; upward price pressure expected")
++    if trading_qty > 0 and target > (entry * trading_qty * Decimal("0.05")):
++        warnings.append("Unrealistically high target profit relative to order value")
++        
++    conf = Decimal(75)
++    if side == 'buy':
++        conf += (imbalance - Decimal("0.5")) * Decimal(40)
++    else:
++        conf += (Decimal("0.5") - imbalance) * Decimal(40)
++    if spread_bps_val > Decimal(10):
++        conf -= (spread_bps_val - Decimal(10)) * Decimal(2)
++    conf = max(Decimal(10), min(Decimal(99), conf))
++
++    gross_profit = (_d(exit_p) - entry) * trading_qty if side == "buy" else (entry - _d(exit_p)) * trading_qty
++
++    order_result = None
++    if kwargs.get('execute_order'):  # Upgrade #9 & #11
++        inst_info, qty_step, tick_size, min_qty, min_price, min_notional = get_instrument_info(s)
++        
++        exec_qty = max(_d(min_qty), trading_qty) if min_qty > 0 else trading_qty
++        qty_str = format_precision(exec_qty, qty_step, ROUND_DOWN)
++        sl_str = format_precision(sl_p, tick_size, ROUND_HALF_UP)
++        tp_str = format_precision(exit_p, tick_size, ROUND_HALF_UP)
++        
++        params: Dict[str, Any] = {
+             "category": "linear",
+-            "symbol": symbol,
+-            "buyLeverage": str(leverage),
+-            "sellLeverage": str(leverage),
++            "symbol": s,
++            "side": side.capitalize(),
++            "orderType": "Limit" if kwargs.get("limit_entry") else "Market",
++            "qty": qty_str,
++            "stopLoss": sl_str,
++            "takeProfit": tp_str,
++            "timeInForce": "GTC"
+         }
+-        if position_idx in (1, 2):
+-            lev_params["positionIdx"] = position_idx
+-        lev_data = _safe_api("POST", "/v5/position/set-leverage",
+-                             params=lev_params, signed=True)
+-        if lev_data.get("retCode") not in (0, 110043):
+-            return {"success": False,
+-                    "error": f"Failed to set leverage: {lev_data.get('retMsg')}",
+-                    "retCode": lev_data.get("retCode")}
+-
+-    # ---------------------------------------------------------------------
+-    # 4. Current market price
+-    # ---------------------------------------------------------------------
+-    ticker = get_ticker(symbol)
+-    if not ticker:
+-        return {"success": False, "error": f"Failed to get ticker for {symbol}."}
+-    try:
+-        current_price = float(ticker.get("lastPrice", 0))
+-    except (TypeError, ValueError):
+-        return {"success": False, "error": "Ticker has no valid lastPrice."}
+-    if current_price <= 0:
+-        return {"success": False, "error": "Invalid lastPrice from ticker."}
++        if kwargs.get("limit_entry"):
++            params["price"] = format_precision(entry, tick_size, ROUND_HALF_UP)
++            
++        if kwargs.get("dry_run"):
++            order_result = {"success": True, "dry_run": True, "order_params": params}
++        else:
++            api_res = _safe_api("POST", "/v5/order/create", params=params, signed=True)
++            if api_res.get("retCode") == 0:
++                order_result = {
++                    "success": True, 
++                    "order_id": api_res.get("result", {}).get("orderId"), 
++                    "data": api_res.get("result")
++                }
++            else:
++                order_result = {
++                    "success": False, 
++                    "error": api_res.get("retMsg"), 
++                    "retCode": api_res.get("retCode"),
++                    "order_params": params
++                }
++
++    res_dict = asdict(TradeMetrics(
++        symbol=s, side=side, requested_qty=float(q),
++        recommended_qty=_round_f(max(Decimal("0.0001"), rec_qty), 4),
++        best_bid=float(best_bid), best_ask=float(best_ask),
++        spread_usdt=float(best_ask - best_bid), 
++        spread_bps=float(spread_bps_val),
++        entry_price=float(entry), target_exit_price=float(exit_p), stop_loss_price=float(sl_p),
++        liquidation_price=float(liq), gross_profit_usdt=float(gross_profit),
++        estimated_fees_usdt=float((entry*trading_qty*tk) + (_d(exit_p)*trading_qty*mk)), 
++        funding_cost_usdt=float(entry*trading_qty*fr), net_profit_usdt=float(target), 
++        margin_required=float(entry*trading_qty/lev) if lev > 0 else float(entry*trading_qty),
++        risk_amount_usdt=float(risk_amt),
++        kelly_fraction=float(max(0, kelly_bounded)), half_kelly_fraction=float(max(0, kelly_bounded/2)),
++        book_imbalance_ratio=float(imbalance), 
++        book_depth_bid_usdt=float(bid_depth_val), 
++        book_depth_ask_usdt=float(ask_depth_val),
++        confidence_score=float(conf), signal="BUY" if side == "buy" else "SELL",
++        leverage=int(lev), fee_scenario="taker_entry_maker_exit",
++        warnings=warnings
++    ))
++    if order_result:
++        res_dict["order_result"] = order_result
++    return res_dict
+ 
+-    # ---------------------------------------------------------------------
+-    # 5. Determine calc_price (Market vs Limit)
+-    # ---------------------------------------------------------------------
+-    is_limit = order_type == "Limit"
+-    if is_limit and entry_price is not None:
+-        try:
+-            calc_price = float(entry_price)
+-        except (TypeError, ValueError):
+-            return {"success": False, "error": f"Invalid --entry-price {entry_price}"}
+-        if calc_price <= 0:
+-            return {"success": False, "error": "--entry-price must be > 0"}
+-    else:
+-        calc_price = current_price
+-        is_limit = False
++def run(**kwargs):
++    return calculate_micro_profit(**kwargs)
+ 
+-    # ---------------------------------------------------------------------
+-    # 6. Balance & risk budget
+-    # ---------------------------------------------------------------------
+-    balance, _bal_raw = get_wallet_balance()
+-    if balance <= 0 and sl_usdt is None:
+-        return {"success": False,
+-                "error": "Insufficient USDT balance to calculate risk."}
++# ---------------------------------------------------------------------------
++# CLI & Sub-Agent Dispatcher
++# ---------------------------------------------------------------------------
+ 
+-    risk_amount = float(sl_usdt) if sl_usdt is not None else balance * (risk_pct / 100.0)
+-    if risk_amount <= 0:
+-        return {"success": False, "error": "Computed risk amount is <= 0."}
++if __name__ == "__main__":
++    # Support sub-agent argc execution (Upgrade #2)
++    if any(k.startswith("argc_") for k in os.environ):
++        kwargs = {}
++        for k, v in os.environ.items():
++            if not k.startswith("argc_"):
++                continue
++            key = k[5:].lower().replace("-", "_")
++            val = v.lower()
++            if val == "true":
++                kwargs[key] = True
++            elif val == "false":
++                kwargs[key] = False
++            else:
++                try:
++                    kwargs[key] = float(v) if "." in v else int(v)
++                except ValueError:
++                    kwargs[key] = v
++        result = run(**kwargs)
++        print(json.dumps(result, indent=2))
++        sys.exit(0)
+ 
+-    # ---------------------------------------------------------------------
+-    # 7. ATR for default SL distance (Wilder's smoothing, SMA fallback)
+-    # ---------------------------------------------------------------------
+-    klines = get_klines(symbol, interval="60", limit=100)
+-    atr: Optional[float] = None
+-    if klines:
+-        try:
+-            closes = [float(k[4]) for k in klines]
+-            highs = [float(k[2]) for k in klines]
+-            lows = [float(k[3]) for k in klines]
+-            atr = _atr_wilder(highs, lows, closes, 14) or _atr_sma(highs, lows, closes, 14)
+-        except (ValueError, IndexError):
+-            atr = None
++    import argparse
++    parser = argparse.ArgumentParser(description="Bybit Smart Micro Trader — Wizard Edition (v5.1)")
++    parser.add_argument("--symbol", required=True)
++    parser.add_argument("--side", required=True)
++    parser.add_argument("--qty", type=float, default=0.0)
++    parser.add_argument("--target", type=float, default=5.0)
++    parser.add_argument("--leverage", type=int, default=1)
++    parser.add_argument("--maker_fee", "--maker-fee", type=float, default=0.0002)
++    parser.add_argument("--taker_fee", "--taker-fee", type=float, default=0.00055)
++    parser.add_argument("--funding_rate", "--funding-rate", type=float, default=0.0001)
++    parser.add_argument("--risk_reward", "--risk-reward", type=float, default=2.0)
++    parser.add_argument("--kelly_win", "--kelly-win", type=float, default=0.55)
++    parser.add_argument("--depth", type=int, default=40)
++    parser.add_argument("--account_balance", "--account-balance", type=float, default=0.0)
++    parser.add_argument("--use_vwap_entry", "--use-vwap-entry", action="store_true")
++    parser.add_argument("--execute_order", "--execute-order", action="store_true")
++    parser.add_argument("--dry_run", "--dry-run", action="store_true")
++    parser.add_argument("--limit_entry", "--limit-entry", action="store_true")
++    parser.add_argument("--verbose", action="store_true")
++    
++    args = parser.parse_args()
++    res = run(**vars(args))
++    
++    if args.verbose:  # Upgrade #12
++        print(f"{C_CYAN}=== Wizard Micro-Profit Analytics ({res['symbol']}) ==={C_RESET}")
++        print(f"Signal: {C_GREEN if res['signal']=='BUY' else C_RED}{res['signal']}{C_RESET} | Confidence: {res['confidence_score']:.1f}%")
++        print(f"Entry: {res['entry_price']} | TP Target: {C_GREEN}{res['target_exit_price']:.4f}{C_RESET} | SL: {C_RED}{res['stop_loss_price']:.4f}{C_RESET}")
++        print(f"Net Target: ${res['net_profit_usdt']} | Margin Req: ${res['margin_required']:.2f}")
++    
++    atr = None
+     if not atr or atr <= 0:
+         atr = calc_price * 0.01  # safe default 1% of price
+ 
+@@ -406,24 +457,36 @@
+                           "Provide --sl-dist, --sl-price or widen ATR.")}
+ 
+     # ---------------------------------------------------------------------
+-    # 9. Position sizing
++    # 9. Position sizing (fee-adjusted for net loss)
+     # ---------------------------------------------------------------------
+-    price_diff = abs(calc_price - stop_loss)
+-    if price_diff > 0:
+-        qty = risk_amount / price_diff
++    e_fee = 0.0002 if time_in_force == "PostOnly" or order_type == "Limit" else 0.00055
++    x_fee = 0.0002  # exit is typically a limit order
++    
++    if side == "Buy":
++        denom = calc_price * (1.0 + e_fee) - stop_loss * (1.0 - x_fee)
++    else:
++        denom = stop_loss * (1.0 + x_fee) - calc_price * (1.0 - e_fee)
++        
++    if denom > 0:
++        qty_calc = risk_amount / denom
+     else:
+-        # Shouldn't happen after the sanity check above, but keep a fallback.
+-        qty = risk_amount / calc_price
++        qty_calc = risk_amount / abs(calc_price - stop_loss)
+ 
+-    qty_str = format_precision(qty, qty_step, ROUND_DOWN)
+-    actual_qty = float(qty_str)
++    if qty is not None and float(qty) > 0:
++        actual_qty = float(qty)
++        qty_str = format_precision(actual_qty, qty_step, ROUND_DOWN)
++    else:
++        qty_str = format_precision(qty_calc, qty_step, ROUND_DOWN)
++        actual_qty = float(qty_str)
+ 
+-    # Min qty check
++    # Min qty check: if calculated qty is below min_qty, clamp to min_qty and tighten stop_loss to preserve risk limit
+     if min_qty and actual_qty < min_qty:
+-        return {"success": False,
+-                "error": (f"Calculated qty {actual_qty} < exchange minOrderQty {min_qty}. "
+-                          "Increase --risk-pct, --sl-usdt or use a wider stop.")}
+-
++        actual_qty = min_qty
++        qty_str = format_precision(actual_qty, qty_step, ROUND_DOWN)
++        # Recompute stop loss only if sl_price was NOT explicitly provided
++        if sl_price is None:
++            stop_loss = calculate_exit_price_for_net_loss(calc_price, actual_qty, side, risk_amount, e_fee, x_fee)
++        
+     if actual_qty <= 0:
+         return {"success": False,
+                 "error": f"Calculated quantity is too small (step={qty_step}, risk={risk_amount})."}
+@@ -461,8 +524,9 @@
+         if side == "Sell" and take_profit >= calc_price:
+             return {"success": False, "error": "TP must be < entry for Sell orders."}
+     elif tp_usdt is not None:
+-        take_profit = calculate_exit_price_by_pnl(calc_price, actual_qty, side, float(tp_usdt))
++        take_profit = calculate_exit_price_by_pnl(calc_price, actual_qty, side, float(tp_usdt), e_fee, x_fee)
+     else:
++        price_diff = abs(calc_price - stop_loss)
+         tp_distance = price_diff * rr_ratio
+         take_profit = calc_price + tp_distance if side == "Buy" else calc_price - tp_distance
+ 
+@@ -602,8 +666,8 @@
+     parser.add_argument("--margin-mode", default=None, choices=["isolated", "cross"])
+     parser.add_argument("--position-idx", type=int, default=0, choices=[0, 1, 2])
+     parser.add_argument("--time-in-force", default="GTC", choices=["GTC", "IOC", "FOK", "PostOnly"])
+-    parser.add_argument("--sl-trigger-by", default="Mark", choices=["Mark", "Index", "Last"])
+-    parser.add_argument("--tp-trigger-by", default="Mark", choices=["Mark", "Index", "Last"])
++    parser.add_argument("--sl-trigger-by", default="Mark")
++    parser.add_argument("--tp-trigger-by", default="Mark")
+     parser.add_argument("--order-link-id", default=None)
+     parser.add_argument("--dry-run", action="store_true")
+     parser.add_argument("--max-position-usdt", type=float, default=None)

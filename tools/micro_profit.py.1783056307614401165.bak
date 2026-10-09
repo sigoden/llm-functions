@@ -1,0 +1,411 @@
+#!/usr/bin/env python3
+"""micro_profit.py
+
+A tiny utility for estimating micro‑profit opportunities on a given order‑book.
+
+Features
+--------
+- Parses bid/ask JSON strings natively matching Bybit V5 structure [["price", "qty"]].
+- Validates input arguments (symbol, side, quantity).
+- Calculates entry price, spread, risk amount and an exit price that respects leverage.
+- Optional verbose logging via ``--verbose``.
+- Exposes a clean JSON output for downstream tools.
+- Full type‑hints and doc‑strings for maintainability.
+"""
+
+import json
+import logging
+import sys
+import argparse
+from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple
+
+# ---------------------------------------------------------------------------
+# Default configuration aligned with Bybit V5 Exchange Standards
+# ---------------------------------------------------------------------------
+DEFAULT_TARGET = 5.0
+DEFAULT_LEVERAGE = 1
+DEFAULT_FEE_RATE = 0.00020      # Bybit Base Futures Maker Fee (0.020%)
+DEFAULT_TAKER_FEE = 0.00055     # Bybit Base Futures Taker Fee (0.055%)
+DEFAULT_KELLY_WIN_RATE = 0.55
+DEFAULT_RISK_REWARD = 2.0
+DEFAULT_DEPTH = 40
+
+# ---------------------------------------------------------------------------
+# Logging configuration – switched on with ``--verbose``
+# ---------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(
+        level=logging.WARNING,  # Warning by default to ensure clean stdout JSON
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+    )
+
+# ---------------------------------------------------------------------------
+# Data structures
+# ---------------------------------------------------------------------------
+
+@dataclass
+class OrderBookLevel:
+    """A single price level in the order book."""
+    price: float
+    qty: float
+
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+
+def parse_order_book(bids_str: str, asks_str: str) -> Dict[str, List[OrderBookLevel]]:
+    """Parse JSON encoded bids/asks into ``OrderBookLevel`` objects.
+    
+    Robustly handles string-based price matrices, raw lists, nested 
+    responses, or Bybit V5 API result envelopes.
+    """
+    bids_raw: List[Any] = []
+    asks_raw: List[Any] = []
+
+    # Attempt to parse bids
+    if bids_str:
+        try:
+            parsed_bids = json.loads(bids_str)
+            if isinstance(parsed_bids, dict):
+                # Handle standard Bybit V5 wraps
+                if "result" in parsed_bids and isinstance(parsed_bids["result"], dict):
+                    res = parsed_bids["result"]
+                    bids_raw = res.get("b", res.get("bids", []))
+                else:
+                    bids_raw = parsed_bids.get("b", parsed_bids.get("bids", []))
+            elif isinstance(parsed_bids, list):
+                bids_raw = parsed_bids
+        except json.JSONDecodeError as exc:
+            logger.error("Failed to parse bids JSON: %s", exc)
+            raise
+
+    # Attempt to parse asks
+    if asks_str:
+        try:
+            parsed_asks = json.loads(asks_str)
+            if isinstance(parsed_asks, dict):
+                # Handle standard Bybit V5 wraps
+                if "result" in parsed_asks and isinstance(parsed_asks["result"], dict):
+                    res = parsed_asks["result"]
+                    asks_raw = res.get("a", res.get("asks", []))
+                else:
+                    asks_raw = parsed_asks.get("a", parsed_asks.get("asks", []))
+            elif isinstance(parsed_asks, list):
+                asks_raw = parsed_asks
+        except json.JSONDecodeError as exc:
+            logger.error("Failed to parse asks JSON: %s", exc)
+            raise
+
+    # Fallback cross-assignments if raw API output is completely passed into one variable
+    if bids_str and not asks_raw:
+        try:
+            parsed = json.loads(bids_str)
+            if isinstance(parsed, dict):
+                res = parsed.get("result", parsed) if isinstance(parsed.get("result"), dict) else parsed
+                if isinstance(res, dict):
+                    asks_raw = res.get("a", res.get("asks", []))
+        except Exception:
+            pass
+
+    if asks_str and not bids_raw:
+        try:
+            parsed = json.loads(asks_str)
+            if isinstance(parsed, dict):
+                res = parsed.get("result", parsed) if isinstance(parsed.get("result"), dict) else parsed
+                if isinstance(res, dict):
+                    bids_raw = res.get("b", res.get("bids", []))
+        except Exception:
+            pass
+
+    def to_levels(raw: List[Any]) -> List[OrderBookLevel]:
+        levels: List[OrderBookLevel] = []
+        if not isinstance(raw, list):
+            return levels
+        for row in raw:
+            if not isinstance(row, (list, tuple)) or len(row) < 2:
+                if isinstance(row, dict) and "price" in row and "qty" in row:
+                    try:
+                        price, qty = float(row["price"]), float(row["qty"])
+                    except (ValueError, TypeError):
+                        continue
+                else:
+                    continue
+            else:
+                try:
+                    price, qty = float(row[0]), float(row[1])
+                except (ValueError, TypeError):
+                    continue
+            if price <= 0 or qty <= 0:
+                continue
+            levels.append(OrderBookLevel(price, qty))
+        return levels
+
+    return {"bids": to_levels(bids_raw), "asks": to_levels(asks_raw)}
+
+def normalize_order_book(
+    bids: List[OrderBookLevel],
+    asks: List[OrderBookLevel],
+) -> Tuple[List[OrderBookLevel], List[OrderBookLevel]]:
+    return sorted(bids, key=lambda x: x.price, reverse=True), sorted(asks, key=lambda x: x.price)
+
+def validate_inputs(symbol: str, side: str, qty: int) -> None:
+    if not symbol:
+        raise ValueError("Symbol must be a non‑empty string")
+    if side.lower() not in {"buy", "sell"}:
+        raise ValueError("Side must be either 'buy' or 'sell'")
+    if qty <= 0:
+        raise ValueError("Quantity must be a positive integer")
+
+def validate_numeric_params(
+    target: float,
+    leverage: int,
+    maker_fee: float,
+    taker_fee: float,
+    funding_rate: float,
+    slippage: float,
+    depth: int,
+) -> None:
+    if target < 0:
+        raise ValueError("Target profit must be non‑negative")
+    if leverage < 1:
+        raise ValueError("Leverage must be >= 1")
+    if maker_fee < 0 or taker_fee < 0:
+        raise ValueError("Fee rates must be non‑negative")
+    if slippage < 0:
+        raise ValueError("Slippage must be non‑negative")
+    if depth < 1:
+        raise ValueError("Depth must be >= 1")
+
+def normalize_side(side: str) -> str:
+    return side.lower()
+
+def entry_price_for_side(side: str, best_bid: float, best_ask: float, slippage: float) -> float:
+    if normalize_side(side) == "buy":
+        return best_ask * (1.0 + slippage)
+    return best_bid * (1.0 - slippage)
+
+def vwap_for_quantity(levels: List[OrderBookLevel], qty: int) -> Tuple[float, float]:
+    remaining = float(qty)
+    cost = filled = 0.0
+    for level in levels:
+        if remaining <= 0:
+            break
+        take = min(remaining, level.qty)
+        cost += take * level.price
+        filled += take
+        remaining -= take
+    if filled <= 0:
+        return (levels[0].price if (levels and len(levels) > 0) else 0.0), 0.0
+    return cost / filled, filled
+
+def estimate_round_trip_fees(
+    entry_price: float,
+    exit_price: float,
+    qty: int,
+    maker_fee: float,
+    taker_fee: float,
+    entry_is_taker: bool = True,
+    exit_is_taker: bool = True,
+) -> Tuple[float, float, float]:
+    entry_rate = taker_fee if entry_is_taker else maker_fee
+    exit_rate = taker_fee if exit_is_taker else maker_fee
+    entry_fee = entry_price * qty * entry_rate
+    exit_fee = exit_price * qty * exit_rate
+    return entry_fee, exit_fee, entry_fee + exit_fee
+
+def calculate_exit_price(
+    entry_price: float,
+    target_usdt: float,
+    leverage: int,
+    qty: int,
+    side: str,
+    maker_fee: float = DEFAULT_FEE_RATE,
+    taker_fee: float = DEFAULT_TAKER_FEE,
+    funding_rate: float = 0.0,
+    max_iterations: int = 5,
+) -> float:
+    if qty <= 0 or entry_price <= 0:
+        raise ValueError("Invalid entry price or quantity")
+    side_n = normalize_side(side)
+    exit_price = entry_price
+    
+    # Accurate Bybit Margin Logic: target_usdt is scaled down relative to leverage rules
+    adjusted_target = target_usdt / leverage 
+    
+    for _ in range(max(1, max_iterations)):
+        _, _, total_fees = estimate_round_trip_fees(entry_price, exit_price, qty, maker_fee, taker_fee)
+        gross_needed = adjusted_target + total_fees + entry_price * qty * funding_rate
+        if side_n == "buy":
+            exit_price = entry_price + gross_needed / qty
+        else:
+            exit_price = entry_price - gross_needed / qty
+        
+        # Avoid mathematical limits resulting in less-than-zero prices
+        if exit_price <= 0:
+            exit_price = 0.000001
+            
+    return exit_price
+
+def gross_profit_usdt(entry_price: float, exit_price: float, qty: int, side: str) -> float:
+    if normalize_side(side) == "buy":
+        return (exit_price - entry_price) * qty
+    return (entry_price - exit_price) * qty
+
+def stop_loss_price(entry_price: float, target_usdt: float, qty: int, side: str, risk_reward: float) -> float:
+    if risk_reward <= 0 or qty <= 0:
+        return entry_price
+    delta = (target_usdt / risk_reward) / qty
+    return entry_price - delta if normalize_side(side) == "buy" else entry_price + delta
+
+def kelly_fraction(win_rate: float, risk_reward: float) -> float:
+    if risk_reward <= 0:
+        return 0.0
+    return max(0.0, min(1.0, win_rate - (1.0 - win_rate) / risk_reward))
+
+def compute_quantity(balance: float, risk_pct: float, price: float, maker: float, taker: float, funding: float) -> int:
+    if balance <= 0 or risk_pct <= 0 or price <= 0:
+        return 1
+    cost_per_unit = price * (maker + taker + funding)
+    if cost_per_unit <= 0:
+        return 1
+    return max(1, int(balance * (risk_pct / 100.0) / cost_per_unit))
+
+def book_imbalance(bids: List[OrderBookLevel], asks: List[OrderBookLevel], depth: int) -> float:
+    ask_vol = sum(l.qty for l in asks[:depth])
+    if ask_vol <= 0:
+        return 0.0
+    return sum(l.qty for l in bids[:depth]) / ask_vol
+
+# ---------------------------------------------------------------------------
+# Core Analytical Calculation Routing Engine
+# ---------------------------------------------------------------------------
+
+def calculate_micro_profit(
+    symbol: str,
+    side: str,
+    qty: int,
+    target: float = DEFAULT_TARGET,
+    leverage: int = DEFAULT_LEVERAGE,
+    maker_fee: float = DEFAULT_FEE_RATE,
+    taker_fee: float = DEFAULT_TAKER_FEE,
+    funding_rate: float = 0.0001,
+    slippage: float = 0.0001,
+    risk_reward: float = DEFAULT_RISK_REWARD,
+    kelly_win: float = DEFAULT_KELLY_WIN_RATE,
+    depth: int = DEFAULT_DEPTH,
+    account_balance: float = 0.0,
+    risk_percent: float = 0.0,
+    bids_json: str = "[]",
+    asks_json: str = "[]",
+    use_vwap_entry: bool = False,
+) -> Dict[str, Any]:
+    validate_inputs(symbol, side, qty)
+    validate_numeric_params(target, leverage, maker_fee, taker_fee, funding_rate, slippage, depth)
+    
+    # Process Orderbook Inputs
+    book = parse_order_book(bids_json, asks_json)
+    bids, asks = normalize_order_book(book["bids"], book["asks"])
+    
+    if not bids or not asks:
+        raise ValueError("Order book levels are empty or invalid")
+        
+    best_bid = bids[0].price
+    best_ask = asks[0].price
+    spread = best_ask - best_bid
+    
+    # Establish Entry Price Basis
+    if use_vwap_entry:
+        target_levels = asks if normalize_side(side) == "buy" else bids
+        entry_price, filled_qty = vwap_for_quantity(target_levels, qty)
+        if filled_qty < qty:
+            logger.warning("Order depth insufficient for complete volume sizing filling.")
+    else:
+        entry_price = entry_price_for_side(side, best_bid, best_ask, slippage)
+
+    # Risk and Metric Adjustments
+    exit_price = calculate_exit_price(
+        entry_price, target, leverage, qty, side, maker_fee, taker_fee, funding_rate
+    )
+    sl_price = stop_loss_price(entry_price, target, qty, side, risk_reward)
+    k_fraction = kelly_fraction(kelly_win, risk_reward)
+    imbalance = book_imbalance(bids, asks, depth)
+    
+    # Generate Suggested Volume Adjustments
+    recommended_qty = qty
+    if account_balance > 0.0 and risk_percent > 0.0:
+        recommended_qty = compute_quantity(account_balance, risk_percent, entry_price, maker_fee, taker_fee, funding_rate)
+        
+    _, _, roundtrip_fees = estimate_round_trip_fees(entry_price, exit_price, qty, maker_fee, taker_fee)
+    gross_p = gross_profit_usdt(entry_price, exit_price, qty, side)
+    
+    return {
+        "symbol": symbol.upper(),
+        "side": normalize_side(side),
+        "requested_qty": qty,
+        "recommended_qty": recommended_qty,
+        "best_bid": best_bid,
+        "best_ask": best_ask,
+        "spread": round(spread, 6),
+        "entry_price": round(entry_price, 6),
+        "target_exit_price": round(exit_price, 6),
+        "stop_loss_price": round(sl_price, 6),
+        "gross_profit_usdt": round(gross_p, 4),
+        "estimated_fees_usdt": round(roundtrip_fees, 4),
+        "net_profit_usdt": round(gross_p - roundtrip_fees, 4),
+        "kelly_fraction": round(k_fraction, 4),
+        "book_imbalance_ratio": round(imbalance, 4)
+    }
+
+# ---------------------------------------------------------------------------
+# CLI Entry Point
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Estimate execution parameters for short-horizon scalp orders over local assets."
+    )
+    parser.add_argument("--symbol", type=str, required=True, help="Asset ticker pair target.")
+    parser.add_argument("--side", type=str, choices=["buy", "sell", "BUY", "SELL"], required=True, help="Position execution side orientation.")
+    parser.add_argument("--qty", type=int, required=True, help="Nominal baseline asset count volume.")
+    parser.add_argument("--target", type=float, default=DEFAULT_TARGET, help="Desired absolute profit floor.")
+    parser.add_argument("--leverage", type=int, default=DEFAULT_LEVERAGE, help="Position margin scale factor multiplier.")
+    parser.add_argument("--maker_fee", type=float, default=DEFAULT_FEE_RATE, help="Maker conversion tariff limit.")
+    parser.add_argument("--taker_fee", type=float, default=DEFAULT_TAKER_FEE, help="Taker execution premium value.")
+    parser.add_argument("--funding_rate", type=float, default=0.0001, help="Current active funding cycle payment rate.")
+    parser.add_argument("--slippage", type=float, default=0.0001, help="Guaranteed pricing structural drag variance.")
+    parser.add_argument("--risk_reward", type=float, default=DEFAULT_RISK_REWARD, help="Calculated statistical win offset expectation.")
+    parser.add_argument("--kelly_win", type=float, default=DEFAULT_KELLY_WIN_RATE, help="Estimated hit strategy metric target ratio.")
+    parser.add_argument("--depth", type=int, default=DEFAULT_DEPTH, help="Total active ticks parsed for metrics evaluation matching.")
+    parser.add_argument("--account_balance", type=float, default=0.0, help="Total capital scale for optimal allocation metrics matching.")
+    parser.add_argument("--risk_percent", type=float, default=0.0, help="Maximum allowed sizing drawdown boundary metrics matching.")
+    parser.add_argument("--bids_json", type=str, default="[]", help="Raw double matrix array strings reflecting market buy depth levels.")
+    parser.add_argument("--asks_json", type=str, default="[]", help="Raw double matrix array strings reflecting market sell depth levels.")
+    parser.add_argument("--use_vwap_entry", action="store_true", help="Toggle average asset density accumulation algorithm modeling.")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose debug logging output.")
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.WARNING)
+        
+    try:
+        results = calculate_micro_profit(
+            symbol=args.symbol, side=args.side, qty=args.qty, target=args.target,
+            leverage=args.leverage, maker_fee=args.maker_fee, taker_fee=args.taker_fee,
+            funding_rate=args.funding_rate, slippage=args.slippage, risk_reward=args.risk_reward,
+            kelly_win=args.kelly_win, depth=args.depth, account_balance=args.account_balance,
+            risk_percent=args.risk_percent, bids_json=args.bids_json, asks_json=args.asks_json,
+            use_vwap_entry=args.use_vwap_entry
+        )
+        print(json.dumps(results, indent=2))
+    except Exception as e:
+        print(json.dumps({"error": str(e)}), file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,47 @@
+#!/bin/bash
+# ════════════════════════════════════════════════════════════════════
+#  NEON OCEAN THEME - Deep Blue / Aqua / Icy Cool Tones
+# ════════════════════════════════════════════════════════════════════
+
+export CYBER_THEME="ocean"
+
+# Ocean Color Palette - Cool Blues & Aquas
+export CYBER_PINK="\033[38;5;39m"      # Deep blue
+export CYBER_CYAN="\033[38;5;45m"     # Cyan
+export CYBER_YELLOW="\033[38;5;51m"   # Sky blue
+export CYBER_ORANGE="\033[38;5;38m"   # Ocean blue
+export CYBER_RED="\033[38;5;196m"     # Red accent
+export CYBER_GREEN="\033[38;5;50m"   # Aqua
+export CYBER_BLUE="\033[38;5;33m"     # Deep ocean
+export CYBER_PURPLE="\033[38;5;141m"  # Lavender
+export CYBER_WHITE="\033[38;5;254m"   # White
+export CYBER_GRAY="\033[38;5;246m"   # Light gray
+export CYBER_BG="\033[48;5;17m"       # Navy background
+
+# Block Characters - Rounded/Wavy style
+export BLOCK_TL="╭"
+export BLOCK_TR="╮"
+export BLOCK_BL="╰"
+export BLOCK_BR="╯"
+export BLOCK_V="│"
+export BLOCK_H="─"
+export BLOCK_DOT="○"
+
+# Header & UI
+export HEADER_TEXT=" 🌊 OCEAN MODE "
+export ICON_SUCCESS="✓"
+export ICON_ERROR="✗"
+export ICON_WARNING="⚠"
+export ICON_INFO="ℹ"
+export ICON_CLOCK="⏱"
+export ICON_TAG="⚑"
+
+# Output path
+export LLM_OUTPUT="/dev/stdout"
+
+# Source the core engine
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/execute_command.sh"
+
+# Run sample command
+main "echo 'Diving into the deep blue...'"

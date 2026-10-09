@@ -1,0 +1,8 @@
+{
+  "name": "bybit-trade",
+  "version": "1.0.0",
+  "dependencies": {
+    "ccxt": "^4.1.0",
+    "lodash": "^4.17.21"
+  }
+}

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# @describe: Perform an internet speed test to measure download and upload bandwidth.
+# @param output_format: (Optional) Output format, either "json" (default) or "plain".
+
+"""
+Internet Speedtest Tool
+Performs a download and upload speed test using the speedtest-cli library.
+"""
+
+import speedtest
+import json
+import sys
+from datetime import datetime, timezone
+
+def run(output_format: str = "json"):
+    """
+    Execute a speed test and output the result.
+
+    Args:
+        output_format: "json" for structured JSON output, "plain" for human readable.
+    """
+    try:
+        st = speedtest.Speedtest()
+        st.get_best_server()
+        download_bps = st.download()
+        upload_bps = st.upload()
+        ping = st.results.ping
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "ping": ping,
+            "download": round(download_bps / 1_000_000, 2),
+            "upload": round(upload_bps / 1_000_000, 2),
+            "bytes_downloaded": download_bps,
+            "bytes_uploaded": upload_bps,
+        }
+
+        if output_format == "plain":
+            print(f"Ping: {ping:.2f} ms")
+            print(f"Download: {result['download']:.2f} Mbps")
+            print(f"Upload: {result['upload']:.2f} Mbps")
+        else:
+            print(json.dumps(result, indent=2))
+
+        return result if output_format == "json" else None
+
+    except Exception as e:
+        error = {"error": str(e)}
+        print(json.dumps(error), file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    # Simple CLI fallback
+    fmt = "json"
+    if len(sys.argv) > 1:
+        fmt = sys.argv[1]
+    run(fmt)

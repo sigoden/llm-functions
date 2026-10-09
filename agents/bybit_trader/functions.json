@@ -1,0 +1,1566 @@
+[
+  {
+    "name": "bybit_trader",
+    "description": "Hardened Bybit V5 USDT-perpetual market analytics, risk management, and guarded execution engine. Use it for technical analysis, micro-scalp scans, orderbook and price-action reads, tickers, fills/history, wallet balance, open positions and orders, live risk status, leverage changes, the kill switch, and gated scalp execution or reduce-only closes.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "calc_micro_profit",
+            "cancel_orders",
+            "close_position",
+            "execute_scalp",
+            "fills",
+            "history",
+            "instrument",
+            "kill_switch",
+            "open_orders",
+            "orderbook",
+            "positions",
+            "price_action",
+            "risk_status",
+            "scan",
+            "set_leverage",
+            "ta",
+            "ticker",
+            "wallet_balance"
+          ],
+          "description": "Engine action to execute"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "USDT-perpetual symbol such as SOLUSDT (default: agent default_symbol)"
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "Kline timeframe: 1, 3, 5, 15, 60, or D (default: 1)"
+        },
+        "side": {
+          "type": "string",
+          "description": "Order side: Buy or Sell (default: Buy)"
+        },
+        "target_profit_usdt": {
+          "type": "number",
+          "description": "Target net scalp profit in USDT (default: agent target_micro_profit)"
+        },
+        "qty": {
+          "type": "number",
+          "description": "Order quantity in base coin; derived from notional and instrument step when omitted"
+        },
+        "leverage": {
+          "type": "integer",
+          "description": "Leverage multiplier for set_leverage and execution (default: agent default_leverage)"
+        },
+        "max_spread_pct": {
+          "type": "number",
+          "description": "Maximum allowed spread percentage for the execution gate (default: agent max_spread_pct)"
+        },
+        "max_notional_usdt": {
+          "type": "number",
+          "description": "Maximum order notional in USDT (default: agent max_notional_usdt)"
+        },
+        "post_only": {
+          "type": "boolean",
+          "description": "Prefer PostOnly maker execution (default: true)"
+        },
+        "live": {
+          "type": "boolean",
+          "description": "Request live execution; still requires every independent safety gate (default: false)"
+        },
+        "live_confirmation": {
+          "type": "string",
+          "description": "Exact live confirmation token required for live execution"
+        },
+        "reduce_only": {
+          "type": "boolean",
+          "description": "Reduce-only close; bypasses directional entry signals (default: false)"
+        },
+        "use_cache": {
+          "type": "boolean",
+          "description": "Reuse cached market data when still fresh (default: false)"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "agent": true
+  },
+  {
+    "name": "bybit_get_ticker",
+    "description": "Get ticker data from Bybit.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "inverse",
+            "option",
+            "spot"
+          ],
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": ""
+        }
+      },
+      "required": [
+        "category",
+        "symbol",
+        "use_tor"
+      ]
+    }
+  },
+  {
+    "name": "bybit_get_orderbook",
+    "description": "Get Bybit orderbook",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Product type"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol"
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Limit"
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": "Use Tor"
+        }
+      }
+    }
+  },
+  {
+    "name": "bybit_get_klines",
+    "description": "Get candlestick/kline data from Bybit exchange using V5 API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Product type (linear/inverse/spot)"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol name (e.g., BTCUSDT, ETHUSDT)"
+        },
+        "interval": {
+          "type": "string",
+          "description": "Time interval (default: 1)"
+        },
+        "start": {
+          "type": "integer",
+          "description": "Start timestamp (optional)"
+        },
+        "end": {
+          "type": "integer",
+          "description": "End timestamp (optional)"
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Limit number of results (default: 200)"
+        },
+        "testnet": {
+          "type": "boolean",
+          "description": "Use testnet (default: true)"
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": "Use Tor for privacy (default: true)"
+        }
+      },
+      "required": [
+        "category",
+        "symbol"
+      ]
+    }
+  },
+  {
+    "name": "bybit_place_order",
+    "description": "Place Bybit order",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Product type"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol"
+        },
+        "side": {
+          "type": "string",
+          "description": "Side"
+        },
+        "order_type": {
+          "type": "string",
+          "description": "Order type"
+        },
+        "qty": {
+          "type": "string",
+          "description": "Quantity"
+        }
+      }
+    }
+  },
+  {
+    "name": "bybit_cancel_order",
+    "description": "Cancel an order on Bybit exchange.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "order_id": {
+          "type": "string",
+          "description": ""
+        },
+        "order_link_id": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "category",
+        "symbol",
+        "order_id",
+        "order_link_id"
+      ]
+    }
+  },
+  {
+    "name": "bybit_cancel_all_orders",
+    "description": "Cancel all orders for a symbol on Bybit V5 API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "category",
+        "symbol"
+      ]
+    }
+  },
+  {
+    "name": "bybit_get_open_orders",
+    "description": "View open orders from Bybit exchange using V5 API\nwith Tor support for privacy.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "testnet": {
+          "type": "boolean",
+          "description": ""
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": ""
+        }
+      },
+      "required": [
+        "category",
+        "symbol",
+        "testnet",
+        "use_tor"
+      ]
+    }
+  },
+  {
+    "name": "bybit_get_positions",
+    "description": "View positions and optionally open orders from Bybit exchange.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "include_orders": {
+          "type": "boolean",
+          "description": ""
+        },
+        "testnet": {
+          "type": "boolean",
+          "description": ""
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": ""
+        }
+      },
+      "required": [
+        "symbol",
+        "include_orders",
+        "testnet",
+        "use_tor"
+      ]
+    }
+  },
+  {
+    "name": "bybit_set_leverage",
+    "description": "Set leverage for trading on Bybit V5 API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "category",
+        "symbol",
+        "leverage"
+      ]
+    }
+  },
+  {
+    "name": "bybit_set_trading_stop",
+    "description": "Set Trading Stop (TP/SL)",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_usdt": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "symbol",
+        "tp_usdt",
+        "sl_usdt"
+      ]
+    }
+  },
+  {
+    "name": "bybit_balance",
+    "description": "Get wallet balance from Bybit V5 API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "account_type": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "account_type"
+      ]
+    }
+  },
+  {
+    "name": "bybit_fee_rate",
+    "description": "Look up Bybit fee rates.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Category (default: PERPETUAL)"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol (e.g., BTCUSDT)"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "bybit_funding_rate",
+    "description": "Get funding rate history.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Trading symbol"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category (default: PERPETUAL)"
+        },
+        "start": {
+          "type": "string",
+          "description": "Start time"
+        },
+        "end": {
+          "type": "string",
+          "description": "End time"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "bybit_get_balance",
+    "description": "Retrieve Bybit wallet balance.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "account_type": {
+          "type": "string",
+          "enum": [
+            "UNIFIED",
+            "CONTRACT",
+            "SPOT"
+          ],
+          "description": ""
+        }
+      },
+      "required": [
+        "account_type"
+      ]
+    }
+  },
+  {
+    "name": "bybit_get_indicators",
+    "description": "Get technical indicators for a symbol on Bybit V5 API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "integer",
+          "description": ""
+        }
+      },
+      "required": [
+        "symbol",
+        "interval",
+        "limit"
+      ]
+    }
+  },
+  {
+    "name": "bybit_analyze_symbol",
+    "description": "Perform comprehensive multi-timeframe analysis on a symbol using 25+ indicators",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "timeframes": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "symbol",
+        "timeframes"
+      ]
+    }
+  },
+  {
+    "name": "bybit_analyze_orderbook",
+    "description": "Analyze L2 Orderbook for depth, imbalance, and walls.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "integer",
+          "description": ""
+        }
+      },
+      "required": [
+        "symbol",
+        "limit"
+      ]
+    }
+  },
+  {
+    "name": "execute_command",
+    "description": "Execute arbitrary shell command and return full output with complete runtime metadata.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Command to run (required)"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Duration for the command (e.g. 60s, 1m, 2h)"
+        },
+        "connect_timeout": {
+          "type": "string",
+          "description": "Connection timeout for curl commands (default: 10s)"
+        },
+        "max_time": {
+          "type": "string",
+          "description": "Max transfer time for curl commands (default: matches --timeout)"
+        },
+        "working_dir": {
+          "type": "string",
+          "description": "Working directory for the command (default: current dir)"
+        },
+        "env": {
+          "type": "array",
+          "description": "Extra environment variable (repeatable)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shell": {
+          "type": "string",
+          "description": "Shell to use: bash/sh/zsh (default: bash)"
+        },
+        "stdin": {
+          "type": "string",
+          "description": "Optional stdin content to pipe to command"
+        },
+        "retry": {
+          "type": "integer",
+          "description": "Number of retries on failure (default: 0)"
+        },
+        "retry_delay": {
+          "type": "string",
+          "description": "Delay between retries (default: 1s)"
+        },
+        "use_cache": {
+          "type": "boolean",
+          "description": "Enable result caching for identical command operations"
+        },
+        "no_color": {
+          "type": "boolean",
+          "description": "Disable ANSI colour output"
+        },
+        "strip_ansi": {
+          "type": "boolean",
+          "description": "Strip ANSI codes from command output before returning"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show extra debug info (PATH, shell, env vars)"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Show what would be executed without running"
+        }
+      },
+      "required": [
+        "command"
+      ]
+    }
+  },
+  {
+    "name": "bybit_live",
+    "description": "BYBIT REALM v4.0 – Comprehensive Bybit V5 trading tool with all endpoints, indicators, breakeven logic, L2 analysis, and profitable macros.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "health_check",
+            "connection_health",
+            "reset_circuit",
+            "renew_tor_circuit",
+            "get_server_time",
+            "move_breakeven",
+            "lock_profit",
+            "partial_close",
+            "dca_ladder",
+            "place_order",
+            "amend_order",
+            "cancel_order",
+            "cancel_all_orders",
+            "get_open_orders",
+            "get_order_history",
+            "batch_orders",
+            "iceberg_order",
+            "place_trailing_stop_order",
+            "calculate_trailing_stop_levels",
+            "get_trailing_stop_status",
+            "place_conditional_order",
+            "batch_amend_orders",
+            "batch_cancel_orders",
+            "get_positions",
+            "get_wallet_balance",
+            "set_leverage",
+            "set_trading_stop",
+            "get_fee_rate",
+            "get_transaction_log",
+            "get_trade_history",
+            "switch_margin_mode",
+            "switch_position_mode",
+            "get_account_info",
+            "get_api_key_info",
+            "get_borrow_history",
+            "get_collateral_info",
+            "get_coin_greeks",
+            "internal_transfer",
+            "get_coin_balance",
+            "get_ticker",
+            "get_24hr_ticker",
+            "get_orderbook",
+            "get_klines",
+            "get_recent_trades",
+            "get_open_interest",
+            "get_liquidations",
+            "get_funding_rate",
+            "get_funding_rate_history",
+            "get_long_short_ratio",
+            "get_mark_price",
+            "get_index_price",
+            "get_price_bands",
+            "get_instruments_info",
+            "get_risk_limit",
+            "set_risk_limit",
+            "get_insurance_pool",
+            "get_delivery_price",
+            "get_historical_volatility",
+            "get_l2_orderbook_analysis",
+            "get_market_momentum",
+            "get_market_health",
+            "get_trend_analysis",
+            "calculate_bollinger_bands",
+            "calculate_macd",
+            "calculate_stoch_rsi",
+            "calculate_cci",
+            "calculate_donchian_channels",
+            "calculate_adx",
+            "calculate_fib_pivots",
+            "calculate_vwap",
+            "calculate_ichimoku_cloud",
+            "calculate_kelly_criterion",
+            "calculate_trade_pnl",
+            "calculate_profit_target",
+            "calculate_sl_tp",
+            "calculate_position_size",
+            "calculate_volatility_adjusted_size",
+            "calculate_breakeven",
+            "calculate_breakeven_with_fees",
+            "calculate_profit_after_fees",
+            "get_pnl_history",
+            "get_pnl_report",
+            "macro_dca_plan",
+            "macro_grid_plan",
+            "macro_scalp_momentum",
+            "macro_mean_reversion",
+            "macro_funding_arb",
+            "macro_twap",
+            "macro_breakout",
+            "macro_portfolio_summary",
+            "macro_smart_entry",
+            "macro_microprofit_scalp",
+            "volume_profile",
+            "volume_divergence",
+            "orderbook_heatmap",
+            "orderflow_analysis",
+            "comprehensive_trend_analysis",
+            "get_instrument_precision",
+            "validate_order_params",
+            "calculate_fee_adjusted_targets",
+            "get_min_order_value",
+            "get_position_detail",
+            "scale_position",
+            "close_position",
+            "flip_position",
+            "auto_sl_tp",
+            "move_sl_to_breakeven",
+            "get_all_positions_summary",
+            "journal_record_trade",
+            "journal_close_trade",
+            "journal_get_trades",
+            "journal_performance",
+            "journal_export",
+            "journal_import",
+            "adaptive_position_size",
+            "fixed_fractional_size",
+            "anti_martingale_size",
+            "portfolio_heat",
+            "max_position",
+            "momentum_sniper",
+            "mean_reversion_scalp",
+            "funding_arb_scan",
+            "smart_dca",
+            "liquidity_sweep",
+            "risk_reward_analysis",
+            "liquidation_price",
+            "drawdown_analysis",
+            "support_resistance",
+            "market_regime",
+            "entry_timing",
+            "scale_into",
+            "scale_out",
+            "hedge_position",
+            "multi_timeframe_signals",
+            "market_session",
+            "whale_detection",
+            "fear_greed",
+            "compound_growth",
+            "trade_checklist",
+            "auto_leverage",
+            "unrealized_pnl",
+            "divergence_signals",
+            "optimal_entry_zones",
+            "spread_analysis",
+            "correlation_analysis",
+            "smart_trailing_stop",
+            "batch_place_orders",
+            "set_tpsl_mode",
+            "add_reduce_margin",
+            "set_auto_add_margin",
+            "get_executions",
+            "confirm_risk_limit",
+            "set_collateral_coin",
+            "get_withdrawable_amount",
+            "get_historical_klines",
+            "get_premium_index_kline",
+            "calculate_rsi",
+            "calculate_ema",
+            "calculate_atr",
+            "calculate_obv",
+            "calculate_cvd",
+            "calculate_mfi",
+            "calculate_cmf",
+            "calculate_williams_r",
+            "calculate_parabolic_sar",
+            "calculate_keltner_channels",
+            "calculate_roc",
+            "calculate_trix",
+            "calculate_ultimate_oscillator",
+            "calculate_choppiness_index",
+            "calculate_aroon",
+            "calculate_dpo",
+            "calculate_hma",
+            "calculate_zlema",
+            "calculate_supertrend",
+            "calculate_elder_ray",
+            "calculate_vwma",
+            "calculate_awesome_oscillator",
+            "calculate_accumulation_distribution",
+            "calculate_heikin_ashi",
+            "calculate_renko",
+            "calculate_pivot_points",
+            "calculate_position_risk",
+            "calculate_compound_growth",
+            "calculate_linear_regression",
+            "calculate_stddev",
+            "calculate_vroc",
+            "calculate_kelly_criterion_standalone",
+            "calculate_max_position",
+            "calculate_bollinger_bandwidth"
+          ],
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "Buy",
+            "Sell"
+          ],
+          "description": ""
+        },
+        "qty": {
+          "type": "number",
+          "description": ""
+        },
+        "price": {
+          "type": "number",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "enum": [
+            "Limit",
+            "Market",
+            "LimitMaker"
+          ],
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "inverse",
+            "spot",
+            "option"
+          ],
+          "description": ""
+        },
+        "order_id": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "number",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "number",
+          "description": ""
+        },
+        "trailing_stop": {
+          "type": "number",
+          "description": ""
+        },
+        "reduce_only": {
+          "type": "boolean",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "enum": [
+            "GTC",
+            "IOC",
+            "FOK",
+            "PostOnly"
+          ],
+          "description": ""
+        },
+        "position_idx": {
+          "type": "integer",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "integer",
+          "description": ""
+        },
+        "buy_leverage": {
+          "type": "integer",
+          "description": ""
+        },
+        "sell_leverage": {
+          "type": "integer",
+          "description": ""
+        },
+        "account_type": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "integer",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "interval_time": {
+          "type": "string",
+          "description": ""
+        },
+        "strong_threshold": {
+          "type": "number",
+          "description": ""
+        },
+        "mild_threshold": {
+          "type": "number",
+          "description": ""
+        },
+        "sl_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "tp_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "risk_usdt": {
+          "type": "number",
+          "description": ""
+        },
+        "sl_price": {
+          "type": "number",
+          "description": ""
+        },
+        "fee_rate": {
+          "type": "number",
+          "description": ""
+        },
+        "funding_rate": {
+          "type": "number",
+          "description": ""
+        },
+        "holding_hours": {
+          "type": "number",
+          "description": ""
+        },
+        "holding_periods": {
+          "type": "integer",
+          "description": ""
+        },
+        "orders": {
+          "type": "string",
+          "description": ""
+        },
+        "slices": {
+          "type": "integer",
+          "description": ""
+        },
+        "delay": {
+          "type": "number",
+          "description": ""
+        },
+        "start_time": {
+          "type": "integer",
+          "description": ""
+        },
+        "end_time": {
+          "type": "integer",
+          "description": ""
+        },
+        "scale_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "reduce": {
+          "type": "boolean",
+          "description": ""
+        },
+        "scale": {
+          "type": "number",
+          "description": ""
+        },
+        "use_atr": {
+          "type": "boolean",
+          "description": ""
+        },
+        "offset_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "entry_price": {
+          "type": "number",
+          "description": ""
+        },
+        "exit_price": {
+          "type": "number",
+          "description": ""
+        },
+        "strategy": {
+          "type": "string",
+          "description": ""
+        },
+        "tags": {
+          "type": "string",
+          "description": ""
+        },
+        "trade_notes": {
+          "type": "string",
+          "description": ""
+        },
+        "trade_id": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_status": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_data": {
+          "type": "string",
+          "description": ""
+        },
+        "total_usdt": {
+          "type": "number",
+          "description": ""
+        },
+        "num_orders": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_grids": {
+          "type": "integer",
+          "description": ""
+        },
+        "upper_price": {
+          "type": "number",
+          "description": ""
+        },
+        "lower_price": {
+          "type": "number",
+          "description": ""
+        },
+        "rr_ratio": {
+          "type": "number",
+          "description": ""
+        },
+        "atr_mult": {
+          "type": "number",
+          "description": ""
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_slices": {
+          "type": "integer",
+          "description": ""
+        },
+        "min_rate": {
+          "type": "number",
+          "description": ""
+        },
+        "top_n": {
+          "type": "integer",
+          "description": ""
+        },
+        "price_range_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "coin": {
+          "type": "string",
+          "description": ""
+        },
+        "amount": {
+          "type": "string",
+          "description": ""
+        },
+        "from_account": {
+          "type": "string",
+          "description": ""
+        },
+        "to_account": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_id": {
+          "type": "integer",
+          "description": ""
+        },
+        "currency": {
+          "type": "string",
+          "description": ""
+        },
+        "trigger_price": {
+          "type": "number",
+          "description": ""
+        },
+        "trigger_by": {
+          "type": "string",
+          "enum": [
+            "LastPrice",
+            "IndexPrice",
+            "MarkPrice"
+          ],
+          "description": ""
+        },
+        "depth": {
+          "type": "integer",
+          "description": ""
+        },
+        "period": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_bins": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_levels": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_entries": {
+          "type": "integer",
+          "description": ""
+        },
+        "num_exits": {
+          "type": "integer",
+          "description": ""
+        },
+        "spacing_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "tp_spacing_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "hedge_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "dip_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": ""
+        },
+        "risk_fraction": {
+          "type": "number",
+          "description": ""
+        },
+        "consecutive_wins": {
+          "type": "integer",
+          "description": ""
+        },
+        "consecutive_losses": {
+          "type": "integer",
+          "description": ""
+        },
+        "daily_return_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "days": {
+          "type": "integer",
+          "description": ""
+        },
+        "win_rate_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "trades_per_day": {
+          "type": "integer",
+          "description": ""
+        },
+        "starting_capital": {
+          "type": "number",
+          "description": ""
+        },
+        "maint_margin_rate": {
+          "type": "number",
+          "description": ""
+        },
+        "account_balance": {
+          "type": "number",
+          "description": ""
+        },
+        "margin": {
+          "type": "string",
+          "description": ""
+        },
+        "auto_add_margin": {
+          "type": "boolean",
+          "description": ""
+        },
+        "tp_sl_mode": {
+          "type": "string",
+          "enum": [
+            "Full",
+            "Partial"
+          ],
+          "description": ""
+        },
+        "collateral_switch": {
+          "type": "boolean",
+          "description": ""
+        },
+        "brick_size": {
+          "type": "number",
+          "description": ""
+        },
+        "percent": {
+          "type": "number",
+          "description": ""
+        },
+        "dca_steps": {
+          "type": "integer",
+          "description": ""
+        },
+        "dca_range_pct": {
+          "type": "number",
+          "description": ""
+        },
+        "total_qty": {
+          "type": "number",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "category",
+        "order_id",
+        "stop_loss",
+        "take_profit",
+        "trailing_stop",
+        "reduce_only",
+        "time_in_force",
+        "position_idx",
+        "client_oid",
+        "leverage",
+        "buy_leverage",
+        "sell_leverage",
+        "account_type",
+        "limit",
+        "interval",
+        "interval_time",
+        "strong_threshold",
+        "mild_threshold",
+        "sl_pct",
+        "tp_pct",
+        "risk_usdt",
+        "sl_price",
+        "fee_rate",
+        "funding_rate",
+        "holding_hours",
+        "holding_periods",
+        "orders",
+        "slices",
+        "delay",
+        "start_time",
+        "end_time",
+        "scale_pct",
+        "reduce",
+        "scale",
+        "use_atr",
+        "offset_pct",
+        "entry_price",
+        "exit_price",
+        "strategy",
+        "tags",
+        "trade_notes",
+        "trade_id",
+        "journal_status",
+        "journal_data",
+        "total_usdt",
+        "num_orders",
+        "num_grids",
+        "upper_price",
+        "lower_price",
+        "rr_ratio",
+        "atr_mult",
+        "duration_minutes",
+        "num_slices",
+        "min_rate",
+        "top_n",
+        "price_range_pct",
+        "coin",
+        "amount",
+        "from_account",
+        "to_account",
+        "risk_id",
+        "currency",
+        "trigger_price",
+        "trigger_by",
+        "depth",
+        "period",
+        "num_bins",
+        "num_levels",
+        "num_entries",
+        "num_exits",
+        "spacing_pct",
+        "tp_spacing_pct",
+        "hedge_pct",
+        "dip_pct",
+        "symbols",
+        "risk_fraction",
+        "consecutive_wins",
+        "consecutive_losses",
+        "daily_return_pct",
+        "days",
+        "win_rate_pct",
+        "trades_per_day",
+        "starting_capital",
+        "maint_margin_rate",
+        "account_balance",
+        "margin",
+        "auto_add_margin",
+        "tp_sl_mode",
+        "collateral_switch",
+        "brick_size",
+        "percent",
+        "dca_steps",
+        "dca_range_pct",
+        "total_qty"
+      ]
+    }
+  },
+  {
+    "name": "bybit_wbta",
+    "description": "Market Trend Observatory v3.3 — Complete L2 Orderbook Microstructure, Trade Flow Analysis, Funding/OI Telemetry, 35+ Technical Indicators, and Multi-Factor Long/Short Signal Engine. Read-only telemetry tool.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Trading pair (e.g. BTCUSDT, ETHUSDT; default: BTCUSDT)"
+        },
+        "interval": {
+          "type": "string",
+          "description": "Kline timeframe: 1, 5, 15, 60, 240, D (default: 15)"
+        },
+        "delay": {
+          "type": "integer",
+          "description": "Refresh seconds between cycles in loop mode (default: 20)"
+        },
+        "use_tor": {
+          "type": "boolean",
+          "description": "Enable Tor SOCKS5 proxy routing"
+        },
+        "once": {
+          "type": "boolean",
+          "description": "Run a single analysis cycle and exit (default)"
+        },
+        "json_out": {
+          "type": "boolean",
+          "description": "Output raw JSON payload for LLM/system integration"
+        },
+        "no_color": {
+          "type": "boolean",
+          "description": "Disable ANSI color output"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable detailed debug logging"
+        }
+      }
+    }
+  },
+  {
+    "name": "bybit_core",
+    "description": "Core V5 API driver for Bybit with session pooling, HMAC signing, failover domain routing, and automatic server time synchronization.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Test action: health_check, server_time, config"
+        },
+        "no_color": {
+          "type": "boolean",
+          "description": "Disable ANSI color output"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable detailed debug log output"
+        }
+      }
+    }
+  },
+  {
+    "name": "free_search",
+    "description": "Performs fast, API-free web searches by parsing DuckDuckGo HTML and Lite endpoints with URL normalization and backoff jitter.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query term (required)"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of search results to return (default: 10, max: 30)"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Request timeout in seconds (default: 15)"
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "Maximum retries on failure (default: 3)"
+        },
+        "filter_spam": {
+          "type": "boolean",
+          "description": "Filter out low-quality or empty search results"
+        },
+        "no_color": {
+          "type": "boolean",
+          "description": "Disable ANSI color output"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable detailed debug logging"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "fetch_url_via_curl",
+    "description": "Fetch content from a URL using curl with advanced options.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Request timeout in seconds (used as --max-time when max-time is default)."
+        },
+        "max_time": {
+          "type": "integer",
+          "description": "Maximum transfer time in seconds."
+        },
+        "connect_timeout": {
+          "type": "integer",
+          "description": "Connection timeout in seconds."
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Custom User-Agent header."
+        },
+        "output": {
+          "type": "string",
+          "description": "Output file path (default: LLM_OUTPUT or return body in tool result)."
+        },
+        "dump_header": {
+          "type": "string",
+          "description": "Output file path for HTTP response headers."
+        },
+        "cookie_file": {
+          "type": "string",
+          "description": "Path to cookie file for session management."
+        },
+        "method": {
+          "type": "string",
+          "description": "HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD)."
+        },
+        "data": {
+          "type": "string",
+          "description": "Request body data for POST/PUT/PATCH."
+        },
+        "headers": {
+          "type": "string",
+          "description": "Comma-separated headers (e.g., \"Key: Val,Key2: Val2\")."
+        },
+        "follow_redirects": {
+          "type": "boolean",
+          "description": "Follow HTTP redirects."
+        },
+        "max_redirects": {
+          "type": "integer",
+          "description": "Maximum number of redirects."
+        },
+        "verify_ssl": {
+          "type": "boolean",
+          "description": "Verify SSL certificates (default: true)."
+        },
+        "compressed": {
+          "type": "boolean",
+          "description": "Request compressed response."
+        },
+        "silent": {
+          "type": "boolean",
+          "description": "Silent mode (less curl stderr)."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Verbose curl output to stderr."
+        },
+        "include": {
+          "type": "boolean",
+          "description": "Include HTTP response headers in the body output."
+        },
+        "retry": {
+          "type": "integer",
+          "description": "Number of retry attempts."
+        },
+        "retry_delay": {
+          "type": "integer",
+          "description": "Delay between retries in seconds."
+        },
+        "limit_rate": {
+          "type": "string",
+          "description": "Limit download rate (e.g., 100k, 1m)."
+        },
+        "proxy": {
+          "type": "string",
+          "description": "Proxy server URL."
+        },
+        "auth": {
+          "type": "string",
+          "description": "Authentication credentials (user:password or bearer token)."
+        },
+        "auth_type": {
+          "type": "string",
+          "description": "Authentication type (basic or bearer)."
+        },
+        "max_bytes": {
+          "type": "integer",
+          "description": "Abort if body exceeds this many bytes (default 10 MiB)."
+        },
+        "json_on_success": {
+          "type": "boolean",
+          "description": "If set, return JSON with body, http_code, and final_url on success."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  }
+]

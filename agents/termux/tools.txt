@@ -1,0 +1,4 @@
+sys_notify.sh
+get_my_location.py
+find_port.sh
+clipboard.sh

@@ -1,0 +1,16 @@
+{
+  "trading_settings": {
+    "max_position_usdt": 10.0,
+    "leverage": 25
+  },
+  "network": {
+    "use_tor": true,
+    "max_retries": 3
+  },
+  "circuit_breaker": {
+    "failure_threshold": 5
+  },
+  "rate_limit": {
+    "calls": 10
+  }
+}

@@ -1,0 +1,4 @@
+[
+  {"operation": "write", "file_path": "/data/data/com.termux/files/home/.config/aichat/llm-functions/tools/test_batch.txt", "content": "line 1"},
+  {"operation": "append", "file_path": "/data/data/com.termux/files/home/.config/aichat/llm-functions/tools/test_batch.txt", "content": "line 2"}
+]

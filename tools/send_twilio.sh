@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 set -e
 
 # @describe Send SMS or Twilio Messaging Channels messages using Twilio API.
@@ -8,7 +8,7 @@ set -e
 # @env TWILIO_ACCOUNT_SID! The twilio account sid
 # @env TWILIO_AUTH_TOKEN! The twilio auth token
 # @env TWILIO_FROM_NUMBER! The twilio from number
-# @env LLM_OUTPUT=/dev/stdout The output path
+# @env LLM_OUTPUT=/dev/fd/1 The output path
 
 main() {
     from_number="$TWILIO_FROM_NUMBER"
@@ -29,7 +29,7 @@ main() {
     body="$(echo "$res" | head -n -1)"
     if [[ "$status" -ge 200 && "$status" -lt 300 ]]; then
         if [[ "$(echo "$body" | jq -r 'has("sid")')" == "true" ]]; then
-            echo "Message sent successfully" >> "$LLM_OUTPUT"
+            echo "Message sent successfully" >&1
         else
             _die "error: $body"
         fi

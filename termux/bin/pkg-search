@@ -1,0 +1,6 @@
+#!/data/data/com.termux/files/usr/bin/bash
+if [ -z "$1" ]; then
+    echo "Usage: pkg-search <query>" >&2
+    exit 1
+fi
+pkg search "$1"

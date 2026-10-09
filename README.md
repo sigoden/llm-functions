@@ -162,7 +162,6 @@ def run(code: str):
         code: Python code to execute, such as `print("hello world")`
     """
     exec(code)
-
 ```
 
 ## Writing Your Own Agents

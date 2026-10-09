@@ -1,0 +1,1600 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# web_search.py — Advanced Web Search Tool v1.0.0
+# argc/aichat compatible · Multi-backend · Content extraction
+#
+# @describe Advanced web search tool supporting multiple backends with content
+#           crawling, downloading, and flexible output formatting.
+#
+# @option --query! <TEXT>                          Search query (required)
+# @option --limit <NUM>                            Maximum results to return (default: 10)
+# @option --backend <BACKEND>                      Search backend: ddg|bing|searx (default: ddg)
+# @option --format <FORMAT>                        Output format: json|jsonl|markdown|csv|tsv (default: json)
+# @option --output <FILE>                          Save results to file path
+# @option --type <TYPE>                            Search type: web|image|news (default: web)
+# @option --depth <NUM>                            Crawl depth for recursive crawling (default: 1)
+# @option --timeout <SECONDS>                      HTTP request timeout in seconds (default: 15)
+# @option --delay <SECONDS>                        Delay between requests in seconds (default: 1.0)
+# @option --proxy <URL>                            HTTP/HTTPS proxy URL
+# @option --user-agent <TEXT>                      Custom User-Agent string
+# @option --header <KEY:VALUE>                     Extra HTTP header (repeatable)
+# @option --content-length <NUM>                   Maximum content length per page (default: 3000)
+# @option --threads <NUM>                          Parallel crawl/download threads (default: 4)
+# @option --safe <LEVEL>                           Safe search: off|moderate|strict (default: moderate)
+# @option --region <CODE>                          Region/market code e.g. us-en (default: us-en)
+# @option --lang <CODE>                            Language code e.g. en-US (default: en-US)
+# @option --searx-url <URL>                        Custom Searx instance URL
+# @option --max-crawl-size <NUM>                   Max page size to crawl in bytes (default: 5242880)
+# @flag   --crawl                                  Fetch and extract content from result URLs
+# @flag   --download                               Download files from result URLs
+# @flag   --verbose                                Enable verbose/debug output
+# @flag   --no-robots                              Ignore robots.txt restrictions
+# @flag   --json                                   Force JSON output (no colors)
+# @flag   --quiet                                  Suppress status messages
+# @flag   --no-verify                              Disable SSL certificate verification
+# @flag   --dedupe                                 Remove duplicate URLs from results
+# @flag   --no-anti-bot                            Disable enhanced anti-bot detection features
+# @flag   --proxy-rotation                          Enable proxy rotation for anti-bot evasion
+#
+# @env LLM_OUTPUT=/dev/fd/1                        Output path for LLM integration
+# ==============================================================================
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import io
+import json
+import logging
+import os
+import re
+import sys
+import time
+import urllib.parse
+import urllib.request
+import urllib.error
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field, asdict
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import (
+    Any, Dict, Iterator, List, Optional, Tuple, Union
+)
+
+# Ensure this module is properly registered in sys.modules
+# This fixes the dataclass module lookup issue when the module is imported dynamically
+if __name__ not in sys.modules:
+    sys.modules[__name__] = sys.modules.get("tools.web") or sys.modules.get("web") or sys.modules.get("__main__")
+
+__version__ = "1.0.0"
+__all__ = ["run", "search", "crawl_url", "download_url", "format_results"]
+
+# ==============================================================================
+# SECTION 1: Logging & color support
+# ==============================================================================
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
+
+try:
+    from colorama import init as _colorama_init, Fore, Style
+    _colorama_init(autoreset=True)
+    _COLORAMA = True
+except ImportError:
+    _COLORAMA = False
+
+    class _Dummy:
+        def __getattr__(self, _: str) -> str:
+            return ""
+
+    Fore  = _Dummy()  # type: ignore[assignment]
+    Style = _Dummy()  # type: ignore[assignment]
+
+
+def _cprint(text: str, color: str = "", style: str = "", file: Any = None) -> None:
+    """Print with optional ANSI color; degrades gracefully without colorama."""
+    out = file or sys.stderr
+    if _COLORAMA:
+        print(f"{style}{color}{text}{Style.RESET_ALL}", file=out)
+    else:
+        print(text, file=out)
+
+
+# ==============================================================================
+# SECTION 2: Constants & defaults
+# ==============================================================================
+
+DEFAULT_LIMIT:          int   = 10
+DEFAULT_BACKEND:        str   = "ddg"
+DEFAULT_FORMAT:         str   = "json"
+DEFAULT_TYPE:           str   = "web"
+DEFAULT_TIMEOUT:        int   = 20
+DEFAULT_DELAY:          float = 1.0
+DEFAULT_CONTENT_LENGTH: int   = 3000
+DEFAULT_THREADS:        int   = 4
+DEFAULT_SAFE:           str   = "moderate"
+DEFAULT_REGION:         str   = "us-en"
+DEFAULT_LANG:           str   = "en-US"
+DEFAULT_SEARX_URL:      str   = "https://searx.be"
+DEFAULT_MAX_CRAWL_SIZE: int   = 5_242_880  # 5 MiB
+
+VALID_BACKENDS: Tuple[str, ...] = ("ddg", "bing", "searx", "brave", "google")
+VALID_FORMATS:  Tuple[str, ...] = ("json", "jsonl", "markdown", "csv", "tsv")
+VALID_TYPES:    Tuple[str, ...] = ("web", "image", "news")
+VALID_SAFE:     Tuple[str, ...] = ("off", "moderate", "strict")
+
+# Google specific search URL patterns
+_GOOGLE_SEARCH_URLS = [
+    "https://www.google.com/search",
+    "https://google.com/search",
+    # Fallback instances for Google
+    "https://isearch.gov.uk/web", # Example alternative, might not be google.com but similar interface
+]
+
+
+# Google specific search URL patterns
+_GOOGLE_SEARCH_URLS = [
+    "https://www.google.com/search",
+    "https://google.com/search",
+    # Fallback instances for Google
+    "https://isearch.gov.uk/web", # Example alternative, might not be google.com but similar interface
+]
+
+# Enhanced User-Agent pool with realistic variations
+_ENHANCED_USER_AGENTS: Tuple[str, ...] = (
+    # Chrome on different OS with version variations
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    # Firefox variations
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5; rv:127.0) Gecko/20100101 Firefox/127.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0",
+    # Safari
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+    # Edge
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
+    # Ubuntu/Chrome
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    # Additional realistic variations
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OPR/110.0.0.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OPR/109.0.0.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Vivaldi/6.5.3206.54",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0 SeaMonkey/2.53.17",
+)
+
+# Legacy compatibility
+_USER_AGENTS = _ENHANCED_USER_AGENTS
+
+# MIME types treated as plain text (skip binary check for these)
+_TEXT_MIME_PREFIXES: Tuple[str, ...] = (
+    "text/", "application/json", "application/xml",
+    "application/javascript", "application/xhtml",
+)
+
+
+# ==============================================================================
+# SECTION 3: Data structures
+# ==============================================================================
+
+@dataclass
+class SearchResult:
+    """
+    One search result entry.
+
+    Populated progressively: basic fields from the search backend,
+    then content/download fields added during crawl/download phase.
+    """
+    title:            str   = ""
+    url:              str   = ""
+    snippet:          str   = ""
+    # Crawl fields (populated by crawl_url)
+    content:          str   = ""
+    content_length: str = 0
+    page_title:       str   = ""
+    truncated:        bool  = False
+    crawl_error:      str   = ""
+    # Download fields (populated by download_url)
+    downloaded_file:  str   = ""
+    file_size:        int   = 0
+    download_error:   str   = ""
+    # Internal dedup key — not serialised
+    _url_hash:        str   = field(default="", repr=False)
+
+    def __post_init__(self) -> None:
+        if self.url and not self._url_hash:
+            self._url_hash = hashlib.md5(
+                self.url.strip().lower().encode(), usedforsecurity=False
+            ).hexdigest()
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a clean dict suitable for JSON serialisation."""
+        d = asdict(self)
+        d.pop("_url_hash", None)
+        # Omit empty optional fields to keep output tidy
+        for key in (
+            "content", "content_length", "page_title", "truncated", "crawl_error",
+            "downloaded_file", "file_size", "download_error",
+        ):
+            if not d[key] and d[key] != 0:
+                d.pop(key, None)
+        return d
+
+
+@dataclass
+class SearchConfig:
+    """
+    All runtime configuration derived from CLI / run() arguments.
+
+    Having a single config object avoids threading dozens of parameters
+    through every function call.
+    """
+    query:          str   = ""
+    limit:          int   = DEFAULT_LIMIT
+    backend:        str   = DEFAULT_BACKEND
+    fmt:            str   = DEFAULT_FORMAT
+    output_file:    str   = ""
+    search_type:    str   = DEFAULT_TYPE
+    depth:          int   = 1
+    timeout:        float = float(DEFAULT_TIMEOUT)
+    delay:          float = float(DEFAULT_DELAY)
+    proxy:          str   = ""
+    user_agent:     str   = ""
+    headers:        List[str] = field(default_factory=list)
+    content_length: int   = DEFAULT_CONTENT_LENGTH
+    threads:        int   = DEFAULT_THREADS
+    safe:           str   = DEFAULT_SAFE
+    region:         str   = DEFAULT_REGION
+    lang:           str   = DEFAULT_LANG
+    searx_url:      str   = DEFAULT_SEARX_URL
+    max_crawl_size: int   = DEFAULT_MAX_CRAWL_SIZE
+    do_crawl:       bool  = False
+    do_download:    bool  = False
+    verbose:        bool  = False
+    no_robots:      bool  = False
+    force_json:     bool  = False
+    quiet:          bool  = False
+    no_verify:      bool  = False
+    dedupe:         bool  = False
+    # Enhanced anti-bot configuration
+    use_realistic_headers: bool = True
+    enable_session_persistence: bool = True
+    circuit_breaker_threshold: int = 5
+    max_retry_attempts: int = 3
+    proxy_rotation_enabled: bool = False
+    # Additional anti-bot settings
+    anti_bot_delay_range: Tuple[float, float] = (0.5, 2.0)
+    enable_request_fingerprinting: bool = True
+    enable_adaptive_timing: bool = True
+    enable_backend_optimization: bool = True
+
+    def effective_user_agent(self, index: int = 0) -> str:
+        """Return explicit UA or rotate through the built-in pool."""
+        if self.user_agent:
+            return self.user_agent
+        return _USER_AGENTS[index % len(_USER_AGENTS)]
+
+    def extra_headers(self) -> Dict[str, str]:
+        """
+        Parse 'Key:Value' header strings into a dict.
+
+        Silently skips malformed entries (no ':').
+        """
+        result: Dict[str, str] = {}
+        for h in self.headers:
+            if ":" in h:
+                k, _, v = h.partition(":")
+                result[k.strip()] = v.strip()
+        return result
+
+
+# ==============================================================================
+# SECTION 4: Minimal HTML parser (stdlib only — no BeautifulSoup dependency)
+# ==============================================================================
+
+class _TextExtractor(HTMLParser):
+    """
+    Lightweight HTMLParser subclass that extracts visible text.
+
+    Skips content inside: script, style, noscript, nav, footer,
+    header, aside, form, iframe, svg, template.
+    """
+
+    _SKIP_TAGS = frozenset({
+        "script", "style", "noscript", "nav", "footer",
+        "header", "aside", "form", "iframe", "svg", "template",
+    })
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._skip_depth:          str = 0
+        self._parts:      List[str] = []
+        self.title:       str       = ""
+        self._in_title:   bool      = False
+
+    def handle_starttag(self, tag: str, attrs: Any) -> None:
+        t = tag.lower()
+        if t in self._SKIP_TAGS:
+            self._skip_depth += 1
+        if t == "title":
+            self._in_title = True
+
+    def handle_endtag(self, tag: str) -> None:
+        t = tag.lower()
+        if t in self._SKIP_TAGS and self._skip_depth > 0:
+            self._skip_depth -= 1
+        if t == "title":
+            self._in_title = False
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth > 0:
+            return
+        text = data.strip()
+        if not text:
+            return
+        if self._in_title and not self.title:
+            self.title = text
+        self._parts.append(text)
+
+    def get_text(self) -> str:
+        return " ".join(self._parts)
+
+
+def _extract_text(html: str) -> Tuple[str, str]:
+    """
+    Extract (title, body_text) from raw HTML using stdlib HTMLParser.
+
+    Returns empty strings on any parse error.
+    """
+    parser = _TextExtractor()
+    try:
+        parser.feed(html)
+    except Exception:
+        pass
+    raw = parser.get_text()
+    # Collapse whitespace runs
+    text = re.sub(r"\s{2,}", " ", raw).strip()
+    return parser.title, text
+
+
+# ==============================================================================
+# SECTION 5: Circuit Breaker Pattern
+# ==============================================================================
+
+class CircuitBreaker:
+    """Circuit breaker pattern to prevent cascading failures"""
+    def __init__(self, failure_threshold: int = 5, timeout:        str = 60):
+        self.failure_threshold = failure_threshold
+        self.timeout = timeout
+        self.failure_count = 0
+        self.last_failure_time = 0
+        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
+    
+    def should_attempt(self) -> bool:
+        if self.state == "OPEN":
+            if time.time() - self.last_failure_time > self.timeout:
+                self.state = "HALF_OPEN"
+                return True
+            return False
+        return True
+    
+    def record_success(self):
+        self.failure_count = 0
+        self.state = "CLOSED"
+    
+    def record_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = "OPEN"
+
+# Global circuit breaker instances
+_circuit_breakers: Dict[str, CircuitBreaker] = {}
+
+def _get_circuit_breaker(backend: str) -> CircuitBreaker:
+    """Get or create circuit breaker for a backend"""
+    if backend not in _circuit_breakers:
+        _circuit_breakers[backend] = CircuitBreaker(failure_threshold=5, timeout=60)
+    return _circuit_breakers[backend]
+
+# ==============================================================================
+# SECTION 6: HTTP utilities
+# ==============================================================================
+
+def _create_session(cfg: SearchConfig) -> urllib.request.OpenerDirector:
+    """Create session with cookie support for persistence"""
+    opener = _build_opener(cfg)
+    
+    # Add cookie jar for session persistence
+    import http.cookiejar
+    cookie_jar = http.cookiejar.CookieJar()
+    opener.add_handler(urllib.request.HTTPCookieProcessor(cookie_jar))
+    
+    return opener
+
+def _build_opener(cfg: SearchConfig) -> urllib.request.OpenerDirector:
+    """
+    Build a urllib OpenerDirector respecting proxy and SSL settings.
+
+    SSL verification can be disabled with --no-verify (useful for
+    self-hosted Searx instances with self-signed certs).
+    """
+    handlers: List[urllib.request.BaseHandler] = []
+
+    if cfg.proxy:
+        handlers.append(urllib.request.ProxyHandler({
+            "http":  cfg.proxy,
+            "https": cfg.proxy,
+        }))
+
+    if cfg.no_verify:
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode    = ssl.CERT_NONE
+        handlers.append(urllib.request.HTTPSHandler(context=ctx))
+
+    return urllib.request.build_opener(*handlers)
+
+
+def _add_request_fingerprint_variation(cfg: SearchConfig, ua_idx: int) -> Dict[str, str]:
+    """Add variations to avoid request fingerprinting"""
+    import random
+    
+    headers = _get_realistic_headers(cfg, ua_idx)
+    
+    # Enhanced fingerprinting avoidance with more sophisticated variations
+    variation_sets = [
+        # Set 1: Standard headers
+        {},
+        # Set 2: Add common browser headers
+        {
+            "Pragma": "no-cache",
+            "Sec-GPC": "1",  # Global Privacy Control
+        },
+        # Set 3: Different cache control
+        {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+        },
+        # Set 4: Add timing and client hints
+        {
+            "TE": "trailers",
+            "Sec-CH-UA-Arch": '"x86"',
+            "Sec-CH-UA-Bitness": '"64"',
+        },
+        # Set 5: Mobile-like headers
+        {
+            "Sec-CH-UA-Mobile": "?1",
+            "Sec-CH-UA-Platform": '"Android"',
+            "Viewport-Width": "360",
+        },
+        # Set 6: Desktop with different platform
+        {
+            "Sec-CH-UA-Platform": '"macOS"',
+            "Sec-GPC": "1",
+        },
+        # Set 7: Linux desktop
+        {
+            "Sec-CH-UA-Platform": '"Linux"',
+            "Sec-CH-UA-Arch": '"x86"',
+        },
+        # Set 8: Enhanced privacy headers
+        {
+            "DNT": "1",
+            "Sec-GPC": "1",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-Mode": "navigate",
+        },
+        # Set 9: Tablet-like headers
+        {
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": '"iPad"',
+            "Sec-CH-UA-Model": '"iPad"',
+        },
+        # Set 10: Minimal headers (older browser simulation)
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+        },
+    ]
+    
+    # Select variation set based on attempt number with some randomness
+    base_variation = ua_idx % len(variation_sets)
+    if random.random() < 0.3:  # 30% chance to use a random variation
+        base_variation = random.randint(0, len(variation_sets) - 1)
+    
+    selected_variation = variation_sets[base_variation]
+    headers.update(selected_variation)
+    
+    # Add random small variations
+    if random.random() < 0.2:  # 20% chance
+        # Randomly modify Accept-Language
+        lang_variants = [
+            "en-US,en;q=0.9",
+            "en-US,en;q=0.8,en-GB;q=0.6",
+            "en-US,en;q=0.7,en-GB;q=0.5,en;q=0.3",
+            "en-GB,en-US;q=0.9,en;q=0.8",
+        ]
+        headers["Accept-Language"] = random.choice(lang_variants)
+    
+    if random.random() < 0.15:  # 15% chance
+        # Randomly modify connection header
+        headers["Connection"] = random.choice(["keep-alive", "close"])
+    
+    if random.random() < 0.1:  # 10% chance
+        # Add a custom header that looks legitimate
+        custom_headers = [
+            ("X-Requested-With", "XMLHttpRequest"),
+            ("X-Forwarded-For", f"192.168.{random.randint(1,255)}.{random.randint(1,255)}"),
+            ("Via", f"1.1 {random.choice(['proxy', 'gateway', 'cache'])}"),
+        ]
+        if random.random() < 0.5:  # 50% chance to actually add it
+            header_name, header_value = random.choice(custom_headers)
+            headers[header_name] = header_value
+    
+    return headers
+
+def _get_realistic_headers(cfg: SearchConfig, ua_idx: int = 0) -> Dict[str, str]:
+    """Generate headers that mimic real browsers"""
+    if not cfg.use_realistic_headers:
+        # Fallback to simple headers if disabled
+        return {
+            "User-Agent": cfg.effective_user_agent(ua_idx),
+            "Accept": "text/html,application/xhtml+xml,*/*;q=0.9",
+            "Accept-Language": cfg.lang,
+            "Accept-Encoding": "identity",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+        }
+    
+    # Enhanced realistic headers with more variations
+    ua = cfg.effective_user_agent(ua_idx)
+    
+    # Detect browser type from User-Agent for appropriate headers
+    if "Chrome" in ua and "Edg" not in ua and "OPR" not in ua:
+        # Chrome-specific headers
+        base_headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9,en-GB;q=0.8,en;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+            "sec-ch-ua": '"Google Chrome";v="124", "Chromium";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "Sec-Purpose": "prefetch",
+        }
+    elif "Firefox" in ua:
+        # Firefox-specific headers
+        base_headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+        }
+    elif "Safari" in ua and "Chrome" not in ua:
+        # Safari-specific headers
+        base_headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+        }
+    elif "Edg" in ua:
+        # Edge-specific headers
+        base_headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+            "sec-ch-ua": '"Microsoft Edge";v="124", "Chromium";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+        }
+    else:
+        # Generic fallback
+        base_headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+        }
+    
+    # Add random variations based on attempt number
+    variations = [
+        # Variation 1: Standard
+        {},
+        # Variation 2: Add pragma
+        {"Pragma": "no-cache"},
+        # Variation 3: Different accept encoding
+        {"Accept-Encoding": "gzip, deflate"},
+        # Variation 4: Add TE header
+        {"TE": "trailers"},
+        # Variation 5: Different cache control
+        {"Cache-Control": "no-cache"},
+        # Variation 6: Add purpose header
+        {"Purpose": "prefetch"},
+        # Variation 7: Different DNT
+        {"DNT": "0"},
+        # Variation 8: Combined variations
+        {"Pragma": "no-cache", "Cache-Control": "no-cache"},
+    ]
+    
+    variation = variations[ua_idx % len(variations)]
+    base_headers.update(variation)
+    
+    # Randomly modify some headers
+    import random
+    if random.random() < 0.3:  # 30% chance
+        base_headers["Accept-Language"] = "en-US,en;q=0.8,en-GB;q=0.6,en;q=0.4"
+    if random.random() < 0.2:  # 20% chance
+        base_headers["Connection"] = "close"
+    
+    return base_headers
+
+def _adaptive_delay(cfg: SearchConfig, attempt: int, success_rate: float = 1.0) -> float:
+    """Calculate adaptive delay based on success rate and attempt number"""
+    import random
+    import time
+    
+    base_delay = cfg.delay
+    
+    # Backend-specific minimum delays
+    backend_min_delays = {
+        "ddg": 0.5,
+        "bing": 1.0,
+        "searx": 1.5,
+        "brave": 0.8,
+    }
+    
+    # Ensure minimum delay for backend
+    min_delay = backend_min_delays.get(cfg.backend, 0.5)
+    base_delay = max(base_delay, min_delay)
+    
+    # Increase delay if success rate is low
+    if success_rate < 0.3:
+        base_delay *= 3.0  # Very aggressive delay for very low success
+    elif success_rate < 0.5:
+        base_delay *= 2.0
+    elif success_rate < 0.8:
+        base_delay *= 1.5
+    
+    # Exponential backoff with attempt number
+    attempt_multiplier = 1 + (attempt * 0.3) + (attempt ** 2 * 0.1)
+    
+    # Add jitter to avoid predictable patterns
+    jitter = random.uniform(0.7, 1.8)
+    
+    # Add time-of-day based variation (simulate human behavior)
+    current_hour = time.localtime().tm_hour
+    if 9 <= current_hour <= 17:  # Business hours - slightly faster
+        time_factor = random.uniform(0.8, 1.2)
+    elif 22 <= current_hour or current_hour <= 6:  # Late night/early morning - slower
+        time_factor = random.uniform(1.2, 2.0)
+    else:  # Evening hours
+        time_factor = random.uniform(0.9, 1.5)
+    
+    final_delay = base_delay * attempt_multiplier * jitter * time_factor
+    
+    # Cap maximum delay to prevent excessive waiting
+    max_delay = 30.0
+    return min(final_delay, max_delay)
+
+def _handle_anti_bot_response(html: str, url: str) -> bool:
+    """Detect anti-bot responses and handle appropriately"""
+    # Enhanced anti-bot detection patterns
+    anti_bot_indicators = [
+        # Common bot detection terms
+        "captcha", "robot", "bot", "automated", "automation",
+        "access denied", "forbidden", "rate limit", "rate-limit",
+        "too many requests", "blocked", "suspicious", "unusual activity",
+        # Cloudflare and CDN protections
+        "cloudflare", "ray id", "cf-ray", "checking your browser",
+        "enable javascript", "javascript is disabled", "please enable cookies",
+        # reCAPTCHA and other CAPTCHA systems
+        "recaptcha", "google recaptcha", "verify you are human", "human verification",
+        "prove you are human", "are you a robot", "security check",
+        # Rate limiting and blocking messages
+        "request blocked", "ip blocked", "temporarily blocked", "service unavailable",
+        "429", "too many requests", "quota exceeded", "limit exceeded",
+        # Geographic and access restrictions
+        "not available in your region", "geo-blocked", "country restriction",
+        # Bot detection headers and meta tags
+        "x-robots-tag", "noindex", "nofollow", "bot-protection",
+        # JavaScript and browser requirements
+        "enable javascript", "javascript required", "upgrade your browser",
+        "modern browser required", "browser not supported",
+        # Security and authentication
+        "security verification", "authentication required", "login required",
+        "session expired", "csrf token", "security token",
+    ]
+    
+    html_lower = html.lower()
+    
+    # Check for anti-bot indicators
+    found_indicators = []
+    for indicator in anti_bot_indicators:
+        if indicator in html_lower:
+            found_indicators.append(indicator)
+    
+    # Additional checks for common anti-bot patterns
+    # Check for CAPTCHA forms
+    if re.search(r'<form[^>]*captcha|captcha[^>]*>', html_lower):
+        found_indicators.append("captcha_form")
+    
+    # Check for JavaScript challenges
+    if re.search(r'javascript.*challenge|challenge.*javascript', html_lower):
+        found_indicators.append("js_challenge")
+    
+    # Check for Cloudflare protection pages
+    if "cloudflare" in html_lower and ("checking" in html_lower or "ray id" in html_lower):
+        found_indicators.append("cloudflare_protection")
+    
+    # Check for rate limiting headers (if we had access to headers)
+    # This would need to be implemented in the HTTP response handling
+    
+    # Log detected indicators for debugging
+    if found_indicators:
+        logger.debug("Anti-bot indicators detected for %s: %s", url, ", ".join(found_indicators))
+    
+    # Consider it an anti-bot response if we found multiple indicators
+    # or specific high-confidence indicators
+    high_confidence_indicators = {"captcha", "cloudflare", "recaptcha", "blocked"}
+    found_high_confidence = any(indicator in html_lower for indicator in high_confidence_indicators)
+    
+    return found_high_confidence or len(found_indicators) >= 2
+
+def _get_proxy_list() -> List[str]:
+    """Get list of proxy servers (can be from config file)"""
+    # Try to load from environment variable first
+    proxy_env = os.environ.get("WEB_SEARCH_PROXIES", "")
+    if proxy_env:
+        return [p.strip() for p in proxy_env.split(",") if p.strip()]
+    
+    # Try to load from proxy file
+    proxy_file = os.environ.get("WEB_SEARCH_PROXY_FILE", "")
+    if proxy_file and os.path.exists(proxy_file):
+        try:
+            with open(proxy_file, 'r', encoding='utf-8') as f:
+                proxies = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+                if proxies:
+                    logger.debug("Loaded %d proxies from file: %s", len(proxies), proxy_file)
+                    return proxies
+        except Exception as e:
+            logger.debug("Failed to load proxy file %s: %s", proxy_file, e)
+    
+    # Default proxy list with some public proxy examples (for testing only)
+    # WARNING: These are examples and may not work reliably
+    default_proxies = [
+        # Add your reliable proxy servers here
+        # "http://proxy1:8080",
+        # "http://proxy2:8080",
+        # "socks5://proxy3:1080",
+    ]
+    
+    return default_proxies
+
+def _rotate_proxy(cfg: SearchConfig, attempt: int) -> str:
+    """Rotate through available proxies with intelligent selection"""
+    if not cfg.proxy_rotation_enabled:
+        return cfg.proxy
+    
+    proxies = _get_proxy_list()
+    if not proxies:
+        return cfg.proxy
+    
+    # Intelligent proxy rotation strategy
+    import random
+    import time
+    
+    # Use different rotation strategies based on attempt number
+    if attempt == 0:
+        # First attempt: use configured proxy or first in list
+        if cfg.proxy:
+            return cfg.proxy
+        else:
+            return proxies[0]
+    elif attempt <= 3:
+        # Early attempts: sequential rotation
+        return proxies[attempt % len(proxies)]
+    else:
+        # Later attempts: random selection with fallback
+        available_proxies = proxies.copy()
+        
+        # Remove recently used proxies to avoid repetition
+        recent_proxies = min(3, len(available_proxies))
+        if attempt > recent_proxies:
+            # Remove the last few used proxies
+            start_idx = max(0, attempt - recent_proxies)
+            for i in range(start_idx, attempt):
+                proxy_to_remove = proxies[i % len(proxies)]
+                if proxy_to_remove in available_proxies:
+                    available_proxies.remove(proxy_to_remove)
+        
+        # Randomly select from remaining proxies
+        if available_proxies:
+            selected_proxy = random.choice(available_proxies)
+            logger.debug("Selected proxy %s (attempt %d, %d available)", 
+                        selected_proxy, attempt, len(available_proxies))
+            return selected_proxy
+        else:
+            # Fallback to sequential rotation
+            return proxies[attempt % len(proxies)]
+
+def _http_get(
+    url:     str,
+    cfg:     SearchConfig,
+    *,
+    data:    Optional[bytes] = None,
+    ua_idx:  int = 0,
+    extra:   Optional[Dict[str, str]] = None,
+) -> Optional[str]:
+    """
+    Perform an HTTP GET (or POST when data is supplied).
+
+    Returns response body as a string, or None on any error.
+    Enforces cfg.timeout; respects cfg.no_verify via the opener.
+    """
+    # Check circuit breaker for this domain
+    domain = urllib.parse.urlparse(url).netloc
+    circuit_breaker = _get_circuit_breaker(domain)
+    
+    if not circuit_breaker.should_attempt():
+        logger.debug("Circuit breaker OPEN for %s, skipping request", domain)
+        return None
+    
+    # Rotate proxy if enabled
+    proxy = _rotate_proxy(cfg, ua_idx)
+    if proxy != cfg.proxy:
+        cfg.proxy = proxy
+    
+    opener = _create_session(cfg)
+    headers = _add_request_fingerprint_variation(cfg, ua_idx)
+    headers.update(cfg.extra_headers())
+    if extra:
+        headers.update(extra)
+
+    req = urllib.request.Request(url, data=data, headers=headers,
+                                 method="POST" if data else "GET")
+    
+    # Enhanced retry logic with adaptive delays
+    max_retries = cfg.max_retry_attempts
+    success = False
+    
+    for attempt in range(max_retries + 1):
+        try:
+            with opener.open(req, timeout=cfg.timeout) as resp:
+                # Guard against enormous pages
+                raw = resp.read(cfg.max_crawl_size + 1)
+                if len(raw) > cfg.max_crawl_size:
+                    logger.debug("Response truncated at %d bytes for %s", cfg.max_crawl_size, url)
+                    raw = raw[:cfg.max_crawl_size]
+                charset = _detect_charset(resp.headers.get("Content-Type", ""))
+                html = raw.decode(charset, errors="replace")
+                
+                # Check for anti-bot responses
+                if _handle_anti_bot_response(html, url):
+                    logger.debug("Anti-bot response detected for %s (attempt %d)", url, attempt + 1)
+                    if attempt < max_retries:
+                        time.sleep(_adaptive_delay(cfg, attempt, 0.3))
+                        continue
+                
+                # Record success and return result
+                circuit_breaker.record_success()
+                success = True
+                return html
+                
+        except urllib.error.HTTPError as exc:
+            logger.debug("HTTP %s for %s (attempt %d)", exc.code, url, attempt + 1)
+            if exc.code in (429, 503, 502, 504, 403) and attempt < max_retries:
+                # Retry on rate limiting, server errors, and forbidden
+                time.sleep(_adaptive_delay(cfg, attempt, 0.5))
+                continue
+        except urllib.error.URLError as exc:
+            logger.debug("URL error for %s: %s (attempt %d)", url, exc.reason, attempt + 1)
+            if attempt < max_retries:
+                time.sleep(_adaptive_delay(cfg, attempt, 0.5))
+                continue
+        except Exception as exc:
+            logger.debug("Request failed for %s: %s (attempt %d)", url, exc, attempt + 1)
+            if attempt < max_retries:
+                time.sleep(_adaptive_delay(cfg, attempt, 0.5))
+                continue
+    
+    # Record failure if all attempts failed
+    if not success:
+        circuit_breaker.record_failure()
+    
+    return None
+
+
+def _http_get_binary(url: str, cfg: SearchConfig, ua_idx: int = 0) -> Optional[bytes]:
+    """
+    Fetch a URL and return raw bytes (for file downloads).
+
+    Returns None on any error.
+    """
+    opener = _create_session(cfg)
+    headers = {
+        "User-Agent": cfg.effective_user_agent(ua_idx),
+        "Accept":     "*/*",
+    }
+    headers.update(cfg.extra_headers())
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with opener.open(req, timeout=cfg.timeout) as resp:
+            return resp.read()
+    except Exception as exc:
+        logger.debug("Binary download failed for %s: %s", url, exc)
+    return None
+
+
+def _detect_charset(content_type: str) -> str:
+    """
+    Extract charset from Content-Type header; default to utf-8.
+
+    Example: 'text/html; charset=windows-1252' → 'windows-1252'
+    """
+    m = re.search(r"charset=([^\s;]+)", content_type, re.IGNORECASE)
+    if m:
+        return m.group(1).strip('"\'')
+    return "utf-8"
+
+
+def _url_encode(text: str) -> str:
+    """Percent-encode a string for use in a query string."""
+    return urllib.parse.quote(text, safe="")
+
+
+# ==============================================================================
+# SECTION 6: Search backends
+# ==============================================================================
+
+# ---------------------------------------------------------------------------
+# 6a. DuckDuckGo (HTML endpoint — no API key required)
+# ---------------------------------------------------------------------------
+
+def _parse_ddg_html(html: str, limit: int) -> List[SearchResult]:
+    """
+    Parse DuckDuckGo HTML results page into SearchResult objects.
+
+    DDG's HTML endpoint is stable and doesn't require JavaScript.
+    Result blocks are identified by class='result__a' anchor tags.
+    """
+    results: List[SearchResult] = []
+    seen:    set                = set()
+
+    # Try multiple patterns for result blocks (DDG changes HTML structure)
+    patterns = [
+        # Primary pattern - original
+        r'<div[^>]*class=["\'][^"\']*result[^"\']*["\'][^>]*>.*?(?='
+        r'<div[^>]*class=["\'][^"\']*result|$)',
+        # Alternative pattern - different class structure
+        r'<article[^>]*class=["\'][^"\']*result[^"\']*["\'][^>]*>.*?</article>',
+        # Fallback pattern - any div with result-like content
+        r'<div[^>]*>.*?<a[^>]*class=["\'][^"\']*result__a[^"\']*["\'][^>]*>.*?</div>',
+    ]
+
+    blocks = []
+    for pattern in patterns:
+        found = re.findall(pattern, html, re.DOTALL)
+        if found:
+            blocks = found
+            logger.debug("DDG parser: found %d blocks with pattern %s", len(found), pattern[:50])
+            break
+
+    for block in blocks:
+        if len(results) >= limit:
+            break
+
+        # Title + URL - try multiple patterns
+        link_patterns = [
+            r'<a[^>]*class=["\'][^"\']*result__a[^"\']*["\'][^>]*'
+            r'href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+            r'<h2[^>]*>.*?<a[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>.*?</h2>',
+            r'<a[^>]*href=["\']([^"\']+)["\'][^>]*class=["\'][^"\']*result__a[^"\']*["\'][^>]*>(.*?)</a>',
+        ]
+
+        m_link = None
+        for pattern in link_patterns:
+            m_link = re.search(pattern, block, re.DOTALL)
+            if m_link:
+                break
+
+        if not m_link:
+            continue
+
+        raw_url = m_link.group(1)
+        title   = _clean_html(m_link.group(2))
+
+        # Unwrap DDG redirect (/l/?uddg=...)
+        if "/l/?uddg=" in raw_url or "//duckduckgo.com/l/" in raw_url:
+            try:
+                qs      = urllib.parse.urlparse(raw_url).query
+                raw_url = urllib.parse.unquote(
+                    urllib.parse.parse_qs(qs).get("uddg", [raw_url])[0]
+                )
+            except Exception:
+                pass
+
+        # Skip ads and non-HTTP URLs
+        if not raw_url.startswith("http"):
+            continue
+        if "ad_domain=" in raw_url or "bing.com/aclick" in raw_url:
+            continue
+        if raw_url in seen:
+            continue
+        seen.add(raw_url)
+
+        # Snippet - try multiple patterns
+        snippet_patterns = [
+            r'class=["\'][^"\']*result__snippet[^"\']*["\'][^>]*>(.*?)</(?:a|div|span)',
+            r'<div[^>]*class=["\'][^"\']*result__snippet[^"\']*["\'][^>]*>(.*?)</div>',
+            r'<p[^>]*class=["\'][^"\']*snippet[^"\']*["\'][^>]*>(.*?)</p>',
+        ]
+
+        snippet = ""
+        for pattern in snippet_patterns:
+            m_snip = re.search(pattern, block, re.DOTALL)
+            if m_snip:
+                snippet = _clean_html(m_snip.group(1))
+                break
+
+        results.append(SearchResult(title=title, url=raw_url, snippet=snippet))
+
+    return results[:limit]
+
+
+def _search_ddg(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query DuckDuckGo HTML endpoint via POST with fallback to GET.
+
+    kl=<region> sets the region; safe-search is mapped from cfg.safe.
+    """
+    # Apply backend-specific strategies
+    if cfg.enable_backend_optimization:
+        cfg = _backend_specific_strategy(cfg)
+    
+    safe_map = {"off": "-2", "moderate": "-1", "strict": "1"}
+    
+    # Try multiple DDG endpoints for better reliability
+    ddg_endpoints = [
+        "https://start.duckduckgo.com/html/",
+        "https://html.duckduckgo.com/html/",
+        "https://duckduckgo.com/html/",
+    ]
+    
+    html = None
+    successful_endpoint = None
+    
+    for endpoint_idx, endpoint in enumerate(ddg_endpoints):
+        logger.debug("DDG search: %r region=%s endpoint=%s", cfg.query, cfg.region, endpoint)
+        
+        # Add adaptive delay before request
+        success_rate_estimate = 0.8 if endpoint_idx == 0 else 0.5
+        time.sleep(_adaptive_delay(cfg, endpoint_idx, success_rate_estimate))
+        
+        # Try POST first (original method)
+        data = urllib.parse.urlencode({
+            "q":  cfg.query,
+            "kl": cfg.region,
+            "kp": safe_map.get(cfg.safe, "-1"),
+            "kc": "-1",   # no clustering
+            "kf": "-1",   # no ads
+        }).encode()
+
+        html = _http_get(
+            endpoint,
+            cfg, data=data,
+            extra={"Content-Type": "application/x-www-form-urlencoded"},
+            ua_idx=endpoint_idx,
+        )
+        
+        # Fallback to GET if POST fails or returns no results
+        if not html:
+            logger.debug("DDG POST failed for %s, trying GET fallback", endpoint)
+            time.sleep(_adaptive_delay(cfg, endpoint_idx + 1, 0.3))  # Lower success rate for fallback
+            params = urllib.parse.urlencode({
+                "q": cfg.query,
+                "kl": cfg.region,
+                "kp": safe_map.get(cfg.safe, "-1"),
+            })
+            html = _http_get(f"{endpoint}?{params}", cfg, ua_idx=endpoint_idx + 1)
+        
+        if html:
+            successful_endpoint = endpoint
+            break
+        
+        # If this endpoint failed, try the next one
+        if endpoint_idx < len(ddg_endpoints) - 1:
+            logger.debug("DDG endpoint %s failed, trying next endpoint", endpoint)
+            time.sleep(_adaptive_delay(cfg, endpoint_idx + 2, 0.2))
+    
+    if not html:
+        logger.warning("All DDG endpoints failed")
+        return []
+
+    results = _parse_ddg_html(html, cfg.limit)
+    logger.debug("DDG returned %d results from %s", len(results), successful_endpoint)
+    return results
+
+
+# ---------------------------------------------------------------------------
+# 6b. Bing (HTML scrape — no API key required)
+# ---------------------------------------------------------------------------
+
+def _parse_bing_html(html: str, limit: int) -> List[SearchResult]:
+    """
+    Parse Bing HTML results page.
+
+    Bing wraps each result in <li class="b_algo">.
+    """
+    results: List[SearchResult] = []
+    seen:    set                = set()
+
+    blocks = re.findall(
+        r'<li[^>]*class=["\'][^"\']*\bb_algo\b[^"\']*["\'][^>]*>.*?</li>',
+        html, re.DOTALL,
+    )
+
+    for block in blocks:
+        if len(results) >= limit:
+            break
+
+        m = re.search(
+            r'<h2[^>]*>\s*<a[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+            block, re.DOTALL,
+        )
+        if not m:
+            continue
+
+        url   = m.group(1)
+        title = _clean_html(m.group(2))
+
+        if not url.startswith("http") or url in seen:
+            continue
+        seen.add(url)
+
+        sm = re.search(
+            r'<div[^>]*class=["\'][^"\']*b_caption[^"\']*["\'][^>]*>'
+            r'.*?<p[^>]*>(.*?)</p>',
+            block, re.DOTALL,
+        )
+        snippet = _clean_html(sm.group(1)) if sm else ""
+
+        results.append(SearchResult(title=title, url=url, snippet=snippet))
+
+    return results[:limit]
+
+
+def _backend_specific_strategy(cfg: SearchConfig) -> SearchConfig:
+    """Apply backend-specific anti-detection measures"""
+    import random
+    
+    if cfg.backend == "ddg":
+        # DuckDuckGo is more lenient, use standard approach
+        cfg.delay = max(cfg.delay, 0.5)
+        cfg.timeout = min(cfg.timeout, 20)
+        # DDG works well with POST requests
+        cfg.max_retry_attempts = max(cfg.max_retry_attempts, 2)
+        
+    elif cfg.backend == "bing":
+        # Bing is more aggressive, be more careful
+        cfg.delay = max(cfg.delay, 1.0)
+        cfg.timeout = min(cfg.timeout, 10)
+        cfg.max_retry_attempts = max(cfg.max_retry_attempts, 3)
+        # Bing is more sensitive to rapid requests
+        if cfg.delay < 1.5:
+            cfg.delay = 1.5
+            
+    elif cfg.backend == "searx":
+        # Searx instances vary, be conservative
+        cfg.delay = max(cfg.delay, 1.5)
+        cfg.timeout = min(cfg.timeout, 15)
+        cfg.max_retry_attempts = max(cfg.max_retry_attempts, 2)
+        # Searx instances may have different rate limits
+        cfg.delay += random.uniform(0.2, 0.8)
+        
+    elif cfg.backend == "brave":
+        # Brave Search - moderate restrictions
+        cfg.delay = max(cfg.delay, 0.8)
+        cfg.timeout = min(cfg.timeout, 15)
+        cfg.max_retry_attempts = max(cfg.max_retry_attempts, 2)
+    
+    # Apply additional safety measures for all backends
+    # Ensure minimum delay between requests
+    min_delays = {"ddg": 0.5, "bing": 1.0, "searx": 1.5, "brave": 0.8}
+    cfg.delay = max(cfg.delay, min_delays.get(cfg.backend, 1.0))
+    
+    # Adjust timeout based on backend reliability
+    timeout_limits = {"ddg": 20, "bing": 10, "searx": 15, "brave": 15}
+    cfg.timeout = min(cfg.timeout, timeout_limits.get(cfg.backend, 15))
+    
+    # Add random jitter to delay to avoid predictable patterns
+    jitter_factor = random.uniform(0.8, 1.3)
+    cfg.delay = cfg.delay * jitter_factor
+    
+    return cfg
+
+def _search_bing(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query Bing web search with improved headers and fallback.
+
+    count= requests more results than needed to account for filtered items.
+    mkt= sets the market/region.
+    """
+    # Apply backend-specific strategies
+    cfg = _backend_specific_strategy(cfg)
+    
+    params = urllib.parse.urlencode({
+        "q":     cfg.query,
+        "count": min(cfg.limit * 2, 50),
+        "mkt":   cfg.region,
+        "safeSearch": cfg.safe.capitalize(),
+        "setlang":    cfg.lang,
+    })
+
+    logger.debug("Bing search: %r region=%s", cfg.query, cfg.region)
+    
+    # Add adaptive delay before request (Bing is more aggressive)
+    time.sleep(_adaptive_delay(cfg, 0, 0.6))
+    
+    # Try with enhanced headers for better compatibility
+    original_headers = cfg.headers.copy()
+    cfg.headers.extend([
+        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language: en-US,en;q=0.9",
+        "Referer: https://www.bing.com/",
+        "Sec-Fetch-Dest: document",
+        "Sec-Fetch-Mode: navigate",
+        "Sec-Fetch-Site: same-origin",
+    ])
+    
+    html = _http_get(f"https://www.bing.com/search?{params}", cfg, ua_idx=1)
+    
+    # Restore original headers
+    cfg.headers = original_headers
+    
+    if not html:
+        logger.warning("Bing returned empty response")
+        return []
+
+    results = _parse_bing_html(html, cfg.limit)
+    logger.debug("Bing returned %d results", len(results))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# 6c. Searx (HTML scrape — self-hosted or public instance)
+# ---------------------------------------------------------------------------
+
+def _parse_searx_html(html: str, limit: int, base_url: str) -> List[SearchResult]:
+    """
+    Parse Searx HTML results page.
+
+    Searx wraps each result in <article class="result ..."> blocks.
+    Relative URLs are resolved against the base_url.
+    """
+    results: List[SearchResult] = []
+    seen:    set                = set()
+
+    # Search blocks - articles with result class
+    blocks = re.findall(
+        r'<article[^>]*class=["\'][^"\']*\bresult\b[^"\']*["\'][^>]*>.*?</article>',
+        html, re.DOTALL,
+    )
+
+    for block in blocks:
+        if len(results) >= limit:
+            break
+
+        # Extract title and URL
+        # Pattern 1: h3 > a
+        # Pattern 2: a[class~=result_header]
+        m = re.search(
+            r'<h[23][^>]*>.*?<a[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>.*?</h[23]>',
+            block, re.DOTALL,
+        ) or re.search(
+            r'<a[^>]*class=["\'][^"\']*\bresult_header\b[^"\']*["\'][^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+            block, re.DOTALL,
+        )
+        
+        if not m:
+            continue
+
+        raw_url = m.group(1)
+        title   = _clean_html(m.group(2))
+
+        # Resolve relative URLs
+        url = urllib.parse.urljoin(base_url, raw_url)
+
+        if not url.startswith("http") or url in seen:
+            continue
+        seen.add(url)
+
+        # Snippet - try multiple patterns
+        sm = re.search(
+            r'<p[^>]*class=["\'](?:[^"\']*\b)?content\b(?:[^"\']*)?["\'][^>]*>(.*?)</p>',
+            block, re.DOTALL,
+        ) or re.search(
+            r'<div[^>]*class=["\'](?:[^"\']*\b)?result_content\b(?:[^"\']*)?["\'][^>]*>(.*?)</div>',
+            block, re.DOTALL,
+        )
+        snippet = _clean_html(sm.group(1)) if sm else ""
+
+        results.append(SearchResult(title=title, url=url, snippet=snippet))
+
+    return results[:limit]
+
+
+def _search_searx(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query a Searx instance with fallback options.
+
+    format=html used for reliable scraping without API key requirements.
+    """
+    # Apply backend-specific strategies
+    cfg = _backend_specific_strategy(cfg)
+    
+    # Try multiple Searx instances for better reliability
+    searx_instances = [
+        cfg.searx_url.rstrip("/"),
+        "https://searx.be",
+        "https://searx.xyz", 
+        "https://search.brave.com/searx",
+        "https://searx.tiekoetter.com",
+        "https://searx.thegreenplace.net",
+        "https://searx.fmac.xyz",
+        "https://searx.work",
+        "https://searx.prvcy.eu",
+    ]
+    
+    params = urllib.parse.urlencode({
+        "q":          cfg.query,
+        "format":     "html",
+        "language":   cfg.lang,
+        "categories": cfg.search_type,
+        "safesearch": {"off": 0, "moderate": 1, "strict": 2}.get(cfg.safe, 1),
+    })
+
+    for i, base in enumerate(searx_instances):
+        logger.debug("Searx search: %r instance=%s", cfg.query, base)
+        
+        # Add adaptive delay between instance attempts
+        if i > 0:
+            time.sleep(_adaptive_delay(cfg, i, 0.4))
+        
+        search_url = f"{base}/search?{params}"
+        html = _http_get(search_url, cfg, ua_idx=2 + i)
+        if html:
+            results = _parse_searx_html(html, cfg.limit, base)
+            if results:
+                logger.debug("Searx returned %d results from %s", len(results), base)
+                return results
+            logger.debug("Searx %s returned no parsable results", base)
+        else:
+            logger.debug("Searx %s returned empty response", base)
+
+    logger.warning("All Searx instances failed")
+    return []
+
+
+def _parse_google_html(html: str, limit: int, base_url: str) -> List[SearchResult]:
+    """
+    Parse Google HTML results page.
+
+    Google wraps results in divs with class 'g'.
+    Relative URLs are resolved against the base_url.
+    """
+    results: List[SearchResult] = []
+    seen:    set                = set()
+
+    # Find result blocks. Google uses divs with class 'g' or 'tfo-unorganized-results'
+    blocks = re.findall(
+        r'<div[^>]*class=["\'](?:[^"\']*\b)?g\b(?:[^"\']*)["\'][^>]*>(.*?)</div>',
+        html, re.DOTALL
+    ) or re.findall(
+        r'<div[^>]*class=["\'](?:[^"\']*\b)?tfo-unorganized-results\b(?:[^"\']*)["\'][^>]*>(.*?)</div>',
+        html, re.DOTALL
+    )
+
+    for block in blocks:
+        if len(results) >= limit:
+            break
+
+        # Extract title and URL
+        # Title is usually in an <h3> tag, URL in an <a> tag within it.
+        m = re.search(
+            r'<h3[^>]*>.*?<a[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>.*?</h3>',
+            block, re.DOTALL
+        )
+        if not m:
+            continue
+
+        raw_url = m.group(1)
+        title   = _clean_html(m.group(2))
+
+        # Resolve relative URLs if necessary
+        url = urllib.parse.urljoin(base_url, raw_url)
+
+        # Skip non-HTTP URLs, ads, and duplicates
+        if not url.startswith("http") or url in seen:
+            continue
+        seen.add(url)
+
+        # Extract snippet - typically in a <p> tag within the result block
+        sm = re.search(
+            r'<p[^>]*>(.*?)</p>',
+            block, re.DOTALL
+        )
+        snippet = _clean_html(sm.group(1)) if sm else ""
+
+        results.append(SearchResult(title=title, url=url, snippet=snippet))
+
+    return results[:limit]
+
+
+def _search_google(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query Google Search HTML endpoint.
+
+    Uses parameters like `q`, `hl`, `gl`, `num`, `start`, `safe`.
+    """
+    # Apply backend-specific strategies
+    cfg = _backend_specific_strategy(cfg)
+    
+    # Google uses different parameters for safe search
+    safe_map = {"off": "off", "moderate": "medium", "strict": "strict"}
+    
+    params = urllib.parse.urlencode({
+        "q":     cfg.query,
+        "hl":    cfg.lang.split('-')[0],  # Use language code only (e.g., 'en')
+        "gl":    cfg.region.split('-')[1] if '-' in cfg.region else cfg.region, # Use region code (e.g., 'us')
+        "num":   cfg.limit,
+        "start": 0, # Start from the first result for simplicity
+        "safe":  safe_map.get(cfg.safe, "medium"),
+    })
+
+    # Try multiple Google instances for better reliability
+    google_instances = _GOOGLE_SEARCH_URLS
+    
+    html = None
+    successful_endpoint = None
+
+    for i, base in enumerate(google_instances):
+        logger.debug("Google search: %r instance=%s", cfg.query, base)
+        
+        # Add adaptive delay
+        time.sleep(_adaptive_delay(cfg, i, 0.7))
+        
+        search_url = f"{base}?{params}"
+        html = _http_get(search_url, cfg, ua_idx=i)
+        if html:
+            successful_endpoint = base
+            break
+        else:
+            logger.debug("Google %s returned empty response", base)
+
+    if not html:
+        logger.warning("All Google instances failed")
+        return []
+
+    results = _parse_google_html(html, cfg.limit, successful_endpoint)
+    logger.debug("Google returned %d results from %s", len(results), successful_endpoint)
+    return results
+
+
+
+# ==============================================================================
+# SECTION 7: Content extraction & downloading
+# ==============================================================================
+
+def crawl_url(url: str, cfg: SearchConfig, ua_idx: int = 0) -> Dict[str, Any]:
+    """
+    Fetch a URL and extract its readable text content.
+
+    Uses stdlib HTMLParser (_TextExtractor) — no external dependencies.
+
+    Returns a dict with keys:
+      title (str), content (str), content_length (int),
+      truncated (bool), error (str)
+    """
+    logger.debug("Crawling: %s", url)
+    html = _http_get(url, cfg, ua_idx=ua_idx)
+
+    if html is None:
+        return {"title": "", "content": "", "content_length": 0,
+                "truncated": False, "error": "Failed to fetch URL"}
+
+    title, text = _extract_text(html)
+
+    truncated = False
+    if len(text) > cfg.content_length:
+        text      = text[:cfg.content_length] + "..."
+        truncated = True
+
+    return {
+        "title":          title,
+        "content":        text,
+        "content_length": len(text),
+        "truncated":      truncated,
+        "error":          "",
+    }
+
+
+def download_url(url: str, cfg: SearchConfig, ua_idx: int = 0) -> Dict[str, Any]:
+    """
+    Download a URL to a local file in the current directory.
+
+    Filename is derived from the URL path; falls back to a timestamp-based
+    name when the URL has no useful path component.
+
+    Returns a dict with keys:
+      downloaded_file (str), file_size (int), error (str)
+    """
+    logger.debug("Downloading: %s", url)
+
+    # Derive filename from URL path
+    parsed   = urllib.parse.urlparse(url)
+    basename = Path(parsed.path).name
+    # Strip query string artifacts and sanitise
+    basename = re.sub(r"[^\w.\-]", "_", basename.split("?")[0])
+    if not basename or basename == "_":
+        basename = f"download_{int(time.time())}"
+
+    data = _http_get_binary(url, cfg, ua_idx=ua_idx)
+    if data is None:

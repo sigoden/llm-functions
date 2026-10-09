@@ -1,0 +1,650 @@
+#!/data/data/com.termux/files/usr/bin/python3
+# ==============================================================================
+# code_healer — Omni Diagnostic, Surgery & Execution Engine
+# ==============================================================================
+
+from __future__ import annotations
+
+import ast
+import datetime
+import difflib
+import fnmatch
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any, Optional
+
+EXIT_SUCCESS = 0
+EXIT_ERROR = 1
+EXIT_FILE_NOT_FOUND = 2
+EXIT_SYNTAX_ERROR = 3
+EXIT_TIMEOUT = 124
+EXIT_INVALID_INPUT = 127
+
+IGNORE_PATTERNS = {
+    ".git", ".svn", ".hg", "__pycache__", "node_modules", ".venv", "venv",
+    "target", "dist", "build", ".next", ".code_healer_backups", ".oracle_backups"
+}
+
+
+def resolve_agent_path(target_str: Optional[str]) -> Path:
+    if not target_str:
+        target_str = "."
+    raw_path = Path(target_str).expanduser()
+    if raw_path.is_absolute():
+        return raw_path.resolve(strict=False)
+
+    agent_cwd = (
+        os.environ.get("LLM_AGENT_VAR___cwd__")
+        or os.environ.get("LLM_AGENT_VAR___CWD__")
+        or os.environ.get("LLM_AGENT_VAR_CWD")
+        or os.getcwd()
+    )
+    return (Path(agent_cwd) / raw_path).resolve(strict=False)
+
+
+def check_syntax(path: Path, content: Optional[str] = None) -> tuple[bool, str]:
+    ext = path.suffix.lower()
+    text = content if content is not None else (path.read_text(encoding="utf-8", errors="replace") if path.exists() else "")
+
+    if ext == ".py":
+        try:
+            ast.parse(text, filename=str(path))
+            return True, "Python AST validation passed."
+        except SyntaxError as e:
+            return False, f"Python SyntaxError at line {e.lineno}, col {e.offset}: {e.msg}"
+    elif ext == ".json":
+        try:
+            json.loads(text)
+            return True, "JSON parsing validation passed."
+        except Exception as e:
+            return False, f"JSON ParseError: {str(e)}"
+    elif ext in {".toml"}:
+        try:
+            import tomllib
+            tomllib.loads(text)
+            return True, "TOML parsing validation passed."
+        except Exception as e:
+            return False, f"TOML ParseError: {str(e)}"
+    elif ext in {".sh", ".bash"}:
+        if shutil.which("bash"):
+            try:
+                proc = subprocess.run(["bash", "-n"], input=text, capture_output=True, text=True)
+                if proc.returncode != 0:
+                    return False, f"Bash syntax error: {proc.stderr.strip()}"
+                return True, "Bash syntax check passed."
+            except Exception:
+                pass
+    return True, f"Syntax check not enforced for '{ext}' files."
+
+
+def get_backup_dir() -> Path:
+    b_dir = os.environ.get("LLM_AGENT_VAR_BACKUP_DIR", ".code_healer_backups")
+    resolved = resolve_agent_path(b_dir)
+    resolved.mkdir(parents=True, exist_ok=True)
+    return resolved
+
+
+def make_backup(target_path: Path) -> Optional[Path]:
+    safe_mode = os.environ.get("LLM_AGENT_VAR_SAFE_MODE", "true").lower() in {"true", "1", "yes"}
+    if safe_mode and target_path.is_file():
+        b_dir = get_backup_dir()
+        timestamp = int(time.time() * 1000)
+        backup_path = b_dir / f"{target_path.name}.{timestamp}.bak"
+        shutil.copy2(target_path, backup_path)
+        return backup_path
+    return None
+
+
+def atomic_write(target_path: Path, new_content: str) -> None:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_file = target_path.with_suffix(f".tmp.{os.getpid()}")
+    try:
+        temp_file.write_text(new_content, encoding="utf-8")
+        temp_file.replace(target_path)
+    finally:
+        if temp_file.exists():
+            temp_file.unlink()
+
+
+def handle_instructions() -> None:
+    runtime = os.environ.get("LLM_AGENT_VAR_TARGET_RUNTIME", "python3.12")
+    safe_mode = os.environ.get("LLM_AGENT_VAR_SAFE_MODE", "true")
+
+    tools = ["python3", "pytest", "ruff", "black", "mypy", "node", "npm", "cargo", "rustc", "git", "bash"]
+    detected = ", ".join([t for t in tools if shutil.which(t)])
+
+    try:
+        status = subprocess.check_output(["git", "status", "--short"], stderr=subprocess.DEVNULL, text=True).strip()
+        git_state = f"Modified files: {len(status.splitlines())}" if status else "Git workspace clean."
+    except Exception:
+        git_state = "Non-git directory."
+
+    prompt = f"""You are operating as Code Healer Ultra (NVIDIA Nemotron Edition).
+
+Diagnostic Telemetry:
+- Target Runtime: {runtime}
+- Safe Mode Active: {safe_mode}
+- Available Toolchains: [{detected}]
+- Repository State: {git_state}
+- Agent CWD: {os.getcwd()}
+- Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+Available Operations through code_healer:
+- 'search_text' / 'list_files': Workspace discovery and regex code searching.
+- 'read': Inspect line slices or full files with line numbering.
+- 'insert_lines' / 'delete_lines': Line-indexed code surgery.
+- 'replace' / 'multi_replace': Exact string or regex find & replace.
+- 'write' / 'append': Create or append code modules safely.
+- 'diff' / 'patch': Unified diff generation and atomic patching.
+- 'syntax_check': Multi-language AST/syntax validation (Python, JSON, TOML, Bash).
+- 'execute': Run test suites, linters, or terminal commands with timeouts.
+- 'list_backups' / 'rollback': Snapshot audit and restoration.
+"""
+    write_raw(prompt)
+
+
+def handle_read(target_path: Path, line_start: Optional[int], line_end: Optional[int]) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    lines = target_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    total_lines = len(lines)
+    start = max(1, line_start or 1)
+    end = min(total_lines, line_end or total_lines)
+    selected_lines = lines[start - 1 : end]
+
+    valid, syntax_msg = check_syntax(target_path)
+    numbered = "".join([f"{i:5d} | {line}" for i, line in enumerate(selected_lines, start=start)])
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "total_lines": total_lines,
+        "range_read": [start, end],
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+        "content": numbered,
+        "raw_slice": "".join(selected_lines),
+    }
+
+
+def handle_write(target_path: Path, content: str) -> dict[str, Any]:
+    backup = make_backup(target_path)
+    atomic_write(target_path, content)
+    valid, syntax_msg = check_syntax(target_path, content)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "File written successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_append(target_path: Path, content: str) -> dict[str, Any]:
+    backup = make_backup(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(target_path, "a", encoding="utf-8") as f:
+        f.write(content)
+
+    valid, syntax_msg = check_syntax(target_path)
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "Content appended successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_insert_lines(target_path: Path, line_number: int, content: str) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    lines = target_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    insert_idx = max(0, min(len(lines), line_number - 1))
+    
+    insert_str = content if content.endswith("\n") else content + "\n"
+    lines.insert(insert_idx, insert_str)
+    new_text = "".join(lines)
+
+    valid, syntax_msg = check_syntax(target_path, new_text)
+    if not valid:
+        return {"success": False, "error": f"Insert causes syntax error: {syntax_msg}", "exit_code": EXIT_SYNTAX_ERROR}
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_text)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": f"Inserted content at line {line_number}.",
+        "new_total_lines": len(lines),
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_delete_lines(target_path: Path, line_start: int, line_end: int) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    lines = target_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    total_lines = len(lines)
+
+    start_idx = max(0, line_start - 1)
+    end_idx = min(total_lines, line_end)
+
+    if start_idx >= end_idx:
+        return {"success": False, "error": f"Invalid line range: {line_start} to {line_end}", "exit_code": EXIT_INVALID_INPUT}
+
+    del lines[start_idx:end_idx]
+    new_text = "".join(lines)
+
+    valid, syntax_msg = check_syntax(target_path, new_text)
+    if not valid:
+        return {"success": False, "error": f"Deletion causes syntax error: {syntax_msg}", "exit_code": EXIT_SYNTAX_ERROR}
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_text)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "deleted_count": end_idx - start_idx,
+        "remaining_lines": len(lines),
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_replace(target_path: Path, find_str: str, replacement_str: str, is_regex: bool = False) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    old_text = target_path.read_text(encoding="utf-8", errors="replace")
+
+    if is_regex:
+        try:
+            pattern = re.compile(find_str)
+            new_text, count = pattern.subn(replacement_str, old_text)
+        except re.error as e:
+            return {"success": False, "error": f"Invalid regex pattern: {str(e)}", "exit_code": EXIT_INVALID_INPUT}
+    else:
+        count = old_text.count(find_str)
+        new_text = old_text.replace(find_str, replacement_str)
+
+    if count == 0:
+        return {"success": False, "error": f"Pattern '{find_str}' not found in target file.", "exit_code": EXIT_ERROR}
+
+    valid, syntax_msg = check_syntax(target_path, new_text)
+    if not valid:
+        return {"success": False, "error": f"Replacement introduces syntax error: {syntax_msg}", "exit_code": EXIT_SYNTAX_ERROR}
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_text)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "occurrences_replaced": count,
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_multi_replace(target_path: Path, replacements: list[dict[str, Any]]) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    current_text = target_path.read_text(encoding="utf-8", errors="replace")
+    total_modifications = 0
+
+    for idx, item in enumerate(replacements):
+        f = item.get("find")
+        r = item.get("replacement")
+        is_rx = bool(item.get("is_regex", False))
+        if f is None or r is None:
+            return {"success": False, "error": f"Replacement at index {idx} missing 'find' or 'replacement'", "exit_code": EXIT_INVALID_INPUT}
+
+        if is_rx:
+            try:
+                pattern = re.compile(f)
+                current_text, cnt = pattern.subn(r, current_text)
+            except re.error as e:
+                return {"success": False, "error": f"Invalid regex in item {idx}: {str(e)}", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            cnt = current_text.count(f)
+            current_text = current_text.replace(f, r)
+
+        if cnt == 0:
+            return {"success": False, "error": f"Pattern '{f}' not found during multi-replace.", "exit_code": EXIT_ERROR}
+        total_modifications += cnt
+
+    valid, syntax_msg = check_syntax(target_path, current_text)
+    if not valid:
+        return {"success": False, "error": f"Multi-replace introduces syntax error: {syntax_msg}", "exit_code": EXIT_SYNTAX_ERROR}
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, current_text)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "total_replacements_applied": total_modifications,
+        "rules_executed": len(replacements),
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_search_text(target_dir: Path, find_pattern: str, glob_pattern: Optional[str], is_regex: bool) -> dict[str, Any]:
+    if not target_dir.is_dir():
+        target_dir = target_dir.parent if target_dir.is_file() else Path.cwd()
+
+    matcher = re.compile(find_pattern) if is_regex else None
+    results = []
+    file_filter = glob_pattern or "*"
+
+    for root, dirs, files in os.walk(target_dir):
+        dirs[:] = [d for d in dirs if d not in IGNORE_PATTERNS and not d.startswith(".")]
+        for file in files:
+            if not fnmatch.fnmatch(file, file_filter):
+                continue
+            file_path = Path(root) / file
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                for line_idx, line in enumerate(content.splitlines(), start=1):
+                    hit = (matcher.search(line) is not None) if is_regex else (find_pattern in line)
+                    if hit:
+                        results.append({
+                            "file": str(file_path.relative_to(target_dir)),
+                            "line": line_idx,
+                            "match": line.strip()[:200]
+                        })
+                        if len(results) >= 150:
+                            break
+            except Exception:
+                continue
+
+    return {
+        "success": True,
+        "query": find_pattern,
+        "matches_count": len(results),
+        "matches": results,
+    }
+
+
+def handle_list_files(target_dir: Path, max_depth: int, pattern: Optional[str]) -> dict[str, Any]:
+    if not target_dir.is_dir():
+        target_dir = target_dir.parent if target_dir.is_file() else Path.cwd()
+
+    file_filter = pattern or "*"
+    tree = []
+    base_parts_len = len(target_dir.parts)
+
+    for root, dirs, files in os.walk(target_dir):
+        current_path = Path(root)
+        depth = len(current_path.parts) - base_parts_len
+        if depth >= max_depth:
+            dirs.clear()
+            continue
+
+        dirs[:] = [d for d in dirs if d not in IGNORE_PATTERNS and not d.startswith(".")]
+
+        for file in files:
+            if fnmatch.fnmatch(file, file_filter):
+                f_path = current_path / file
+                rel_path = f_path.relative_to(target_dir)
+                try:
+                    size = f_path.stat().st_size
+                except Exception:
+                    size = 0
+                tree.append({
+                    "path": str(rel_path),
+                    "size_bytes": size,
+                    "depth": depth
+                })
+
+    return {
+        "success": True,
+        "directory": str(target_dir),
+        "total_files": len(tree),
+        "files": tree[:200],
+    }
+
+
+def handle_diff(target_path: Path, new_content: str) -> dict[str, Any]:
+    old_content = target_path.read_text(encoding="utf-8", errors="replace") if target_path.exists() else ""
+    diff = list(difflib.unified_diff(
+        old_content.splitlines(keepends=True),
+        new_content.splitlines(keepends=True),
+        fromfile=f"a/{target_path.name}",
+        tofile=f"b/{target_path.name}",
+        lineterm="",
+    ))
+
+    valid, syntax_msg = check_syntax(target_path, new_content)
+    return {
+        "success": True,
+        "target": str(target_path),
+        "diff": "\n".join(diff) if diff else "No changes detected.",
+        "proposed_syntax_valid": valid,
+        "syntax_message": syntax_msg,
+    }
+
+
+def handle_patch(target_path: Path, new_content: str) -> dict[str, Any]:
+    valid, syntax_msg = check_syntax(target_path, new_content)
+    if not valid:
+        return {"success": False, "error": f"Patch refused. Syntax error: {syntax_msg}", "exit_code": EXIT_SYNTAX_ERROR}
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_content)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "File patched successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": syntax_msg,
+    }
+
+
+def handle_execute(command: str, timeout_sec: float) -> dict[str, Any]:
+    agent_cwd = (
+        os.environ.get("LLM_AGENT_VAR___cwd__")
+        or os.environ.get("LLM_AGENT_VAR___CWD__")
+        or os.environ.get("LLM_AGENT_VAR_CWD")
+        or os.getcwd()
+    )
+    start_time = time.monotonic()
+    try:
+        proc = subprocess.run(
+            command,
+            shell=True,
+            cwd=agent_cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+        )
+        return {
+            "success": proc.returncode == 0,
+            "command": command,
+            "exit_code": proc.returncode,
+            "stdout": proc.stdout.strip(),
+            "stderr": proc.stderr.strip(),
+            "duration_ms": round((time.monotonic() - start_time) * 1000, 2),
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "command": command,
+            "error": f"Command timed out after {timeout_sec}s",
+            "exit_code": EXIT_TIMEOUT,
+            "duration_ms": round((time.monotonic() - start_time) * 1000, 2),
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "command": command,
+            "error": str(e),
+            "exit_code": EXIT_ERROR,
+            "duration_ms": round((time.monotonic() - start_time) * 1000, 2),
+        }
+
+
+def handle_list_backups(target_path: Path) -> dict[str, Any]:
+    b_dir = get_backup_dir()
+    pattern = f"{target_path.name}.*.bak" if target_path.name != "." else "*.bak"
+    backups = []
+
+    for p in sorted(b_dir.glob(pattern), key=lambda x: x.stat().st_mtime, reverse=True):
+        mtime = datetime.datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        backups.append({
+            "filename": p.name,
+            "original_target": p.name.split(".")[0],
+            "modified_at": mtime,
+            "size_bytes": p.stat().st_size,
+        })
+
+    return {
+        "success": True,
+        "backup_directory": str(b_dir),
+        "total_backups": len(backups),
+        "backups": backups,
+    }
+
+
+def handle_rollback(target_path: Path) -> dict[str, Any]:
+    b_dir = get_backup_dir()
+    pattern = f"{target_path.name}.*.bak"
+    backups = sorted(b_dir.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if not backups:
+        return {"success": False, "error": f"No backups found for {target_path.name} in {b_dir}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    latest_backup = backups[0]
+    shutil.copy2(latest_backup, target_path)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "restored_from": str(latest_backup),
+        "message": "File successfully rolled back to latest snapshot.",
+    }
+
+
+def write_raw(content: str) -> None:
+    out_target = os.environ.get("LLM_OUTPUT", "/dev/stdout")
+    if out_target in {"/dev/stdout", "/dev/fd/1", "-"}:
+        sys.stdout.write(content + "\n")
+        sys.stdout.flush()
+    else:
+        with open(out_target, "a", encoding="utf-8") as fp:
+            fp.write(content + "\n")
+
+
+def write_json(data: dict[str, Any]) -> None:
+    write_raw(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def main() -> int:
+    args = sys.argv[1:]
+
+    if args and args[0] == "_instructions":
+        handle_instructions()
+        return EXIT_SUCCESS
+
+    if args and args[0] in {"code_healer", "file_doctor"}:
+        args = args[1:]
+
+    raw_input = ""
+    if args and not args[0].startswith("-"):
+        raw_input = args[0]
+    elif not sys.stdin.isatty():
+        raw_input = sys.stdin.read()
+
+    try:
+        params = json.loads(raw_input) if raw_input.strip() else {}
+    except Exception:
+        params = {}
+
+    action = params.get("action") or "read"
+    target = params.get("target")
+    content = params.get("content")
+    find_str = params.get("find")
+    replacement_str = params.get("replacement")
+    replacements = params.get("replacements")
+    is_regex = bool(params.get("is_regex", False))
+    command = params.get("command")
+    timeout = float(params.get("timeout", 30.0))
+    line_number = params.get("line_number")
+    line_start = params.get("line_start")
+    line_end = params.get("line_end")
+    pattern = params.get("pattern")
+    max_depth = int(params.get("max_depth", 3))
+
+    target_path = resolve_agent_path(target) if target else Path.cwd()
+
+    if action in {"read", "inspect"}:
+        res = handle_read(target_path, line_start, line_end)
+    elif action == "write":
+        res = {"success": False, "error": "'content' required"} if content is None else handle_write(target_path, content)
+    elif action == "append":
+        res = {"success": False, "error": "'content' required"} if content is None else handle_append(target_path, content)
+    elif action == "insert_lines":
+        if line_number is None or content is None:
+            res = {"success": False, "error": "'line_number' and 'content' required for insert_lines", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_insert_lines(target_path, line_number, content)
+    elif action == "delete_lines":
+        if line_start is None or line_end is None:
+            res = {"success": False, "error": "'line_start' and 'line_end' required for delete_lines", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_delete_lines(target_path, line_start, line_end)
+    elif action == "replace":
+        if find_str is None or replacement_str is None:
+            res = {"success": False, "error": "Both 'find' and 'replacement' required", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_replace(target_path, find_str, replacement_str, is_regex)
+    elif action == "multi_replace":
+        if not replacements or not isinstance(replacements, list):
+            res = {"success": False, "error": "'replacements' list required for multi_replace", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_multi_replace(target_path, replacements)
+    elif action == "search_text":
+        if not find_str:
+            res = {"success": False, "error": "'find' query required for search_text", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_search_text(target_path, find_str, pattern, is_regex)
+    elif action == "list_files":
+        res = handle_list_files(target_path, max_depth, pattern)
+    elif action == "diff":
+        res = {"success": False, "error": "'content' required"} if content is None else handle_diff(target_path, content)
+    elif action == "patch":
+        res = {"success": False, "error": "'content' required"} if content is None else handle_patch(target_path, content)
+    elif action == "execute":
+        res = {"success": False, "error": "'command' required"} if not command else handle_execute(command, timeout)
+    elif action == "syntax_check":
+        valid, msg = check_syntax(target_path, content)
+        res = {"success": True, "valid": valid, "message": msg}
+    elif action == "list_backups":
+        res = handle_list_backups(target_path)
+    elif action == "rollback":
+        res = handle_rollback(target_path)
+    else:
+        res = {"success": False, "error": f"Unknown action: {action}", "exit_code": EXIT_INVALID_INPUT}
+
+    write_json(res)
+    return res.get("exit_code", EXIT_SUCCESS)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

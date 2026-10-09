@@ -6,15 +6,30 @@ const path = require("path");
 const { readFile, writeFile } = require("fs/promises");
 const os = require("os");
 
+// Standard exit codes
+const EXIT_SUCCESS = 0;
+const EXIT_GENERAL_ERROR = 1;
+const EXIT_INVALID_INPUT = 2;
+const EXIT_FILE_NOT_FOUND = 3;
+const EXIT_PERMISSION_DENIED = 4;
+const EXIT_NETWORK_ERROR = 5;
+const EXIT_TIMEOUT = 124;
+const EXIT_COMMAND_NOT_FOUND = 127;
+
 async function main() {
-  const [toolName, rawData] = parseArgv("run-tool.js");
-  const toolData = parseRawData(rawData);
+  try {
+    const [toolName, rawData] = parseArgv("run-tool.js");
+    const toolData = parseRawData(rawData);
 
-  const rootDir = path.resolve(__dirname, "..");
-  await setupEnv(rootDir, toolName);
+    const rootDir = path.resolve(__dirname, "..");
+    await setupEnv(rootDir, toolName);
 
-  const toolPath = path.resolve(rootDir, `tools/${toolName}.js`);
-  await run(toolName, toolPath, "run", toolData);
+    const toolPath = path.resolve(rootDir, `tools/${toolName}.js`);
+    await run(toolName, toolPath, "run", toolData);
+  } catch (err) {
+    console.error(err.message);
+    process.exit(err.code || EXIT_GENERAL_ERROR);
+  }
 }
 
 function parseArgv(thisFileName) {
@@ -34,8 +49,9 @@ function parseArgv(thisFileName) {
   }
 
   if (!toolData || !toolName) {
-    console.log(`Usage: ./run-tools.js <tool-name> <tool-data>`);
-    process.exit(1);
+    const err = new Error(`Usage: ./run-tool.js <tool-name> <tool-data>`);
+    err.code = EXIT_INVALID_INPUT;
+    throw err;
   }
 
   return [toolName, toolData];
@@ -43,12 +59,16 @@ function parseArgv(thisFileName) {
 
 function parseRawData(data) {
   if (!data) {
-    throw new Error("No JSON data");
+    const err = new Error("No JSON data");
+    err.code = EXIT_INVALID_INPUT;
+    throw err;
   }
   try {
     return JSON.parse(data);
   } catch {
-    throw new Error("Invalid JSON data");
+    const err = new Error("Invalid JSON data");
+    err.code = EXIT_INVALID_INPUT;
+    throw err;
   }
 }
 
@@ -57,6 +77,9 @@ async function setupEnv(rootDir, toolName) {
   process.env["LLM_ROOT_DIR"] = rootDir;
   process.env["LLM_TOOL_NAME"] = toolName;
   process.env["LLM_TOOL_CACHE_DIR"] = path.resolve(rootDir, "cache", toolName);
+  if (process.stdout.isTTY) {
+    process.env["LLM_OUTPUT_COLOR"] = "1";
+  }
 }
 
 async function loadEnv(filePath) {
@@ -96,11 +119,33 @@ async function run(toolName, toolPath, toolFunc, toolData) {
   if (os.platform() === "win32") {
     toolPath = `file://${toolPath}`;
   }
-  const mod = await import(toolPath);
-  if (!mod || !mod[toolFunc]) {
-    throw new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
+  
+  let mod;
+  try {
+    mod = await import(toolPath);
+  } catch (err) {
+    const error = new Error(`Failed to import tool module: ${err.message}`);
+    error.code = EXIT_FILE_NOT_FOUND;
+    throw error;
   }
-  const value = await mod[toolFunc](toolData);
+  
+  if (!mod || !mod[toolFunc]) {
+    const error = new Error(`Not module function '${toolFunc}' at '${toolPath}'`);
+    error.code = EXIT_GENERAL_ERROR;
+    throw error;
+  }
+  
+  let value;
+  try {
+    value = await mod[toolFunc](toolData);
+  } catch (err) {
+    // Propagate the tool's exit code if available
+    if (err.code) {
+      process.exit(err.code);
+    }
+    throw err;
+  }
+  
   await returnToLLM(value);
   await dumpResult(toolName);
 }
@@ -115,7 +160,7 @@ async function returnToLLM(value) {
     } else {
       process.stdout.write(value);
     }
-  }
+  };
   const type = typeof value;
   if (type === "string" || type === "number" || type === "boolean") {
     await write(value.toString());
@@ -153,7 +198,4 @@ async function dumpResult(name) {
   process.stdout.write(`\x1b[2m----------------------\n${data}\n----------------------\x1b[0m\n`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main();

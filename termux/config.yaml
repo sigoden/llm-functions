@@ -1,0 +1,8 @@
+model: null
+temperature: 0.7
+top_p: null
+use_tools: null
+agent_prelude: "termux-session"
+instructions: null
+variables:
+  storage_access: "false"

@@ -1,0 +1,10 @@
+Line 1: This is the first line of the test file.
+Line 2: Testing the edit tool functionality.
+Line 3: We are checking various operations.
+Line 4: This line contains some sample text.
+Line 5: Another line for testing purposes.
+Line 6: The edit tool seems to be working well.
+Line 7: Let's continue testing more features.
+Line 8: Head and tail operations are next.
+Line 9: This is the ninth line.
+Line 10: The final line of our test file.

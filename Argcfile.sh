@@ -32,6 +32,10 @@ run@tool() {
     cmd="$(_lang_to_cmd "$lang")"
     run_tool_script="scripts/run-tool.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    
+    # Ensure LLM_OUTPUT exists if not provided
+    export LLM_OUTPUT="${LLM_OUTPUT:-/dev/stdout}"
+    
     exec "$cmd" "$run_tool_script" "$argc_tool" "$argc_json"
 }
 
@@ -56,6 +60,10 @@ run@agent() {
     cmd="$(_lang_to_cmd "$lang")"
     run_agent_script="scripts/run-agent.$lang"
     [[ -n "$argc_cwd" ]] && cd "$argc_cwd"
+    
+    # Ensure LLM_OUTPUT exists if not provided
+    export LLM_OUTPUT="${LLM_OUTPUT:-/dev/stdout}"
+    
     exec "$cmd" "$run_agent_script"  "$argc_agent" "$argc_action" "$argc_json"
 }
 
@@ -122,8 +130,8 @@ build-bin@tool() {
                 _build_win_shim tool $lang > "$bin_file"
             else
                 bin_file="$BIN_DIR/$basename"
-                if [[ "$lang" == "py" && -d "$VENV_DIR" ]]; then
-                    rm -rf "$bin_file"
+                if [[ "$lang" == "py" ]]; then
+                    rm -f "$bin_file"
                     _build_py_shim tool $lang > "$bin_file"
                     chmod +x "$bin_file"
                 else
@@ -244,9 +252,9 @@ build-bin@agent() {
                     _build_win_shim agent $lang > "$bin_file"
                 else
                     bin_file="$BIN_DIR/$name"
-                    if [[ "$lang" == "py" && -d "$VENV_DIR" ]]; then
-                        rm -rf "$bin_file"
-                        _build_py_shim tool $lang > "$bin_file"
+                    if [[ "$lang" == "py" ]]; then
+                        rm -f "$bin_file"
+                        _build_py_shim agent $lang > "$bin_file"
                         chmod +x "$bin_file"
                     else
                         ln -s -f "$PWD/scripts/run-agent.$lang" "$bin_file"
@@ -450,7 +458,11 @@ test@tool() {
     mkdir -p "$TMP_DIR"
     names_file="$TMP_DIR/tools.txt"
     declarations_file="$TMP_DIR/functions.json"
-    argc list@tool > "$names_file"
+    if [[ -f tools.txt ]]; then
+        cat tools.txt | grep -v '^#' > "$names_file"
+    else
+        argc list@tool > "$names_file"
+    fi
     argc build@tool --names-file "$names_file" --declarations-file "$declarations_file"
     test-demo@tool
 }
@@ -489,7 +501,11 @@ test-demo@tool() {
 test@agent() {
     mkdir -p "$TMP_DIR"
     names_file="$TMP_DIR/agents.txt"
-    argc list@agent > "$names_file"
+    if [[ -f agents.txt ]]; then
+        cat agents.txt | grep -v '^#' > "$names_file"
+    else
+        argc list@agent > "$names_file"
+    fi
     argc build@agent --names-file "$names_file"
     test-demo@agent
 }
@@ -653,15 +669,17 @@ EOF
 _build_py_shim() {
     kind="$1"
     lang="$2"
-    cat <<-'EOF' | sed -e "s|__ROOT_DIR__|$PWD|g" -e "s|__VENV_DIR__|$VENV_DIR|g" -e "s/__KIND__/$kind/g"
-#!/usr/bin/env bash
+    local bash_path
+    bash_path="$(command -v bash 2>/dev/null || echo "/bin/bash")"
+    cat <<-EOF
+#!${bash_path}
 set -e
 
-if [[ -f "__ROOT_DIR__/__VENV_DIR__/bin/activate" ]]; then
-    source "__ROOT_DIR__/__VENV_DIR__/bin/activate"
+if [[ -f "$PWD/$VENV_DIR/bin/activate" ]]; then
+    source "$PWD/$VENV_DIR/bin/activate"
 fi
 
-python "__ROOT_DIR__/scripts/run-__KIND__.py" "$(basename "$0")" "$@"
+python "$PWD/scripts/run-${kind}.py" "\$(basename "\$0")" "\$@"
 EOF
 }
 
@@ -677,10 +695,11 @@ _check_bin() {
 
 _check_envs() {
     script_path="$1"
-    envs=( $(sed -E -n 's/.* @env ([A-Z0-9_]+)!.*/\1/p' $script_path) )
+    envs=( $(grep -oP '(?<=@env )[A-Z0-9_]+' "$script_path" 2>/dev/null || true) )
     missing_envs=()
     for env in $envs; do
-        if [[ -z "${!env}" ]]; then
+        # Ignore LLM_OUTPUT as it's injected by the framework at runtime
+        if [[ -z "${!env}" && "$env" != "LLM_OUTPUT" ]]; then
             missing_envs+=("$env")
         fi
     done
@@ -761,7 +780,7 @@ _choice_code_interpreter() {
 }
 
 _choice_agent() {
-    ls -1 agents
+    (cd agents && ls -d */ 2>/dev/null | sed 's/\///')
 }
 
 _choice_agent_action() {
@@ -770,7 +789,7 @@ _choice_agent_action() {
     else
         expr="s/:.*//"
     fi
-    argc generate-declarations@agent "$1" --oneline | sed "$expr"
+    argc generate-declarations@agent "$argc_agent" --oneline | sed "$expr"
 }
 
 _choice_mcp_args() {
@@ -784,7 +803,7 @@ _choice_mcp_args() {
 }
 
 _die() {
-    echo "$*" >&2
+    echo -e '[31m'"$*"'[0m' >&2
     exit 1
 }
 

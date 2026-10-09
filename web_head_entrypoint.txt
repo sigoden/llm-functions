@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# web_search.py — Advanced Web Search Tool v1.0.0
+# argc/aichat compatible · Multi-backend · Content extraction
+#
+# @describe Advanced web search tool supporting multiple backends with content
+#           crawling, downloading, and flexible output formatting.
+#
+# @option --query! <TEXT>                          Search query (required)
+# @option --limit <NUM>                            Maximum results to return (default: 10)
+# @option --backend <BACKEND>                      Search backend: ddg|bing|searx (default: ddg)
+# @option --format <FORMAT>                        Output format: json|jsonl|markdown|csv|tsv (default: json)
+# @option --output <FILE>                          Save results to file path
+# @option --type <TYPE>                            Search type: web|image|news (default: web)
+# @option --depth <NUM>                            Crawl depth for recursive crawling (default: 1)
+# @option --timeout <SECONDS>                      HTTP request timeout in seconds (default: 15)
+# @option --delay <SECONDS>                        Delay between requests in seconds (default: 1.0)
+# @option --proxy <URL>                            HTTP/HTTPS proxy URL
+# @option --user-agent <TEXT>                      Custom User-Agent string
+# @option --header <KEY:VALUE>                     Extra HTTP header (repeatable)
+# @option --content-length <NUM>                   Maximum content length per page (default: 3000)
+# @option --threads <NUM>                          Parallel crawl/download threads (default: 4)
+# @option --safe <LEVEL>                           Safe search: off|moderate|strict (default: moderate)
+# @option --region <CODE>                          Region/market code e.g. us-en (default: us-en)
+# @option --lang <CODE>                            Language code e.g. en-US (default: en-US)
+# @option --searx-url <URL>                        Custom Searx instance URL
+# @option --max-crawl-size <NUM>                   Max page size to crawl in bytes (default: 5242880)
+# @flag   --crawl                                  Fetch and extract content from result URLs
+# @flag   --download                               Download files from result URLs
+# @flag   --verbose                                Enable verbose/debug output
+# @flag   --no-robots                              Ignore robots.txt restrictions
+# @flag   --json                                   Force JSON output (no colors)
+# @flag   --quiet                                  Suppress status messages
+# @flag   --no-verify                              Disable SSL certificate verification
+# @flag   --dedupe                                 Remove duplicate URLs from results
+# @flag   --no-anti-bot                            Disable enhanced anti-bot detection features
+# @flag   --proxy-rotation                          Enable proxy rotation for anti-bot evasion
+#
+# @env LLM_OUTPUT=/dev/fd/1                        Output path for LLM integration
+# ==============================================================================
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import io
+import json
+import logging
+import os
+import re

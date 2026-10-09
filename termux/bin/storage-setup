@@ -1,0 +1,12 @@
+#!/data/data/com.termux/files/usr/bin/bash
+if [ ! -d "/sdcard" ]; then
+    echo "Error: /sdcard not accessible" >&2
+    exit 1
+fi
+if [ ! -d "$HOME/storage" ]; then
+    termux-setup-storage
+    echo "Storage setup initiated. Please grant permissions on your device."
+else
+    echo "Storage already configured at $HOME/storage"
+    ls -la "$HOME/storage"
+fi

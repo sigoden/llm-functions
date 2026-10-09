@@ -1,0 +1,202 @@
++ set -e
++ main '{"query": "test", "num_results": "5"}'
++++ dirname -- /data/data/com.termux/files/home/.config/aichat/llm-functions/bin/custom_search
+++ cd -- /data/data/com.termux/files/home/.config/aichat/llm-functions/bin/..
+++ pwd
++ root_dir=/data/data/com.termux/files/home/.config/aichat/llm-functions
++ self_name=run-tool.sh
++ parse_argv '{"query": "test", "num_results": "5"}'
++ [[ /data/data/com.termux/files/home/.config/aichat/llm-functions/bin/custom_search == *run\-tool\.sh ]]
+++ basename /data/data/com.termux/files/home/.config/aichat/llm-functions/bin/custom_search
++ tool_name=custom_search
++ tool_data='{"query": "test", "num_results": "5"}'
++ [[ custom_search == *.sh ]]
++ [[ -z {"query": "test", "num_results": "5"} ]]
++ [[ -z custom_search ]]
++ setup_env
++ load_env /data/data/com.termux/files/home/.config/aichat/llm-functions/.env
++ local env_file=/data/data/com.termux/files/home/.config/aichat/llm-functions/.env env_vars
++ [[ -f /data/data/com.termux/files/home/.config/aichat/llm-functions/.env ]]
++ IFS==
++ read -r key value
+++ cat /data/data/com.termux/files/home/.config/aichat/llm-functions/.env
++ [[ BYBIT_API_KEY == \#* ]]
++ [[ -z BYBIT_API_KEY ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ BYBIT_API_SECRET == \#* ]]
++ [[ -z BYBIT_API_SECRET ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ BYBIT_TESTNET == \#* ]]
++ [[ -z BYBIT_TESTNET ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ YOU_API_KEY == \#* ]]
++ [[ -z YOU_API_KEY ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ # Additional configuration for trading tools == \#* ]]
++ continue
++ IFS==
++ read -r key value
++ [[ BYBIT_USE_TESTNET == \#* ]]
++ [[ -z BYBIT_USE_TESTNET ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ NODE_ENV == \#* ]]
++ [[ -z NODE_ENV ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ # Trading parameters == \#* ]]
++ continue
++ IFS==
++ read -r key value
++ [[ DEFAULT_RISK_USDT == \#* ]]
++ [[ -z DEFAULT_RISK_USDT ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ DEFAULT_PROFIT_USDT == \#* ]]
++ [[ -z DEFAULT_PROFIT_USDT ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ DEFAULT_TIMEFRAME == \#* ]]
++ [[ -z DEFAULT_TIMEFRAME ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ # Logging configuration == \#* ]]
++ continue
++ IFS==
++ read -r key value
++ [[ LOG_LEVEL == \#* ]]
++ [[ -z LOG_LEVEL ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ LOG_RETENTION_DAYS == \#* ]]
++ [[ -z LOG_RETENTION_DAYS ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ # Slippage settings == \#* ]]
++ continue
++ IFS==
++ read -r key value
++ [[ SLIPPAGE_BUFFER_LOW == \#* ]]
++ [[ -z SLIPPAGE_BUFFER_LOW ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ SLIPPAGE_BUFFER_NORMAL == \#* ]]
++ [[ -z SLIPPAGE_BUFFER_NORMAL ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ SLIPPAGE_BUFFER_HIGH == \#* ]]
++ [[ -z SLIPPAGE_BUFFER_HIGH ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ SLIPPAGE_BUFFER_EXTREME == \#* ]]
++ [[ -z SLIPPAGE_BUFFER_EXTREME ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ # Safety settings == \#* ]]
++ continue
++ IFS==
++ read -r key value
++ [[ SAFETY_BUFFER_USDT == \#* ]]
++ [[ -z SAFETY_BUFFER_USDT ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ MAX_POSITION_SIZE_USDT == \#* ]]
++ [[ -z MAX_POSITION_SIZE_USDT ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ MIN_TRADE_SIZE_USDT == \#* ]]
++ [[ -z MIN_TRADE_SIZE_USDT ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ GOOGLE_API_KEY == \#* ]]
++ [[ -z GOOGLE_API_KEY ]]
++ [[ -z '' ]]
++ env_vars=' GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI'
++ IFS==
++ read -r key value
++ [[ GOOGLE_CSE_ID == \#* ]]
++ [[ -z GOOGLE_CSE_ID ]]
++ [[ -z x ]]
++ IFS==
++ read -r key value
+++ echo ''
++ [[ '' == \#* ]]
++ [[ -z '' ]]
++ continue
++ IFS==
++ read -r key value
++ [[ -n  GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI ]]
++ eval 'export  GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI'
+++ export GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI
+++ GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI
++ export LLM_ROOT_DIR=/data/data/com.termux/files/home/.config/aichat/llm-functions
++ LLM_ROOT_DIR=/data/data/com.termux/files/home/.config/aichat/llm-functions
++ export LLM_TOOL_NAME=custom_search
++ LLM_TOOL_NAME=custom_search
++ export LLM_TOOL_CACHE_DIR=/data/data/com.termux/files/home/.config/aichat/llm-functions/cache/custom_search
++ LLM_TOOL_CACHE_DIR=/data/data/com.termux/files/home/.config/aichat/llm-functions/cache/custom_search
++ tool_path=/data/data/com.termux/files/home/.config/aichat/llm-functions/tools/custom_search.sh
++ run
++ [[ -z {"query": "test", "num_results": "5"} ]]
++ [[ '' == Windows_NT ]]
+++ cat
++ jq_script=$'def escape_shell_word:\n  tostring\n  | gsub("\'"; "\'\\"\'\\"\'")\n  | gsub("\\n"; "\'$\'\\\\n\'\'")\n  | "\'\\(.)\'";\ndef to_args:\n    to_entries | .[] | \n    (.key | split("_") | join("-")) as $key |\n    if .value | type == "array" then\n        .value | .[] | "--\\($key) \\(. | escape_shell_word)"\n    elif .value | type == "boolean" then\n        if .value then "--\\($key)" else "" end\n    else\n        "--\\($key) \\(.value | escape_shell_word)"\n    end;\n[ to_args ] | join(" ")'
+++ jq -r $'def escape_shell_word:\n  tostring\n  | gsub("\'"; "\'\\"\'\\"\'")\n  | gsub("\\n"; "\'$\'\\\\n\'\'")\n  | "\'\\(.)\'";\ndef to_args:\n    to_entries | .[] | \n    (.key | split("_") | join("-")) as $key |\n    if .value | type == "array" then\n        .value | .[] | "--\\($key) \\(. | escape_shell_word)"\n    elif .value | type == "boolean" then\n        if .value then "--\\($key)" else "" end\n    else\n        "--\\($key) \\(.value | escape_shell_word)"\n    end;\n[ to_args ] | join(" ")'
+++ echo '{"query": "test", "num_results": "5"}'
++ args='--query '\''test'\'' --num-results '\''5'\'''
++ [[ -z '' ]]
++ is_temp_llm_output=1
+++ mktemp
++ export LLM_OUTPUT=/data/data/com.termux/files/usr/tmp/tmp.b5E7RYh8G8
++ LLM_OUTPUT=/data/data/com.termux/files/usr/tmp/tmp.b5E7RYh8G8
++ GOOGLE_API_KEY=AIzaSyBnMVWNJUwlah6vQSvqN-e6ZhOWS1ejgnI
++ GOOGLE_CSE_ID=40de0ade1bbd147da
++ eval ''\''/data/data/com.termux/files/home/.config/aichat/llm-functions/tools/custom_search.sh'\'' --query '\''test'\'' --num-results '\''5'\'''
+++ /data/data/com.termux/files/home/.config/aichat/llm-functions/tools/custom_search.sh --query test --num-results 5

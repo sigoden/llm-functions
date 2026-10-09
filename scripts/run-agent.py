@@ -2,11 +2,11 @@
 
 # Usage: ./run-agent.py <agent-name> <agent-func> <agent-data>
 
+import importlib.util
+import json
 import os
 import re
-import json
 import sys
-import importlib.util
 
 
 def main():
@@ -42,18 +42,20 @@ def parse_argv(this_file_name):
             agent_name = sys.argv[1]
             agent_func = sys.argv[2]
             agent_data = sys.argv[3]
-    else:
-        if len(sys.argv) > 2:
-            agent_name = os.path.basename(agent_name)
-            agent_func = sys.argv[1]
-            agent_data = sys.argv[2]
+    elif len(sys.argv) > 2:
+        agent_name = os.path.basename(agent_name)
+        agent_func = sys.argv[1]
+        agent_data = sys.argv[2]
 
     if agent_name and agent_name.endswith(".py"):
         agent_name = agent_name[:-3]
 
     if (not agent_data) or (not agent_func) or (not agent_name):
-        print("Usage: ./run-agent.py <agent-name> <agent-func> <agent-data>", file=sys.stderr)
-        sys.exit(1)   
+        print(
+            "Usage: ./run-agent.py <agent-name> <agent-func> <agent-data>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     return agent_name, agent_func, agent_data
 
@@ -65,11 +67,13 @@ def setup_env(root_dir, agent_name, agent_func):
     os.environ["LLM_AGENT_FUNC"] = agent_func
     os.environ["LLM_AGENT_ROOT_DIR"] = os.path.join(root_dir, "agents", agent_name)
     os.environ["LLM_AGENT_CACHE_DIR"] = os.path.join(root_dir, "cache", agent_name)
+    if sys.stdout.isatty():
+        os.environ["LLM_OUTPUT_COLOR"] = "1"
 
 
 def load_env(file_path):
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             lines = f.readlines()
     except:
         return
@@ -86,7 +90,9 @@ def load_env(file_path):
 
         if env_name not in os.environ:
             env_value = "=".join(value_parts).strip()
-            if (env_value.startswith('"') and env_value.endswith('"')) or (env_value.startswith("'") and env_value.endswith("'")):
+            if (env_value.startswith('"') and env_value.endswith('"')) or (
+                env_value.startswith("'") and env_value.endswith("'")
+            ):
                 env_value = env_value[1:-1]
             env_vars[env_name] = env_value
 
@@ -105,7 +111,7 @@ def run(agent_name, agent_path, agent_func, agent_data):
 
     value = getattr(mod, agent_func)(**agent_data)
     return_to_llm(value)
-    dump_result(rf'{agent_name}:{agent_func}')
+    dump_result(rf"{agent_name}:{agent_func}")
 
 
 def return_to_llm(value):
@@ -127,12 +133,16 @@ def return_to_llm(value):
 
 
 def dump_result(name):
-    if (not os.getenv("LLM_DUMP_RESULTS")) or (not os.getenv("LLM_OUTPUT")) or (not os.isatty(1)):
+    if (
+        (not os.getenv("LLM_DUMP_RESULTS"))
+        or (not os.getenv("LLM_OUTPUT"))
+        or (not os.isatty(1))
+    ):
         return
 
     show_result = False
     try:
-        if re.search(rf'\b({os.environ["LLM_DUMP_RESULTS"]})\b', name):
+        if re.search(rf"\b({os.environ['LLM_DUMP_RESULTS']})\b", name):
             show_result = True
     except:
         pass
@@ -141,7 +151,7 @@ def dump_result(name):
         return
 
     try:
-        with open(os.environ["LLM_OUTPUT"], "r", encoding="utf-8") as f:
+        with open(os.environ["LLM_OUTPUT"], encoding="utf-8") as f:
             data = f.read()
     except:
         return

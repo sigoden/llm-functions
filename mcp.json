@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "web-search": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/web-search/build/index.js"]
+    },
+    "github": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/.config/aichat/llm-functions/node_modules/@modelcontextprotocol/server-github/dist/index.js"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "dummy_token"
+      }
+    },
+    "bybit": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/.config/aichat/llm-functions/bybit-mcp/build/index.js"]
+    },
+    "filesystem": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/.config/aichat/llm-functions/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js", "/data/data/com.termux/files/home"]
+    }
+  }
+}

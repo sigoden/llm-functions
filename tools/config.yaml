@@ -1,0 +1,4 @@
+fallback_cooldown: 300
+max_failures_before_fallback: 3
+model: minimax-m3:cloud
+system_prompt: ''

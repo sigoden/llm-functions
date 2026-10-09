@@ -1,0 +1,7 @@
+#!/data/data/com.termux/files/usr/bin/bash
+if [ -z "$1" ]; then
+    echo "Usage: pkg-install <packages>" >&2
+    exit 1
+fi
+pkg install -y "$1"
+echo "$?"

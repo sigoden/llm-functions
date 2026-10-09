@@ -1,0 +1,382 @@
+#!/data/data/com.termux/files/usr/bin/python3
+# ==============================================================================
+# file_doctor — Code Healer Diagnostic, Patch & Execution Engine
+# ==============================================================================
+
+from __future__ import annotations
+
+import ast
+import difflib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any, Optional
+
+EXIT_SUCCESS = 0
+EXIT_ERROR = 1
+EXIT_FILE_NOT_FOUND = 2
+EXIT_SYNTAX_ERROR = 3
+EXIT_TIMEOUT = 124
+EXIT_INVALID_INPUT = 127
+
+
+def resolve_agent_path(target_str: Optional[str]) -> Path:
+    if not target_str:
+        target_str = "."
+    raw_path = Path(target_str).expanduser()
+    if raw_path.is_absolute():
+        return raw_path.resolve(strict=False)
+
+    agent_cwd = (
+        os.environ.get("LLM_AGENT_VAR___cwd__")
+        or os.environ.get("LLM_AGENT_VAR___CWD__")
+        or os.environ.get("LLM_AGENT_VAR_CWD")
+        or os.getcwd()
+    )
+    return (Path(agent_cwd) / raw_path).resolve(strict=False)
+
+
+def check_syntax(path: Path, content: Optional[str] = None) -> tuple[bool, str]:
+    ext = path.suffix.lower()
+    text = content if content is not None else (path.read_text(encoding="utf-8", errors="replace") if path.exists() else "")
+
+    if ext == ".py":
+        try:
+            ast.parse(text, filename=str(path))
+            return True, "Python AST check passed."
+        except SyntaxError as e:
+            return False, f"Python SyntaxError line {e.lineno}, col {e.offset}: {e.msg}"
+    elif ext == ".json":
+        try:
+            json.loads(text)
+            return True, "JSON validation passed."
+        except Exception as e:
+            return False, f"JSON ParseError: {str(e)}"
+    return True, "No automated syntax rule defined for this filetype."
+
+
+def get_backup_dir() -> Path:
+    b_dir = os.environ.get("LLM_AGENT_VAR_BACKUP_DIR", ".code_healer_backups")
+    resolved = resolve_agent_path(b_dir)
+    resolved.mkdir(parents=True, exist_ok=True)
+    return resolved
+
+
+def make_backup(target_path: Path) -> Optional[Path]:
+    safe_mode = os.environ.get("LLM_AGENT_VAR_SAFE_MODE", "true").lower() in {"true", "1", "yes"}
+    if safe_mode and target_path.is_file():
+        b_dir = get_backup_dir()
+        timestamp = int(time.time() * 1000)
+        backup_path = b_dir / f"{target_path.name}.{timestamp}.bak"
+        shutil.copy2(target_path, backup_path)
+        return backup_path
+    return None
+
+
+def atomic_write(target_path: Path, new_content: str) -> None:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_file = target_path.with_suffix(f".tmp.{os.getpid()}")
+    try:
+        temp_file.write_text(new_content, encoding="utf-8")
+        temp_file.replace(target_path)
+    finally:
+        if temp_file.exists():
+            temp_file.unlink()
+
+
+def handle_read(target_path: Path, line_start: Optional[int], line_end: Optional[int]) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    lines = target_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    total_lines = len(lines)
+
+    start = max(1, line_start or 1)
+    end = min(total_lines, line_end or total_lines)
+    selected_lines = lines[start - 1 : end]
+
+    valid, syntax_msg = check_syntax(target_path)
+    numbered = "".join([f"{i:5d} | {line}" for i, line in enumerate(selected_lines, start=start)])
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "total_lines": total_lines,
+        "range_read": [start, end],
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+        "content": numbered,
+        "raw_slice": "".join(selected_lines),
+    }
+
+
+def handle_write(target_path: Path, content: str) -> dict[str, Any]:
+    backup = make_backup(target_path)
+    atomic_write(target_path, content)
+    valid, syntax_msg = check_syntax(target_path, content)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "File written successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_append(target_path: Path, content: str) -> dict[str, Any]:
+    backup = make_backup(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(target_path, "a", encoding="utf-8") as f:
+        f.write(content)
+
+    valid, syntax_msg = check_syntax(target_path)
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "Content appended successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_replace(target_path: Path, find_str: str, replacement_str: str, is_regex: bool = False) -> dict[str, Any]:
+    if not target_path.is_file():
+        return {"success": False, "error": f"File not found: {target_path}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    old_text = target_path.read_text(encoding="utf-8", errors="replace")
+
+    if is_regex:
+        try:
+            pattern = re.compile(find_str)
+            new_text, count = pattern.subn(replacement_str, old_text)
+        except re.error as e:
+            return {"success": False, "error": f"Invalid regex pattern: {str(e)}", "exit_code": EXIT_INVALID_INPUT}
+    else:
+        count = old_text.count(find_str)
+        new_text = old_text.replace(find_str, replacement_str)
+
+    if count == 0:
+        return {"success": False, "error": f"Pattern '{find_str}' not found in target file.", "exit_code": EXIT_ERROR}
+
+    valid, syntax_msg = check_syntax(target_path, new_text)
+    if not valid:
+        return {
+            "success": False,
+            "error": f"Replacement introduces a syntax error: {syntax_msg}",
+            "exit_code": EXIT_SYNTAX_ERROR,
+        }
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_text)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "occurrences_replaced": count,
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": {"valid": valid, "message": syntax_msg},
+    }
+
+
+def handle_diff(target_path: Path, new_content: str) -> dict[str, Any]:
+    old_content = target_path.read_text(encoding="utf-8", errors="replace") if target_path.exists() else ""
+    old_lines = old_content.splitlines(keepends=True)
+    new_lines = new_content.splitlines(keepends=True)
+
+    diff = list(difflib.unified_diff(
+        old_lines,
+        new_lines,
+        fromfile=f"a/{target_path.name}",
+        tofile=f"b/{target_path.name}",
+        lineterm="",
+    ))
+
+    valid, syntax_msg = check_syntax(target_path, new_content)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "diff": "\n".join(diff) if diff else "No changes detected.",
+        "proposed_syntax_valid": valid,
+        "syntax_message": syntax_msg,
+    }
+
+
+def handle_patch(target_path: Path, new_content: str) -> dict[str, Any]:
+    valid, syntax_msg = check_syntax(target_path, new_content)
+    if not valid:
+        return {
+            "success": False,
+            "error": f"Patch refused. Syntax error: {syntax_msg}",
+            "exit_code": EXIT_SYNTAX_ERROR,
+        }
+
+    backup = make_backup(target_path)
+    atomic_write(target_path, new_content)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "message": "File patched successfully.",
+        "backup_created": str(backup) if backup else None,
+        "syntax_status": syntax_msg,
+    }
+
+
+def handle_execute(command: str, timeout_sec: float) -> dict[str, Any]:
+    agent_cwd = (
+        os.environ.get("LLM_AGENT_VAR___cwd__")
+        or os.environ.get("LLM_AGENT_VAR___CWD__")
+        or os.environ.get("LLM_AGENT_VAR_CWD")
+        or os.getcwd()
+    )
+    start_time = time.monotonic()
+    try:
+        proc = subprocess.run(
+            command,
+            shell=True,
+            cwd=agent_cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+        )
+        duration_ms = round((time.monotonic() - start_time) * 1000, 2)
+        return {
+            "success": proc.returncode == 0,
+            "command": command,
+            "exit_code": proc.returncode,
+            "stdout": proc.stdout.strip(),
+            "stderr": proc.stderr.strip(),
+            "duration_ms": duration_ms,
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "command": command,
+            "error": f"Command timed out after {timeout_sec}s",
+            "exit_code": EXIT_TIMEOUT,
+            "duration_ms": round((time.monotonic() - start_time) * 1000, 2),
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "command": command,
+            "error": str(e),
+            "exit_code": EXIT_ERROR,
+            "duration_ms": round((time.monotonic() - start_time) * 1000, 2),
+        }
+
+
+def handle_rollback(target_path: Path) -> dict[str, Any]:
+    b_dir = get_backup_dir()
+    pattern = f"{target_path.name}.*.bak"
+    backups = sorted(b_dir.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if not backups:
+        return {"success": False, "error": f"No backups found for {target_path.name} in {b_dir}", "exit_code": EXIT_FILE_NOT_FOUND}
+
+    latest_backup = backups[0]
+    shutil.copy2(latest_backup, target_path)
+
+    return {
+        "success": True,
+        "target": str(target_path),
+        "restored_from": str(latest_backup),
+        "message": "File successfully rolled back to latest snapshot.",
+    }
+
+
+def write_output(data: dict[str, Any]) -> None:
+    payload = json.dumps(data, ensure_ascii=False, indent=2)
+    out_target = os.environ.get("LLM_OUTPUT", "/dev/stdout")
+    if out_target in {"/dev/stdout", "/dev/fd/1", "-"}:
+        sys.stdout.write(payload + "\n")
+        sys.stdout.flush()
+    else:
+        try:
+            target_file = Path(out_target)
+            target_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(target_file, "a", encoding="utf-8") as fp:
+                fp.write(payload + "\n")
+        except OSError:
+            sys.stdout.write(payload + "\n")
+            sys.stdout.flush()
+
+
+def main() -> int:
+    raw_input = ""
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
+        raw_input = sys.argv[1]
+    elif not sys.stdin.isatty():
+        raw_input = sys.stdin.read()
+
+    try:
+        params = json.loads(raw_input) if raw_input.strip() else {}
+    except Exception:
+        params = {}
+
+    action = params.get("action") or "read"
+    target = params.get("target")
+    content = params.get("content")
+    find_str = params.get("find")
+    replacement_str = params.get("replacement")
+    is_regex = bool(params.get("is_regex", False))
+    command = params.get("command")
+    timeout = float(params.get("timeout", 30.0))
+    line_start = params.get("line_start")
+    line_end = params.get("line_end")
+
+    target_path = resolve_agent_path(target) if target else Path.cwd()
+
+    if action in {"read", "inspect"}:
+        res = handle_read(target_path, line_start, line_end)
+    elif action == "write":
+        if content is None:
+            res = {"success": False, "error": "'content' parameter is required for write", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_write(target_path, content)
+    elif action == "append":
+        if content is None:
+            res = {"success": False, "error": "'content' parameter is required for append", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_append(target_path, content)
+    elif action == "replace":
+        if find_str is None or replacement_str is None:
+            res = {"success": False, "error": "Both 'find' and 'replacement' are required for replace", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_replace(target_path, find_str, replacement_str, is_regex)
+    elif action == "diff":
+        if content is None:
+            res = {"success": False, "error": "'content' is required for diff", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_diff(target_path, content)
+    elif action == "patch":
+        if content is None:
+            res = {"success": False, "error": "'content' is required for patch", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_patch(target_path, content)
+    elif action == "execute":
+        if not command:
+            res = {"success": False, "error": "'command' is required for execute", "exit_code": EXIT_INVALID_INPUT}
+        else:
+            res = handle_execute(command, timeout)
+    elif action == "syntax_check":
+        valid, msg = check_syntax(target_path, content)
+        res = {"success": True, "valid": valid, "message": msg}
+    elif action == "rollback":
+        res = handle_rollback(target_path)
+    else:
+        res = {"success": False, "error": f"Unknown action: {action}", "exit_code": EXIT_INVALID_INPUT}
+
+    write_output(res)
+    return res.get("exit_code", EXIT_SUCCESS)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

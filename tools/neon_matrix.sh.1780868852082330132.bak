@@ -1,0 +1,47 @@
+#!/bin/bash
+# ════════════════════════════════════════════════════════════════════
+#  NEON MATRIX THEME - Terminal Green / Digital Rain Aesthetic
+# ════════════════════════════════════════════════════════════════════
+
+export CYBER_THEME="matrix"
+
+# Matrix Color Palette - Terminal Green
+export CYBER_PINK="\033[38;5;46m"      # Matrix green
+export CYBER_CYAN="\033[38;5;47m"     # Bright green
+export CYBER_YELLOW="\033[38;5;82m"   # Lime green
+export CYBER_ORANGE="\033[38;5;70m"   # Teal green
+export CYBER_RED="\033[38;5;196m"     # Red accent
+export CYBER_GREEN="\033[38;5;46m"    # Matrix green
+export CYBER_BLUE="\033[38;5;51m"     # Cyan
+export CYBER_PURPLE="\033[38;5;45m"   # Cool cyan
+export CYBER_WHITE="\033[38;5;253m"   # Off-white
+export CYBER_GRAY="\033[38;5;242m"   # Dim gray
+export CYBER_BG="\033[48;5;232m"      # Dark background
+
+# Block Characters - Digital/Matrix style
+export BLOCK_TL="╔"
+export BLOCK_TR="╗"
+export BLOCK_BL="╚"
+export BLOCK_BR="╝"
+export BLOCK_V="║"
+export BLOCK_H="═"
+export BLOCK_DOT="•"
+
+# Header & UI
+export HEADER_TEXT=" MATRIX MODE "
+export ICON_SUCCESS="✓"
+export ICON_ERROR="✗"
+export ICON_WARNING="⚠"
+export ICON_INFO="ℹ"
+export ICON_CLOCK="⏱"
+export ICON_TAG="⚑"
+
+# Output path
+export LLM_OUTPUT="/dev/stdout"
+
+# Source the core engine
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/execute_command.sh"
+
+# Run sample command
+main "echo 'Welcome to the Matrix...'"

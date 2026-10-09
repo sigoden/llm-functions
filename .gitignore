@@ -1,18 +1,33 @@
-/tmp
-/tools.txt
-/agents.txt
-functions.json
-/bin
-/cache
-/agents/_*
-/tools/_*
-/tools/web_search.*
-/tools/code_interpreter.*
-/.env
-__pycache__
-/.venv
-node_modules
-/package.json
-package-lock.json
-*.lock
-/mcp.json
+# Runtime / build scratch
+cache/__tmp__/
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Editor / OS
+.DS_Store
+*~
+*.swp
+
+# Backup artifacts (edit tools in this repo auto-create these; history is in git)
+*.bak
+*.bak.*
+*.backup
+*.*.bak
+
+# Logs (keep any already-tracked logs as-is; ignore new ones)
+*.log
+
+# Node (root node_modules is intentionally tracked for on-device MCP servers;
+# ignore nested install artifacts under agent/bridge dirs that are not tracked)
+aicha5/bridge/node_modules/.cache/
+
+# Bybit suite runtime artifacts
+/bybit_trades.db
+/trading_signals.json

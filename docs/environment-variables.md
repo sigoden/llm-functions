@@ -11,6 +11,7 @@
 | `LLM_AGENT_FUNC`      | Agent function, such as `list_todos`                                                                                       |
 | `LLM_AGENT_ROOT_DIR`  | Path to `<llm-functions-dir>/agents/<agent-name>`                                                                          |
 | `LLM_AGENT_CACHE_DIR` | Path to `<llm-functions-dir>/cache/<agent-name>`,<br>The agent tool script can use this directory to store some cache data |
+| `LLM_OUTPUT_COLOR`    | Set to `1` if the current environment supports colorized output (stdout is a TTY).                                         |
 
 ## Injected by runtime (AIChat)
 

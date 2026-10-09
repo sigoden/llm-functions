@@ -1,0 +1,32 @@
+{
+  "name": "llm-functions",
+  "version": "1.0.0",
+  "description": "This project empowers you to effortlessly build powerful LLM tools and agents using familiar languages like Bash, JavaScript, and Python.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sigoden/llm-functions.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sigoden/llm-functions/issues"
+  },
+  "homepage": "https://github.com/sigoden/llm-functions#readme",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^2.1.205",
+    "@modelcontextprotocol/server-filesystem": "^2026.1.14",
+    "@modelcontextprotocol/server-github": "^2025.4.8",
+    "bybit-api": "^4.6.2",
+    "dotenv": "^17.4.2",
+    "technicalindicators": "^3.1.0"
+  }
+}

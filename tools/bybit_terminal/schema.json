@@ -1,0 +1,59 @@
+{
+  "name": "bybit_terminal",
+  "description": "Bybit V5 terminal tool",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "description": "Operation name (e.g., place_order, calculate_all_indicators)"
+      },
+      "symbol": {
+        "type": "string",
+        "description": "Trading pair, e.g., BTCUSD"
+      },
+      "side": {
+        "type": "string",
+        "enum": ["Buy", "Sell"],
+        "description": "Order side"
+      },
+      "qty": {
+        "type": "number",
+        "description": "Quantity"
+      },
+      "price": {
+        "type": "number",
+        "description": "Limit price (optional)"
+      },
+      "stop_loss": {
+        "type": "number",
+        "description": "Stop‑loss price (optional)"
+      },
+      "take_profit": {
+        "type": "number",
+        "description": "Take‑profit price (optional)"
+      },
+      "category": {
+        "type": "string",
+        "enum": ["linear", "inverse"],
+        "default": "linear",
+        "description": "Product category"
+      },
+      "interval": {
+        "type": "string",
+        "default": "60",
+        "description": "Kline interval for indicators"
+      },
+      "depth": {
+        "type": "integer",
+        "default": 50,
+        "description": "Order‑book depth"
+      },
+      "kwargs": {
+        "type": "object",
+        "description": "Extra action‑specific arguments"
+      }
+    },
+    "required": ["action"]
+  }
+}

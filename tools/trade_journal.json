@@ -1,0 +1,526 @@
+[
+  {
+    "ts": "2026-06-09T05:03:35.809819+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "0.001",
+      "timeInForce": "GoodTillCancel",
+      "price": "20000.0",
+      "stopLoss": "0.1",
+      "takeProfit": "0.1",
+      "orderLinkId": "test_client_oid_001"
+    },
+    "result": {
+      "status": "error",
+      "msg": "All network tiers failed. Last error: 403 Client Error: Forbidden for url: https://api.bybit.com/v5/order/create"
+    }
+  },
+  {
+    "ts": "2026-07-23T19:36:57.483357+00:00",
+    "action": "execute_order",
+    "symbol": "ADAUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 30.0,
+      "entry_price": 0.1696,
+      "stop_loss": 0.1671,
+      "take_profit": 0.1711,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.05,
+      "expected_loss_usdt": 0.08,
+      "notional_usdt": 5.088,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 2.01,
+      "order_params": {
+        "category": "linear",
+        "symbol": "ADAUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "30.0",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "0.1671",
+        "takeProfit": "0.1711"
+      },
+      "order_id": "dc7314a0-b3bb-43be-ac74-68a81f9122af",
+      "order_link_id": "",
+      "data": {
+        "orderId": "dc7314a0-b3bb-43be-ac74-68a81f9122af",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T19:45:32.994688+00:00",
+    "action": "execute_order",
+    "symbol": "GALAUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "GALAUSDT",
+      "side": "Sell",
+      "order_type": "Market",
+      "qty": 2525.0,
+      "entry_price": 0.002,
+      "stop_loss": 0.002028,
+      "take_profit": 0.001984,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.04,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.05,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.99,
+      "order_params": {
+        "category": "linear",
+        "symbol": "GALAUSDT",
+        "side": "Sell",
+        "orderType": "Market",
+        "qty": "2525.0",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "0.002028",
+        "takeProfit": "0.001984"
+      },
+      "order_id": "244f3594-838a-4bfd-9f7d-206830e085f7",
+      "order_link_id": "",
+      "data": {
+        "orderId": "244f3594-838a-4bfd-9f7d-206830e085f7",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T19:46:34.814829+00:00",
+    "action": "execute_order",
+    "symbol": "SOLUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "SOLUSDT",
+      "side": "Sell",
+      "order_type": "Market",
+      "qty": 0.1,
+      "entry_price": 75.57,
+      "stop_loss": 76.27,
+      "take_profit": 75.44,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 7.557,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.99,
+      "order_params": {
+        "category": "linear",
+        "symbol": "SOLUSDT",
+        "side": "Sell",
+        "orderType": "Market",
+        "qty": "0.1",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "76.27",
+        "takeProfit": "75.44"
+      },
+      "order_id": "b84b7b42-bb93-45da-9dec-cd3290dcfb82",
+      "order_link_id": "",
+      "data": {
+        "orderId": "b84b7b42-bb93-45da-9dec-cd3290dcfb82",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T19:51:36.037389+00:00",
+    "action": "move_sl_to_breakeven",
+    "symbol": "GALAUSDT",
+    "details": {
+      "entry_price": 0.001999,
+      "new_sl": "0.001997",
+      "net_pnl": 0.00858702
+    }
+  },
+  {
+    "ts": "2026-07-23T19:52:16.210498+00:00",
+    "action": "execute_order",
+    "symbol": "LINKUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "LINKUSDT",
+      "side": "Sell",
+      "order_type": "Market",
+      "qty": 0.6,
+      "entry_price": 8.437,
+      "stop_loss": 8.56,
+      "take_profit": 8.427,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.0622,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 2.0,
+      "order_params": {
+        "category": "linear",
+        "symbol": "LINKUSDT",
+        "side": "Sell",
+        "orderType": "Market",
+        "qty": "0.6",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "8.560",
+        "takeProfit": "8.427"
+      },
+      "order_id": "4bd67f85-4e30-4cc6-8b94-ee8a27e87a4a",
+      "order_link_id": "",
+      "data": {
+        "orderId": "4bd67f85-4e30-4cc6-8b94-ee8a27e87a4a",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T19:52:16.460148+00:00",
+    "action": "execute_order",
+    "symbol": "GALAUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "GALAUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 2533.0,
+      "entry_price": 0.001995,
+      "stop_loss": 0.001967,
+      "take_profit": 0.002006,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.03,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.0533,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 2.0,
+      "order_params": {
+        "category": "linear",
+        "symbol": "GALAUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "2533.0",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "0.001967",
+        "takeProfit": "0.002006"
+      },
+      "order_id": "31d1ef3f-60fc-4515-b296-e365ee2fe914",
+      "order_link_id": "",
+      "data": {
+        "orderId": "31d1ef3f-60fc-4515-b296-e365ee2fe914",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:06:09.716739+00:00",
+    "action": "move_sl_to_breakeven",
+    "symbol": "ADAUSDT",
+    "details": {
+      "entry_price": 0.1696,
+      "new_sl": "0.1699",
+      "net_pnl": 0.0079296
+    }
+  },
+  {
+    "ts": "2026-07-23T20:09:47.702502+00:00",
+    "action": "execute_order",
+    "symbol": "GALAUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "GALAUSDT",
+      "side": "Sell",
+      "order_type": "Market",
+      "qty": 2517.0,
+      "entry_price": 0.002004,
+      "stop_loss": 0.002032,
+      "take_profit": 0.001995,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.02,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.0441,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 2.0,
+      "order_params": {
+        "category": "linear",
+        "symbol": "GALAUSDT",
+        "side": "Sell",
+        "orderType": "Market",
+        "qty": "2517.0",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "0.002032",
+        "takeProfit": "0.001995"
+      },
+      "order_id": "c811c89f-6abf-40c0-8b50-efc6c613ffba",
+      "order_link_id": "",
+      "data": {
+        "orderId": "c811c89f-6abf-40c0-8b50-efc6c613ffba",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:35:17.445094+00:00",
+    "action": "move_sl_to_breakeven",
+    "symbol": "GALAUSDT",
+    "details": {
+      "entry_price": 0.002003,
+      "new_sl": "0.002000",
+      "net_pnl": 0.006034759200000001
+    }
+  },
+  {
+    "ts": "2026-07-23T20:36:45.583850+00:00",
+    "action": "execute_order",
+    "symbol": "DOGEUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "DOGEUSDT",
+      "side": "Sell",
+      "order_type": "Market",
+      "qty": 73.0,
+      "entry_price": 0.06953,
+      "stop_loss": 0.07054,
+      "take_profit": 0.06942,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.0757,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.99,
+      "order_params": {
+        "category": "linear",
+        "symbol": "DOGEUSDT",
+        "side": "Sell",
+        "orderType": "Market",
+        "qty": "73.0",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "0.07054",
+        "takeProfit": "0.06942"
+      },
+      "order_id": "b2399811-161b-4611-8b8d-37db926fc458",
+      "order_link_id": "",
+      "data": {
+        "orderId": "b2399811-161b-4611-8b8d-37db926fc458",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:36:53.021308+00:00",
+    "action": "execute_order",
+    "symbol": "LINKUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 0.6,
+      "entry_price": 8.504,
+      "stop_loss": 8.381,
+      "take_profit": 8.519,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.1024,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.98,
+      "order_params": {
+        "category": "linear",
+        "symbol": "LINKUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "0.6",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "8.381",
+        "takeProfit": "8.519"
+      },
+      "order_id": "a656188d-0afb-4495-8463-a12a80791a08",
+      "order_link_id": "",
+      "data": {
+        "orderId": "a656188d-0afb-4495-8463-a12a80791a08",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:36:53.123656+00:00",
+    "action": "execute_order",
+    "symbol": "SOLUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 0.1,
+      "entry_price": 76.08,
+      "stop_loss": 75.37,
+      "take_profit": 76.2,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 7.608,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.98,
+      "order_params": {
+        "category": "linear",
+        "symbol": "SOLUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "0.1",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "75.37",
+        "takeProfit": "76.20"
+      },
+      "order_id": "5b3f909f-172f-4ce1-9861-dc83a707a036",
+      "order_link_id": "",
+      "data": {
+        "orderId": "5b3f909f-172f-4ce1-9861-dc83a707a036",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:39:51.611590+00:00",
+    "action": "execute_order",
+    "symbol": "SOLUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 0.1,
+      "entry_price": 76.07,
+      "stop_loss": 75.36,
+      "take_profit": 76.26,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.02,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 7.607,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.96,
+      "order_params": {
+        "category": "linear",
+        "symbol": "SOLUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "0.1",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "75.36",
+        "takeProfit": "76.26"
+      },
+      "order_id": "bcbe6d59-f395-429a-8bb4-28b699555a71",
+      "order_link_id": "",
+      "data": {
+        "orderId": "bcbe6d59-f395-429a-8bb4-28b699555a71",
+        "orderLinkId": ""
+      }
+    }
+  },
+  {
+    "ts": "2026-07-23T20:39:52.521997+00:00",
+    "action": "execute_order",
+    "symbol": "LINKUSDT",
+    "details": {
+      "success": true,
+      "dry_run": false,
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "order_type": "Market",
+      "qty": 0.6,
+      "entry_price": 8.503,
+      "stop_loss": 8.38,
+      "take_profit": 8.518,
+      "trailing_stop_dist": null,
+      "trailing_activation": null,
+      "expected_profit_usdt": 0.01,
+      "expected_loss_usdt": 0.07,
+      "notional_usdt": 5.1018,
+      "risk_pct": 1.0,
+      "risk_amount": 0.02,
+      "balance": 1.96,
+      "order_params": {
+        "category": "linear",
+        "symbol": "LINKUSDT",
+        "side": "Buy",
+        "orderType": "Market",
+        "qty": "0.6",
+        "timeInForce": "GTC",
+        "positionIdx": 0,
+        "slTriggerBy": "MarkPrice",
+        "tpTriggerBy": "MarkPrice",
+        "stopLoss": "8.380",
+        "takeProfit": "8.518"
+      },
+      "order_id": "5d352393-1de4-4317-8102-a7571dacf8db",
+      "order_link_id": "",
+      "data": {
+        "orderId": "5d352393-1de4-4317-8102-a7571dacf8db",
+        "orderLinkId": ""
+      }
+    }
+  }
+]

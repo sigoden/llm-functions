@@ -1,0 +1,17 @@
+# Bybit Trading Tools Dependencies
+# Core trading library
+pybit>=5.0.0
+
+# Data analysis
+pandas>=2.0.0
+pandas_ta>=0.3.14b
+
+# CLI argument parsing
+argc>=1.0.0
+
+# Optional: for enhanced HTTP handling
+requests>=2.28.0
+urllib3>=1.26.0
+
+# Optional: for Tor proxy support
+PySocks>=1.7.1

@@ -1,8 +1,18 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 
 # Usage: ./run-mcp-tool.sh <tool-name> <tool-data>
 
-set -e
+set -eo pipefail
+
+cleanup() {
+    local exit_code=$?
+    if [[ -n "${is_temp_llm_output:-}" ]] && [[ -n "${LLM_OUTPUT:-}" ]] && [[ -f "$LLM_OUTPUT" ]]; then
+        rm -f "$LLM_OUTPUT"
+    fi
+    exit $exit_code
+}
+
+trap cleanup EXIT
 
 main() {
     root_dir="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd)"
@@ -51,7 +61,7 @@ run() {
         die "error: no JSON data"
     fi
 
-    if [[ "$OS" == "Windows_NT" ]]; then
+    if [[ "${OS:-}" == "Windows_NT" ]]; then
         set -o igncr
         tool_data="$(echo "$tool_data" | sed 's/\\/\\\\/g')"
     fi
@@ -59,6 +69,9 @@ run() {
     if [[ -z "$LLM_OUTPUT" ]]; then
         is_temp_llm_output=1
         export LLM_OUTPUT="$(mktemp)"
+    fi
+    if [[ -t 1 ]]; then
+        export LLM_OUTPUT_COLOR=1
     fi
 
     if [[ -n "$LLM_MCP_SKIP_CONFIRM" ]]; then
@@ -102,6 +115,12 @@ $(cat "$LLM_OUTPUT")
 ----------------------$(echo -e "\e[0m")
 EOF
     fi
+}
+
+die() {
+    local exit_code=${2:-1}
+    echo "ERROR: $1" >&2
+    exit "$exit_code"
 }
 
 main "$@"

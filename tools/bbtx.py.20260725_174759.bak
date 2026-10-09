@@ -1,0 +1,2597 @@
+#!/usr/bin/env python3
+# @describe Unified Entry Point — Bybit Realm v5.0
+# @option --action! health_check, get_wallet_balance, get_account_info, get_positions, get_position_risk, get_fee_rate, set_leverage, set_trading_stop, set_position_mode, get_executions, get_pnl_history, panic_close, bulk_update_tp_sl, get_account_summary, get_pnl_summary, update_trailing_stop, set_tp_sl, check_risk_limit, check_balance, close_position, get_open_positions_summary, send_telegram_alert, export_trade_history, calculate_rsi, calculate_sma, calculate_ema, calculate_macd, calculate_bollinger_bands, calculate_vwap, calculate_atr, calculate_stoch, scan_scalping_opportunities, place_order, amend_order, cancel_order, cancel_all_orders, get_open_orders, get_order_history, batch_place_orders, place_smart_trade, get_ticker, get_orderbook, get_klines, get_recent_trades, get_instruments_info, get_funding_rate, get_open_interest, get_volatility_index, get_orderbook_analysis, get_volume_at_price, get_market_regime, scan_symbols, get_journal
+# @option --symbol <TEXT> Trading pair (e.g. BTCUSDT).
+# @option --side <ENUM> Buy, Sell.
+# @option --qty <NUM> quantity.
+# @option --price <NUM> price.
+# @option --category <ENUM> linear, spot, inverse.
+# @option --stop_loss <NUM> Stop loss price.
+# @option --take_profit <NUM> Take profit price.
+# @option --leverage <NUM> Leverage value.
+# @option --interval <TEXT> 1, 5, 15, 60, 240, D.
+# @option --limit <NUM> Result limit.
+# @flag --json Output raw JSON instead of pretty print.
+"""
+"╔══════════════════════════════════════════════════════════════════════════════╗"
+# ║           BYBIT REALM v5.0 — Advanced Trading & Analysis Suite               ║
+║                                                                              ║
+# ║  Modules Integrated:                                                         ║
+# ║  • bybit_smart_order  : Position Sizing & Risk Management Execution          ║
+║  • bybit_wbta         : L2 Orderbook Intelligence & Technical Observatory     ║
+║  • scientific_calc    : Math, Matrix, & Statistical Analytics Engine          ║
+║  • proxy_utils        : Geo-IP Bypass & TOR Proxy Routing                     ║
+"╚══════════════════════════════════════════════════════════════════════════════╝"
+"""
+from __future__ import annotations
+import sys
+from pathlib import Path
+import sys
+
+# Add current directory to sys.path
+sys.path.insert(0, str(Path(__file__).parent))
+CURRENT_DIR = Path(__file__).parent.resolve()
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(0, str(CURRENT_DIR))
+
+# ── Module Imports with Fallback Handlers ─────────────────────────────────────
+try:
+    import proxy_utils
+    proxy_utils.set_proxy_environment()
+except ImportError:
+    pass
+except ImportError:
+    proxy_utils = None
+try:
+    import bybit_smart_order
+except ImportError:
+    bybit_smart_order = None
+except ImportError:
+    bybit_smart_order = None
+try:
+    import bybit_wbta
+except ImportError:
+    bybit_wbta = None
+except ImportError:
+    bybit_wbta = None
+try:
+    import scientific_calculator
+except ImportError:
+    scientific_calculator = None
+import os
+import asyncio
+import json
+import csv
+import time
+import math
+import uuid
+import logging
+import hashlib
+import hmac
+import threading
+import statistics
+import requests
+from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_HALF_UP, ROUND_DOWN, InvalidOperation
+from datetime import datetime, timezone, timedelta
+from typing import Optional, List, Dict, Any, Literal, Tuple
+from dotenv import load_dotenv
+load_dotenv(override=True)
+dotenv_path = CURRENT_DIR.parent / ".env"
+load_dotenv(dotenv_path=dotenv_path, override=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+)
+logger = logging.getLogger("BybitRealm")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 1: DECIMAL & PRECISION HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from typing import Any
+
+
+def format_precision(value: Any, step: Any, rounding: Any = ROUND_HALF_UP) -> str:
+    """
+    Format a numeric value to an exact decimal step string without binary float drift.
+    Example: format_precision(0.00010000000002, 0.0001) -> "0.0001"
+    """
+    if value is None or value == "":
+        return ""
+    if step is None or float(step) <= 0:
+        return format(Decimal(str(value)), "f")
+    try:
+        val_d = Decimal(str(value))
+        step_d = Decimal(str(step))
+        quantized = val_d.quantize(step_d, rounding=rounding)
+        return format(quantized, "f")
+    except (InvalidOperation, ValueError):
+        return str(value)
+@dataclass
+from decimal import Decimal, ROUND_DOWN
+
+
+class LotSizeFilter:
+    qty_step: float
+    min_order_qty: float
+    max_order_qty: float
+    min_notional: float = 0.0
+
+    def __init__(
+        self,
+        qty_step: float,
+        min_order_qty: float,
+        max_order_qty: float,
+        min_notional: float = 0.0,
+    ) -> None:
+        self.qty_step = qty_step
+        self.min_order_qty = min_order_qty
+        self.max_order_qty = max_order_qty
+        self.min_notional = min_notional
+
+    def adjust(self, qty: float) -> str:
+        if self.qty_step <= 0:
+            return format(Decimal(str(qty)), "f")
+        step = Decimal(str(self.qty_step))
+        q = Decimal(str(qty))
+        adjusted = (q / step).quantize(Decimal("1"), rounding=ROUND_DOWN) * step
+        final_qty = max(
+            Decimal(str(self.min_order_qty)),
+            min(Decimal(str(self.max_order_qty)), adjusted),
+        )
+        return format(final_qty, "f")
+@dataclass
+from decimal import Decimal, ROUND_HALF_UP
+
+
+class PriceFilter:
+    tick_size: float
+    min_price: float = 0.0
+    max_price: float = 1e12
+
+    def __init__(self, tick_size: float, min_price: float = 0.0, max_price: float = 1e12):
+        self.tick_size = tick_size
+        self.min_price = min_price
+        self.max_price = max_price
+
+    def adjust(self, price: float) -> str:
+        if self.tick_size <= 0:
+            return format(Decimal(str(price)), "f")
+        tick = Decimal(str(self.tick_size))
+        p = Decimal(str(price))
+        adjusted = (p / tick).quantize(Decimal("1"), rounding=ROUND_HALF_UP) * tick
+        final_price = max(Decimal(str(self.min_price)), min(Decimal(str(self.max_price)), adjusted))
+        return format(final_price, "f")
+from dataclasses import dataclass
+
+
+@dataclass
+class BBT:
+    """Placeholder class for BBT - original class definition was truncated."""
+    pass
+@dataclass
+class InstrumentInfo:
+    lot_size: LotSizeFilter
+    price_flt: PriceFilter
+    symbol: str
+    status: str = "Trading"
+    fetched_at: float = field(default_factory=time.time)
+@dataclass
+import os
+from dataclasses import dataclass, field
+
+
+@dataclass
+class TradingConfig:
+    api_key: str = field(default_factory=lambda: os.getenv("BYBIT_API_KEY", ""))
+    api_secret: str = field(default_factory=lambda: os.getenv("BYBIT_API_SECRET", ""))
+    testnet: bool = field(default_factory=lambda: os.getenv("BYBIT_USE_TESTNET", "false").lower() == "true")
+    use_proxy: bool = field(default_factory=lambda: os.getenv("PROXY_ENABLED", "false").lower() == "true")
+    journal_path: str = field(default_factory=lambda: os.getenv("JOURNAL_PATH", "bybit_journal.json"))
+    timeout: int = field(default_factory=lambda: int(os.getenv("REQUEST_TIMEOUT", "15")))
+    max_retries: int = field(default_factory=lambda: int(os.getenv("MAX_RETRIES", "3")))
+    recv_window: int = 30000
+
+    @property
+    def base_url(self) -> str:
+        return "https://api-testnet.bybit.com" if self.testnet else "https://api.bybit.com"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 2: LONG VS SHORT LOGIC HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+def calculate_pnl(side: str, entry_price: float, mark_price: float, qty: float) -> tuple[float, float]:
+    """Calculate unrealized PnL ($) and PnL (%) for Long vs Short positions."""
+    side_clean = side.capitalize()
+    if side_clean == "Buy":  # Long
+        pnl_usd = (mark_price - entry_price) * qty
+    else:  # Sell / Short
+        pnl_usd = (entry_price - mark_price) * qty
+
+    cost_usd = entry_price * qty
+    pnl_pct = (pnl_usd / cost_usd * 100.0) if cost_usd > 0 else 0.0
+    return round(pnl_usd, 4), round(pnl_pct, 3)
+from typing import Tuple, Optional
+
+
+def calculate_liquidation_distance(side: str, mark_price: float, liq_price: float) -> Tuple[Optional[float], str]:
+    """Calculate distance (%) to liquidation price and assign position heat level."""
+    if liq_price <= 0 or mark_price <= 0:
+        return None, "UNKNOWN"
+
+    side_clean = side.capitalize()
+    if side_clean == "Buy":  # Long: Liquidation is below Mark
+        dist_pct = (mark_price - liq_price) / mark_price * 100.0
+    else:  # Short: Liquidation is above Mark
+        dist_pct = (liq_price - mark_price) / mark_price * 100.0
+
+    if dist_pct <= 0:
+        heat = "CRITICAL"  # Liquidated or past liquidation
+    elif dist_pct < 3.0:
+        heat = "CRITICAL"
+    elif dist_pct < 8.0:
+        heat = "HIGH"
+    elif dist_pct < 20.0:
+        heat = "MEDIUM"
+    else:
+        heat = "LOW"
+
+    return round(dist_pct, 3), heat
+def calculate_breakeven_price(side: str, entry_price: float, fee_rate: float = 0.00055) -> float:
+    """Calculate breakeven exit price covering entry and exit trading fees."""
+    side_clean = side.capitalize()
+    if side_clean == "Buy":  # Long needs higher exit price to cover fees
+        return entry_price * (1.0 + 2.0 * fee_rate)
+    else:  # Short needs lower exit price to cover fees
+        return entry_price * (1.0 - 2.0 * fee_rate)
+def validate_tp_sl(side: str, entry_price: float, tp: Optional[float] = None, sl: Optional[float] = None) -> Optional[str]:
+    """Validate TP and SL price boundaries based on Long vs Short direction."""
+    side_clean = side.capitalize()
+    if side_clean == "Buy":  # Long
+        if tp is not None and tp <= entry_price:
+            return f"Invalid Long TP ({tp}): Take Profit must be > Entry ({entry_price})."
+        if sl is not None and sl >= entry_price:
+            return f"Invalid Long SL ({sl}): Stop Loss must be < Entry ({entry_price})."
+    else:  # Short
+        if tp is not None and tp >= entry_price:
+            return f"Invalid Short TP ({tp}): Take Profit must be < Entry ({entry_price})."
+        if sl is not None and sl <= entry_price:
+            return f"Invalid Short SL ({sl}): Stop Loss must be > Entry ({entry_price})."
+    return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 3: RATE LIMITER & TRADE JOURNAL
+# ══════════════════════════════════════════════════════════════════════════════
+import time
+import threading
+
+
+class RateLimiter:
+    def __init__(self, capacity: int = 20, refill_per_ms: float = 0.02):
+        self.capacity = capacity
+        self.tokens = capacity
+        self.refill_per_ms = refill_per_ms
+        self.last_check = time.monotonic() * 1000
+        self.lock = threading.Lock()
+
+    def acquire(self):
+        with self.lock:
+            now = time.monotonic() * 1000
+            delta = now - self.last_check
+            self.tokens = min(self.capacity, self.tokens + delta * self.refill_per_ms)
+            self.last_check = now
+            if self.tokens < 1:
+                sleep_time = (1 - self.tokens) / self.refill_per_ms
+                time.sleep(sleep_time / 1000)
+            self.tokens -= 1
+from __future__ import annotations
+
+import json
+import threading
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+class TradeJournal:
+    def __init__(self, path: str = "bybit_journal.json"):
+        self._path = Path(path)
+        self._lock = threading.Lock()
+        self._entries: list[dict[str, Any]] = self._load()
+
+    def _load(self) -> list[dict[str, Any]]:
+        if self._path.exists():
+            try:
+                data = json.loads(self._path.read_text(encoding="utf-8"))
+                return data if isinstance(data, list) else []
+            except (json.JSONDecodeError, OSError):
+                return []
+        return []
+
+    def _save(self) -> None:
+        with self._path.open("w", encoding="utf-8") as f:
+            json.dump(self._entries, f, indent=2, ensure_ascii=False)
+
+    def record(
+        self,
+        action: str,
+        payload: dict[str, Any],
+        result: dict[str, Any],
+        symbol: str | None = None,
+    ) -> str:
+        entry = {
+            "id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "action": action,
+            "symbol": symbol or payload.get("symbol", "N/A"),
+            "payload": payload,
+            "result": result,
+            "status": "success" if result.get("status") != "error" else "failed",
+        }
+        with self._lock:
+            self._entries.append(entry)
+            self._save()
+        return entry["id"]
+
+    def get_entries(
+        self,
+        symbol: str | None = None,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        with self._lock:
+            entries = self._entries
+            if symbol:
+                entries = [
+                    e for e in entries if e.get("symbol", "").upper() == symbol.upper()
+                ]
+            return entries[-limit:]
+```python
+class BybitRealm:
+    def __init__(self, config: Optional[TradingConfig] = None):
+        self.config = config or TradingConfig()
+        self.session = requests.Session()
+        self.session.headers.update({"Content-Type": "application/json"})
+        if proxy_utils and self.config.use_proxy:
+            self.session.proxies = proxy_utils.get_proxies()
+
+        self._limiter = RateLimiter()
+        self.journal = TradeJournal(self.config.journal_path)
+        self._cache_lock = threading.Lock()
+        self._instr_cache: Dict[str, InstrumentInfo] = {}
+
+    def _sign(self, ts: str, payload: str = "") -> str:
+        msg = f"{ts}{self.config.api_key}{self.config.recv_window}{payload}"
+        return hmac.new(self.config.api_secret.encode("utf-8"), msg.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    def _build_query_string(self, params: dict) -> str:
+        if not params:
+            return ""
+        clean_params = {k: str(v) for k, v in params.items() if v is not None}
+        return "&".join(f"{k}={v}" for k, v in sorted(clean_params.items()))
+
+    def _request(self, method: str, endpoint: str, params: Optional[dict] = None, json_data: Optional[dict] = None, signed: bool = True) -> dict:
+        self._limiter.acquire()
+        ts = str(int(time.time() * 1000))
+        headers = {
+            "X-BAPI-API-KEY": self.config.api_key,
+            "X-BAPI-TIMESTAMP": ts,
+            "X-BAPI-RECV-WINDOW": str(self.config.recv_window),
+            "Content-Type": "application/json",
+        }
+        url = self.config.base_url + endpoint
+        sign_payload = ""
+
+        if signed:
+            if method.upper() == "GET":
+                sign_payload = self._build_query_string(params or {})
+                if sign_payload:
+                    url = f"{url}?{sign_payload}"
+                params = None
+            else:
+                sign_payload = json.dumps(json_data, sort_keys=True) if json_data else ""
+            headers["X-BAPI-SIGN"] = self._sign(ts, sign_payload)
+
+        try:
+            resp = self.session.request(
+                method,
+                url,
+                params=params,
+                data=sign_payload if (signed and method.upper() == "POST") else None,
+                json=json_data if not (signed and method.upper() == "POST") else None,
+                headers=headers,
+                timeout=self.config.timeout,
+            )
+            if resp.status_code != 200:
+                return {"status": "error", "code": resp.status_code, "msg": resp.text}
+
+            data = resp.json()
+            if data.get("retCode") == 0:
+                return data.get("result", data)
+            return {"status": "error", "code": data.get("retCode"), "msg": data.get("retMsg")}
+        except Exception as exc:
+            return {"status": "error", "msg": str(exc)}
+
+    # ── Instrument Precision Fetcher ─────────────────────────────────────────
+    def _fetch_instrument(self, symbol: str, category: str = "linear") -> InstrumentInfo:
+        cache_key = f"{symbol}_{category}"
+        with self._cache_lock:
+            cached = self._instr_cache.get(cache_key)
+            if cached and time.time() - cached.fetched_at < 3600:
+                return cached
+
+        res = self._request("GET", "/v5/market/instruments-info", params={"category": category, "symbol": symbol.upper()}, signed=False)
+        item = res.get("list", [{}])[0]
+        lot = item.get("lotSizeFilter", {})
+        pft = item.get("priceFilter", {})
+
+        info = InstrumentInfo(
+```python
+        params: dict = {"category": category, "limit": limit}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._request("GET", "/v5/execution/list", params=params, signed=True)
+
+    def get_pnl_history(self, category: str = "linear", symbol: Optional[str] = None, limit: int = 50) -> dict:
+        params: dict = {"category": category, "limit": limit}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._request("GET", "/v5/position/closed-pnl", params=params, signed=True)
+
+    # ── Orders & Execution ───────────────────────────────────────────────────
+    def place_order(self, symbol: str, side: Literal["Buy", "Sell"], qty: float, price: Optional[float] = None, order_type: str = "Limit", category: str = "linear", stop_loss: Optional[float] = None, take_profit: Optional[float] = None, **kwargs) -> dict:
+        # Validate TP/SL boundaries for Long vs Short
+        if price is not None:
+            err = validate_tp_sl(side, float(price), take_profit, stop_loss)
+            if err:
+                return {"status": "error", "msg": err}
+
+        adj_qty = self.adjust_qty(symbol, qty, category)
+        payload: dict = {
+            "category": category,
+            "symbol": symbol.upper(),
+            "side": side.capitalize(),
+            "orderType": order_type.capitalize(),
+            "qty": adj_qty,
+            "timeInForce": kwargs.get("time_in_force", "GTC"),
+        }
+        if price is not None:
+            payload["price"] = self.adjust_price(symbol, price, category)
+        if stop_loss is not None:
+            payload["stopLoss"] = self.adjust_price(symbol, stop_loss, category)
+        if take_profit is not None:
+            payload["takeProfit"] = self.adjust_price(symbol, take_profit, category)
+
+        for k in ("reduceOnly", "orderLinkId", "triggerPrice", "triggerBy", "positionIdx"):
+            if k in kwargs and kwargs[k] is not None:
+                payload[k] = kwargs[k]
+
+        result = self._request("POST", "/v5/order/create", json_data=payload, signed=True)
+        self.journal.record("place_order", payload, result, symbol=symbol.upper())
+        return result
+
+    def amend_order(self, symbol: str, order_id: Optional[str] = None, client_oid: Optional[str] = None, qty: Optional[float] = None, price: Optional[float] = None, stop_loss: Optional[float] = None, take_profit: Optional[float] = None, category: str = "linear") -> dict:
+        payload: dict = {"category": category, "symbol": symbol.upper()}
+        if order_id:
+            payload["orderId"] = order_id
+        elif client_oid:
+            payload["orderLinkId"] = client_oid
+        if qty is not None:
+            payload["qty"] = self.adjust_qty(symbol, qty, category)
+        if price is not None:
+            payload["price"] = self.adjust_price(symbol, price, category)
+        if stop_loss is not None:
+            payload["stopLoss"] = self.adjust_price(symbol, stop_loss, category)
+        if take_profit is not None:
+            payload["takeProfit"] = self.adjust_price(symbol, take_profit, category)
+
+        return self._request("POST", "/v5/order/amend", json_data=payload, signed=True)
+
+    def cancel_order(self, symbol: str, order_id: Optional[str] = None, client_oid: Optional[str] = None, category: str = "linear") -> dict:
+        payload: dict = {"category": category, "symbol": symbol.upper()}
+        if order_id:
+            payload["orderId"] = order_id
+        elif client_oid:
+            payload["orderLinkId"] = client_oid
+        return self._request("POST", "/v5/order/cancel", json_data=payload, signed=True)
+
+    def cancel_all_orders(self, symbol: Optional[str] = None, category: str = "linear") -> dict:
+        payload: dict = {"category": category, "settleCoin": "USDT"}
+        if symbol:
+            payload["symbol"] = symbol.upper()
+        return self._request("POST", "/v5/order/cancel-all", json_data=payload, signed=True)
+
+    def get_open_orders(self, symbol: Optional[str] = None, category: str = "linear", limit: int = 50) -> dict:
+        params: dict = {"category": category, "limit": limit}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._request("GET", "/v5/order/realtime", params=params, signed=True)
+
+    def get_order_history(self, symbol: Optional[str] = None, category: str = "linear", limit: int = 50) -> dict:
+        params: dict = {"category": category, "limit": limit}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._request("GET", "/v5/order/history", params=params, signed=True)
+
+    def batch_place_orders(self, orders: List[dict], category: str = "linear") -> dict:
+        formatted: List[dict] = []
+        for o in orders[:10]:
+            sym = o["symbol"].upper()
+            item = {
+                "symbol": sym,
+                "side": o["side"].capitalize(),
+                "orderType": o.get("order_type", "Limit").capitalize(),
+                "qty": self.adjust_qty(sym, o["qty"], category),
+                "timeInForce": o.get("time_in_force", "GTC"),
+            }
+            if o.get("price") is not None:
+                item["price"] = self.adjust_price(sym, o["price"], category)
+            formatted.append(item)
+
+        payload = {"category": category, "request": formatted}
+        return self._request("POST", "/v5/order/create-batch", json_data=payload, signed=True)
+
+    def close_position(self, symbol: str, category: str = "linear") -> dict:
+        """Close an open position with proper Long vs Short direction flipping."""
+        pos_data = self.get_positions(category=category, symbol=symbol)
+        positions = pos_data.get("list", []) if isinstance(pos_data, dict) else []
+
+        for pos in positions:
+            size = float(pos.get("size", 0))
+            if size > 0:
+                pos_side = pos.get("side", "Buy").capitalize()
+                close_side = "Sell" if pos_side == "Buy" else "Buy"
+                pos_idx = int(pos.get("positionIdx", 0))
+                return self.place_order(
+                    symbol=symbol,
+                    side=close_side,
+                    qty=size,
+                    order_type="Market",
+                    reduceOnly=True,
+                    positionIdx=pos_idx,
+                    category=category,
+                )
+        return {"status": "error", "msg": f"No open position found for {symbol}"}
+
+    def panic_close(self, category: str = "linear") -> dict:
+        """Cancel all open orders and market-close all positions."""
+        cancel_res = self.cancel_all_orders(category=category)
+        positions = self.get_positions(category=category).get("list", [])
+        closures = []
+        for pos in positions:
+            size = float(pos.get("size", 0))
+            if size > 0:
+                pos_side = pos.get("side", "Buy").capitalize()
+                close_side = "Sell" if pos_side == "Buy" else "Buy"
+                pos_idx = int(pos.get("positionIdx", 0))
+                closures.append(self.place_order(
+                    symbol=pos["symbol"],
+                    side=close_side,
+                    qty=size,
+                    order_type="Market",
+                    reduceOnly=True,
+                    positionIdx=pos_idx,
+                    category=category,
+                ))
+        return {"status": "ok", "cancellations": cancel_res, "closures": closures}
+
+    def bulk_update_tp_sl(self, category: str = "linear", tp: Optional[float] = None, sl: Optional[float] = None) -> dict:
+        positions = self.get_positions(category=category).get("list", [])
+        updates = []
+        for
+```python
+            return {"status": "error", "msg": f"Position size is 0 for {symbol}"}
+
+        entry_price = float(pos.get("avgPrice", 0) or pos.get("entryPrice", 0))
+        pos_side = pos.get("
+"trades_analyzed": len(filtered),
+            "total_pnl": round(total_pnl, 4),
+            "total_fees": round(total_fees, 4),
+            "net_pnl": round(total_pnl - total_fees, 4),
+            "win_rate_pct": round(len(wins) / len(filtered) * 100, 2) if filtered else 0.0,
+            "avg_win": round(sum(float(t["closedPnl"]) for t in wins) / len(wins), 4) if wins else 0.0,
+            "avg_loss": round(sum(float(t["closedPnl"]) for t in losses) / len(losses), 4) if losses else 0.0,
+        }
+
+    def check_risk_limit(self, symbol: str, qty: float, price: float) -> dict:
+        max_size = float(os.getenv("MAX_POSITION_SIZE_USDT", "1000"))
+        notional = qty * price
+        if notional > max_size:
+            return {"status": "error", "msg": f"Risk Limit Exceeded: Notional ({notional:.2f}) > Max Allowed ({max_size:.2f})"}
+        return {"status": "ok", "msg": "Trade within risk limits", "notional": notional}
+
+    def export_trade_history(self, symbol: str, filename: str = "trade_history.csv") -> dict:
+        history = self.get_order_history(symbol=symbol, limit=100)
+        items = history.get("list", []) if isinstance(history, dict) else []
+        if not items:
+            return {"status": "error", "msg": "No trade history to export"}
+        try:
+            with open(filename, mode="w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=items[0].keys())
+                writer.writeheader()
+                writer.writerows(items)
+            return {"status": "ok", "msg": f"Exported {len(items)} entries to {filename}"}
+        except Exception as err:
+            return {"status": "error", "msg": f"Export failed: {err}"}
+
+    def scan_symbols(self, symbols: List[str], category: str = "linear") -> dict:
+        results = []
+        for sym in symbols:
+            ticker_raw = self.get_ticker(symbol=sym, category=category)
+            t_list = ticker_raw.get("list", []) if isinstance(ticker_raw, dict) else []
+            if t_list:
+                t = t_list[0]
+                results.append({
+                    "symbol": sym.upper(),
+                    "last_price": float(t.get("lastPrice", 0)),
+                    "change_24h_pct": float(t.get("price24hPcnt", 0)) * 100.0,
+                    "turnover_24h": float(t.get("turnover24h", 0)),
+                })
+        results.sort(key=lambda x: x["turnover_24h"], reverse=True)
+        return {"status": "ok", "count": len(results), "symbols": results}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 5: UNIFIED PROGRAMMATIC ENTRY POINT
+# ══════════════════════════════════════════════════════════════════════════════
+_realm: Optional[BybitRealm] = None
+_realm_lock = threading.Lock()
+def get_realm() -> BybitRealm:
+    global _realm
+    if _realm is None:
+        with _realm_lock:
+            if _realm is None:
+                _realm = BybitRealm()
+    return _realm
+from typing import Optional, Literal, Any
+
+def run(
+    action: str,
+    symbol: Optional[str] = None,
+    side: Optional[Literal["Buy", "Sell"]] = None,
+    qty: Optional[float] = None,
+    price: Optional[float] = None,
+    stop_loss: Optional[float] = None,
+    take_profit: Optional[float] = None,
+    leverage: Optional[int] = None,
+    category: str = "linear",
+    interval: str = "60",
+    limit: int = 50,
+    **kwargs: Any,
+) -> Any:
+    """Execute a trading action with the specified parameters."""
+    pass
+def execute_action(
+    action: str,
+    symbol: str = None,
+    side: str = None,
+    qty: float = None,
+    price: float = None,
+    category: str = "linear",
+    stop_loss: float = None,
+    take_profit: float = None,
+    leverage: int = None,
+    limit: int = None,
+    interval: str = None,
+    **kwargs,
+) -> dict:
+    bot = get_realm()
+    logger.info(
+        f"Executing Action: {action} | Symbol: {symbol} | Side: {side} | "
+        f"Qty: {qty} | Price: {price}"
+    )
+
+    try:
+        # ── Health & Account ─────────────────────────────────────────────────
+        if action == "health_check":
+            return bot.health_check()
+        if action in ("get_wallet_balance", "check_balance"):
+            return bot.get_wallet_balance(account_type=kwargs.get("account_type", "UNIFIED"))
+        if action == "get_account_info":
+            return bot.get_account_info()
+        if action == "get_positions":
+            return bot.get_positions(category=category, symbol=symbol)
+        if action == "get_position_risk":
+            return bot.get_position_risk(category=category, symbol=symbol)
+        if action == "get_fee_rate":
+            return bot.get_fee_rate(category=category, symbol=symbol)
+        if action == "get_account_summary":
+            return bot.get_account_summary()
+        if action == "get_open_positions_summary":
+            return bot.get_open_positions_summary(category=category)
+
+        # ── Orders & Smart Trades ────────────────────────────────────────────
+        if action == "place_smart_trade":
+            return bot.place_smart_trade(
+                symbol=symbol or "BTCUSDT",
+                side=side or "Buy",
+                qty=qty,
+                price=price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                leverage=leverage,
+                **kwargs,
+            )
+        if action == "place_order":
+            if not symbol or not side or qty is None:
+                return {
+                    "status": "error",
+                    "msg": "symbol, side, and qty are required for place_order",
+                }
+            return bot.place_order(
+                symbol=symbol,
+                side=side,
+                qty=qty,
+                price=price,
+                category=category,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                **kwargs,
+            )
+        if action == "amend_order":
+            return bot.amend_order(
+                symbol=symbol,
+                qty=qty,
+                price=price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                category=category,
+                **kwargs,
+            )
+        if action == "cancel_order":
+            return bot.cancel_order(symbol=symbol, category=category, **kwargs)
+        if action == "cancel_all_orders":
+            return bot.cancel_all_orders(symbol=symbol, category=category)
+        if action == "close_position":
+            return bot.close_position(symbol=symbol, category=category)
+        if action == "panic_close":
+            return bot.panic_close(category=category)
+        if action == "batch_place_orders":
+            return bot.batch_place_orders(
+                orders=kwargs.get("orders", []), category=category
+            )
+        if action == "set_leverage":
+            return bot.set_leverage(
+                symbol=symbol, leverage=leverage or 10, category=category
+            )
+        if action in ("set_trading_stop", "set_tp_sl"):
+            return bot.set_trading_stop(
+                symbol=symbol,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                category=category,
+            )
+        if action == "update_trailing_stop":
+            return bot.set_trading_stop(
+                symbol=symbol,
+                trailing_stop=kwargs.get("trailing_stop_pct"),
+                category=category,
+            )
+        if action == "bulk_update_tp_sl":
+            return bot.bulk_update_tp_sl(
+                category=category, tp=take_profit, sl=stop_loss
+            )
+
+        # ── Market Data ──────────────────────────────────────────────────────
+        if action == "get_ticker":
+            return bot.get_ticker(symbol=symbol, category=category)
+        if action == "get_orderbook":
+            return bot.get_orderbook(symbol=symbol, limit=limit, category=category)
+        if action == "get_klines":
+            return bot.get_klines(
+                symbol=symbol, interval=interval, limit=limit, category=category
+            )
+        if action == "get_recent_trades":
+            return bot.get_recent_trades(
+                symbol=symbol, limit=limit, category=category
+            )
+        if action == "get_instruments_info":
+            return bot.get_instruments_info(
+                category=category, symbol=symbol, limit=limit
+            )
+        if action == "get_funding_rate":
+            return bot.get_funding_rate(
+                symbol=symbol, category=category, limit=limit
+            )
+        if action == "get_open_interest":
+            return bot.get_open_interest(
+                symbol=symbol, interval=interval, category=category, limit=limit
+            )
+        if action == "get_volatility_index":
+            return bot.get_volatility_index(category=category)
+        if action == "get_open_orders":
+            return bot.get_open_orders(
+                symbol=symbol, category=category, limit=limit
+            )
+        if action == "get_order_history":
+            return bot.get_order_history(
+                symbol=symbol, category=category, limit=limit
+            )
+        if action == "get_executions":
+            return bot.get_executions(
+                category=category, symbol=symbol, limit=limit
+            )
+        if action == "get_pnl_history":
+            return bot.get_pnl_history(
+                category=category, symbol=symbol, limit=limit
+            )
+        if action == "get_pnl_summary":
+            return bot.get_pnl_summary(
+                symbol=symbol, limit=limit, days=int(kwargs.get("days", 7))
+            )
+
+        # ── Observatory & Analytics (Delegated to bybit_wbta) ───────────────
+        if action == "get_market_regime":
+            return bot.get_market_regime(
+                symbol=symbol or "BTCUSDT", interval=interval, **kwargs
+            )
+        if action in ("get_orderbook_analysis", "get_volume_at_price"):
+            return bot.get_orderbook_analysis(
+                symbol=symbol or "BTCUSDT", **kwargs
+            )
+        if action == "scan_scalping_opportunities":
+            return bot.scan_scalping_opportunities(
+                symbol=symbol or "BTCUSDT", interval=interval, **kwargs
+            )
+        if action == "scan_symbols":
+            return bot.scan_symbols(
+                symbols=kwargs.get("symbols", [symbol] if symbol else ["BTCUSDT"]),
+                category=category,
+            )
+        if action.startswith("calculate_"):
+            if action == "calculate_limit_micro_profit":
+                return bot.calculate_micro_profit(
+                    entry_price=float(kwargs.get("entry_price", price or 0)),
+                    limit_price=float(kwargs.get("limit_price", price or 0)),
+                    side=side or "Buy",
+                    qty=float(qty or 0),
+                )
+            indicator_name = action.replace("calculate_", "").upper()
+            return bot.calculate_indicator(
+                name=indicator_name, symbol=symbol or "BTCUSDT",
+                interval=interval, **kwargs,
+            )
+
+        # ── Miscellaneous ───────────────────────────────────────────────────
+        if action == "get_journal":
+            return {
+                "status": "ok",
+                "entries": bot.journal.get_entries(symbol=symbol, limit=limit),
+            }
+        if action == "check_risk_limit":
+            return bot.check_risk_limit(
+                symbol=symbol, qty=qty or 0, price=price or 0
+            )
+        if action == "export_trade_history":
+            return bot.export_trade_history(
+                symbol=symbol,
+                filename=kwargs.get("filename", "trade_history.csv"),
+            )
+        if action == "send_telegram_alert":
+            logger.info(f"ALERT: {kwargs.get('message', 'Alert triggered')}")
+            return {"status": "ok", "msg": "Alert logged."}
+
+        return {"status": "error", "msg": f"Action '{action}' is not supported."}
+
+    except Exception as exc:
+        logger.error(f"Execution error on action '{action}': {exc}", exc_info=True)
+        return {"status": "error", "action": action, "msg": str(exc)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 6: CLI PARSER & ARGC INTERFACE
+# ══════════════════════════════════════════════════════════════════════════════
+def _coerce_type(val: str) -> Any:
+    if val.lower() == "true":
+        return True
+    if val.lower() == "false":
+        return False
+    try:
+        return int(val)
+    except ValueError:
+        pass
+    try:
+        return float(val)
+    except ValueError:
+        pass
+    return val
+```python
+if __name__ == "__main__":
+    import argparse
+
+    # Argc environment variable parsing fast path
+    if "argc_action" in os.environ:
+        action = os.environ.get("argc_action")
+        symbol = os.environ.get("argc_symbol")
+        side = os.environ.get("argc_side")
+        qty = float(os.environ["argc_qty"]) if "argc_qty" in os.environ and os.environ["argc_qty"] else None
+        price = float(os.environ["argc_price"]) if "argc_price" in os.environ and os.environ["argc_price"] else None
+        stop_loss = float(os.environ["argc_stop_loss"]) if "argc_stop_loss" in os.environ and os.environ["argc_stop_loss"] else None
+        take_profit = float(os.environ["argc_take_profit"]) if "argc_take_profit" in os.environ and os.environ["argc_take_profit"] else None
+        category = os.environ.get("argc_category", "linear")
+
+        kwargs = {}
+        for k, v in os.environ.items():
+            if k.startswith("argc_") and k not in ("argc_action", "argc_symbol", "argc_side", "argc_qty", "argc_price", "argc_stop_loss", "argc_take_profit", "argc_category"):
+                kwargs[k[5:].replace("-", "_")] = _coerce_type(v)
+
+        result = run(
+            action=action,
+            symbol=symbol,
+            side=side,
+            qty=qty,
+            price=price,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            category=category,
+            **kwargs,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        sys.exit(0)
+
+    # Standard CLI mode
+    parser = argparse.ArgumentParser(description="Bybit Realm v5.0 Master CLI")
+    parser.add_argument("--action", required
+```python
+            idx = min(max(idx, 0), bins - 1)
+            profile[idx] += d["v"]
+            
+        poc_idx = max(profile, key=profile.get)
+        poc_price = min_p + (poc_idx * bin_size) + (bin_size / 2)
+        
+        return {"poc": round(poc_price, 4), "volume": profile[poc_idx]}
+
+    def calculate_orderflow_delta(self, symbol: str, interval: str = "60", limit: int = 100) -> dict:
+        """Calculates net orderflow (Aggressive Buy Vol - Aggressive Sell Vol)."""
+        trades = self.get_recent_trades(symbol=symbol, limit=limit).get("result", {}).get("list", [])
+        delta = 0.0
+        for t in trades:
+            # Bybit side: Buy = Taker Buy (Aggressive Buy), Sell = Taker Sell
+            vol = float(t["v"])
+            if t["s"] == "Buy":
+                delta += vol
+            else:
+                delta -= vol
+        return {"status": "ok", "symbol": symbol, "delta": round(delta, 2)}
+
+    def calculate_market_depth_profile(self, symbol: str, depth: int = 200, order_sizes: List[float] = None, distance_pcts: List[float] = None) -> dict:
+        """Aggregates orderbook volume at specific percentage distances from mid-price."""
+        if order_sizes is None:
+            order_sizes = [100.0, 500.0, 1000.0]
+        if distance_pcts is None:
+            distance_pcts = [0.1, 0.5, 1.0]
+
+        ob = self.get_orderbook(symbol=symbol, limit=depth).get("result", {})
+        bids = [{"p": float(p), "v": float(q)} for p, q in ob.get("b", [])]
+        asks = [{"p": float(p), "v": float(q)} for p, q in ob.get("a", [])]
+        
+        if not bids or not asks:
+            return {"status": "error", "msg": "Invalid orderbook"}
+        mid = (bids[0]["p"] + asks[0]["p"]) / 2
+        if mid == 0:
+            return {"status": "error", "msg": "Invalid price"}
+        
+        profile = {}
+        for pct in distance_pcts:
+            bid_vol = sum(b["v"] for b in bids if b["p"] >= mid * (1 - pct / 100))
+            ask_vol = sum(a["v"] for a in asks if a["p"] <= mid * (1 + pct / 100))
+            profile[f"{pct}%"] = {"bid_vol": round(bid_vol, 2), "ask_vol": round(ask_vol, 2)}
+            
+        return {"status": "ok", "symbol": symbol, "mid_price": mid, "profile": profile}
+
+    def detect_high_confluence_levels(self, symbol: str, interval: str = "60", depth: int = 50) -> dict:
+        """Identifies strong S/R zones by finding price levels with multi-method confluence."""
+        # Get all S/R indicators
+        sr_data = self.calculate_support_resistance_levels(symbol=symbol, interval=interval, depth=depth)
+        
+        all_levels = []
+        # Add support and resistance levels with their confluence scores
+        for s in sr_data.get("support", []):
+            all_levels.append({"price": s["price"], "score": s["confluence"], "type": "Support"})
+        for r in sr_data.get("resistance", []):
+            all_levels.append({"price": r["price"], "score": r["confluence"], "type": "Resistance"})
+            
+        # Sort by confluence score
+        confluence_zones = sorted(all_levels, key=lambda x: x["score"], reverse=True)
+        
+        return {
+            "status": "ok",
+            "symbol": symbol,
+            "high_confluence_zones": confluence_zones[:5]  # Top 5 strongest
+        }
+
+    def deep_level_sort(self, symbol: str, level_cnt: int = 10, vol_thresh: float = 0.5) -> dict:
+        """Groups orderbook volume into levels based on a threshold."""
+        orderbook = self.get_orderbook(symbol=symbol).get("result", {})
+        if not orderbook:
+            return {"status": "error", "msg": "Empty orderbook"}
+        bids = [[float(p), float(q)] for p, q in orderbook.get("b", [])]
+        asks = [[float(p), float(q)] for p, q in orderbook.get("a", [])]
+
+        def bucket(prices, is_bid):
+            sorted_items = sorted(prices, key=lambda x: x[0], reverse=is_bid)
+            buckets = []
+            cum_vol = 0.0
+            price_sum = 0.0
+            count = 0
+            for price, qty in
+        return {"bids": bid_sorted, "asks": ask_sorted}
+
+    def generate_market_depth_report(self, symbol: str) -> dict:
+        """Generates a professional market depth analysis report."""
+        depth = self.get_orderbook(symbol=symbol).get("result", {})
+        if not depth: return {"status": "error", "msg": "Empty orderbook"}
+        bids = [[float(p), float(q)] for p, q in depth.get("b", [])]
+        asks = [[float(p), float(q)] for p, q in depth.get("a", [])]
+
+        bid_ladder = self._build_price_ladder(bids, weight="price*volume")
+        ask_ladder = self._build_price_ladder(asks, weight="price*volume")
+        
+        sup_clusters = self._cluster_levels(bid_ladder, direction=1, delta=0.004)
+        res_clusters = self._cluster_levels(ask_ladder, direction=-1, delta=0.004)
+        
+        support_zones = self._identify_liquidity_zones(sup_clusters, thresh=0.38)
+        resistance_zones = self._identify_liquidity_zones(res_clusters, thresh=0.38)
+        
+        sorted_depth = self._sort_depth(bids, asks, support_zones, resistance_zones, top=10)
+        
+        return {
+            "status": "success",
+            "symbol": symbol,
+            "support_zones": [round(x, 4) for x in support_zones],
+            "resistance_zones": [round(x, 4) for x in resistance_zones],
+            "sorted_bids": [(round(p, 4), round(q, 2)) for p, q, _ in sorted_depth["bids"]],
+            "sorted_asks": [(round(p, 4), round(q, 2)) for p, q, _ in sorted_depth["asks"]],
+            "note": "Market depth analysis completed."
+        }
+
+    def calculate_limit_micro_profit(self, entry_price: float, limit_price: float, side: str, qty: float, fee_rate: float = 0.001) -> dict:
+        """Calculates net profit for a limit order."""
+        if side.lower() == "buy": raw_pnl = (limit_price - entry_price) * qty
+        else: raw_pnl = (entry_price - limit_price) * qty
+        fee = abs(limit_price * qty) * fee_rate
+        net_pnl = raw_pnl - fee
+        pct_return = (net_pnl / (entry_price * qty)) * 100 if entry_price * qty != 0 else 0
+        return {"status": "success", "net_pnl": round(net_pnl, 4), "fee_applied": round(fee, 4), "pct_return": round(pct_return, 2)}
+
+    def calculate_depth_weighted_profit(self, symbol: str, entry_price: float, limit_price: float, side: str, qty: float) -> dict:
+        """Calculates profit based on weighted average fill price across orderbook depth."""
+        orderbook = self.get_orderbook(symbol=symbol).get("result", {})
+        if not orderbook: return {"status": "error", "msg": "Empty orderbook"}
+        bids = [[float(p), float(q)] for p, q in orderbook.get("b", [])]
+        asks = [[float(p), float(q)] for p, q in orderbook.get("a", [])]
+        levels = asks if side.lower() == "buy" else bids
+        total_vol, weighted_sum = 0.0, 0.0
+        for p, q in levels:
+            if (side.lower() == "buy" and p <= limit_price) or (side.lower() == "sell" and p >= limit_price):
+                take = min(q, qty - total_vol)
+                weighted_sum += p * take
+                total_vol += take
+                if total_vol >= qty: break
+        if total_vol < qty: return {"status": "error", "msg": "Insufficient liquidity"}
+        return self.calculate_limit_micro_profit(entry_price, weighted_sum / total_vol, side, qty)
+
+    def get_orderbook_analysis(self, symbol: str, category: str = "linear", depth: int = 50, wall_multiplier: float = 3.5) -> dict:
+        """
+        Analyzes orderbook for imbalance, liquidity, and walls.
+        """
+        raw = self.get_orderbook(symbol=symbol, category=category, limit=depth).get("result", {})
+        
+        bids: List[Tuple[float, float]] = [(float(p), float(q)) for p, q in raw.get("b", [])]
+        asks: List[Tuple[float, float]] = [(float(p), float(q)) for p, q in raw.get("a", [])]
+
+        if not bids or not asks:
+            return {"status": "error", "msg": "Empty orderbook"}
+
+        bid_vol = sum(q for _, q in bids)
+        ask_vol = sum(q for _, q in asks)
+        
+        # Order Book Imbalance (OBI)
+        total_vol = bid_vol + ask_vol
+        obi = (bid_vol - ask_vol) / total_vol if total_vol > 0 else 0
+        
+        # Wall detection
+        bid_avg = bid_vol / depth if depth > 0 else 0
+        ask_avg = ask_vol / depth if depth > 0 else 0
+        bid_walls = [b for b in bids if b[1] > bid_avg * wall_multiplier]
+        ask_walls = [a for a in asks if a[1] > ask_avg * wall_multiplier]
+        
+        # Volume Profile (top 5 tiers)
+        volume_profile = {
+            "bid_tiers": [{"price": b[0], "volume": b[1]} for b in bids[:5]],
+            "ask_tiers": [{"price": a[0], "volume": a[1]} for a in asks[:5]]
+        }
+        
+        return {
+            "status": "ok",
+            "symbol": symbol,
+            "obi": round(obi, 4),
+            "bid_vol": round(bid_vol, 2),
+            "ask_vol": round(ask_vol, 2),
+            "bid_walls": bid_walls,
+            "ask_walls": ask_walls,
+            "volume_profile": volume_profile
+        }
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # POSITION RISK METRICS
+    # ══════════════════════════════════════════════════════════════════════════
+    def get_position_risk(
+        self,
+        category: str = "linear",
+        symbol: Optional[str] = None,
+    ) -> dict:
+        """
+        Enriches raw position data with:
+        - Unrealised PnL %
+        - Distance to liquidation price (%)
+        - Position heat (risk level: LOW / MEDIUM / HIGH / CRITICAL)
+        - Notional value
+        """
+        raw = self.get_positions(category=category, symbol=symbol)
+        positions = raw.get("list", [])
+
+        enriched: List[dict] = []
+        for pos in positions:
+            size = float(pos.get("size", 0))
+            if size == 0:
+                continue
+
+            entry = float(pos.get("avgPrice", 0) or pos.get("entryPrice", 0))
+            liq = float(pos.get("liqPrice", 0))
+            mark = float(pos.get("markPrice", 0))
+            unrealised_pnl = float(pos.get("unrealisedPnl", 0))
+            leverage = float(pos.get("leverage", 1))
+
+            notional = size * mark
+            pnl_pct = (unrealised_pnl / (notional / leverage)) * 100 if notional else 0
+
+            liq_dist_pct: Optional[float] = None
+            if liq > 0 and mark > 0:
+                liq_dist_pct = abs(mark - liq) / mark * 100
+
+            # Heat level
+            if liq_dist_pct is None:
+                heat = "UNKNOWN"
+            elif liq_dist_pct < 3:
+                heat = "CRITICAL"
+            elif liq_dist_pct < 8:
+                heat = "HIGH"
+            elif liq_dist_pct < 20:
+                heat = "MEDIUM"
+            else:
+                heat = "LOW"
+
+            enriched.append({
+                **pos,
+                "notional_usd": round(notional, 2),
+                "pnl_pct": round(pnl_pct, 3),
+                "liq_dist_pct": round(liq_dist_pct, 3) if liq_dist_pct is not None else None,
+                "position_heat": heat,
+            })
+
+        return {
+            "status": "ok",
+            "category": category,
+            "positions": enriched,
+            "total_positions": len(enriched),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def panic_close(self, category: str = "linear") -> dict:
+        """Cancels all active orders and closes all open positions."""
+        cancel_res = self.cancel_all_orders(category=category)
+        positions = self.get_positions(category=category).get("list", [])
+        closures = []
+        for pos in positions:
+            if float(pos.get("size", 0)) > 0:
+                side = "Sell" if pos["side"] == "Buy" else "Buy"
+                closures.append(self.place_order(
+                    symbol=pos["symbol"],
+                    side=side,
+                    qty=float(pos["size"]),
+                    order_type="Market",
+                    category=category
+                ))
+        return {"status": "ok", "cancellations": cancel_res, "closures": closures}
+
+    def bulk_update_tp_sl(self, category: str = "linear", tp: float = None, sl: float = None) -> dict:
+        """Applies TP/SL to all open positions."""
+        positions = self.get_positions(category=category).get("list", [])
+        updates = []
+        for pos in positions:
+            if float(pos.get("size", 0)) > 0:
+                updates.append(self.set_trading_stop(
+                    symbol=pos["symbol"],
+                    take_profit=tp,
+                    stop_loss=sl,
+                    category=category
+                ))
+        return {"status": "ok", "updates": updates}
+
+    def close_position(self, symbol: str, category: str = "linear") -> dict:
+        """Closes an open position for a given symbol."""
+        positions = self.get_positions(category=category, symbol=symbol).get("list", [])
+        for pos in positions:
+            if float(pos.get("size", 0)) > 0:
+                side = "Sell" if pos["side"] == "Buy" else "Buy"
+                return self.place_order(
+                    symbol=symbol,
+                    side=side,
+                    qty=float(pos["size"]),
+                    order_type="Market",
+                    category=category
+                )
+        return {"status": "error", "msg": f"No open position found for {symbol}"}
+
+    def get_account_summary(self) -> dict:
+        """Provides a snapshot of balance and positions."""
+        return {
+            "balance": self.get_wallet_balance(),
+            "positions": self.get_positions(),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+    def alert(self, message: str, level: str = "INFO") -> bool:
+        """Generic alert method that logs to the console. Can be extended to other sinks."""
+        log_func = getattr(logger, level.lower(), logger.info)
+        log_func(f"[ALERT] {message}")
+        return True
+
+    def export_trade_history(self, symbol: str, filename: str = "trade_history.csv") -> dict:
+        """Exports trade history to CSV."""
+        import csv
+        history = self.get_order_history(symbol=symbol, limit=100).get("list", [])
+        
+        try:
+            with open(filename, mode='w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=history[0].keys())
+                writer.writeheader()
+                writer.writerows(history)
+            return {"status": "ok", "msg": f"Exported {len(history)} entries to {filename}"}
+        except Exception as e:
+            return {"status": "error", "msg": f"Export failed: {e}"}
+
+    def get_open_positions_summary(self, category: str = "linear") -> dict:
+        """Provides a concise summary of all open positions."""
+        positions = self.get_positions(category=category).get("list", [])
+        summary = []
+        for pos in positions:
+            if float(pos.get("size", 0)) > 0:
+                summary.append({
+                    "symbol": pos["symbol"],
+                    "side": pos["side"],
+                    "size": pos["size"],
+                    "avgPrice": pos["avgPrice"],
+                    "markPrice": pos["markPrice"],
+                    "unrealisedPnl": pos["unrealisedPnl"]
+                })
+
+# ... (rest of file)
+
+
+# ... (rest of file)
+
+    # ... existing methods ...
+    def set_tp_sl(self, symbol: str, tp: Optional[float] = None, sl: Optional[float] = None, category: str = "linear") -> dict:
+        """Sets TP/SL for a specific position."""
+        return self.set_trading_stop(symbol=symbol, take_profit=tp, stop_loss=sl, category=category)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # TECHNICAL ANALYSIS INDICATORS
+    # ══════════════════════════════════════════════════════════════════════════
+    def calculate_macd(self, symbol: str, interval: str = "60", fast: int = 12, slow: int = 26, signal: int = 9) -> dict:
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=200).get("list", [])
+        if not klines or len(klines) < slow: return {"status": "error", "msg": "Insufficient data"}
+        closes = [float(k[4]) for k in reversed(klines)]
+        def get_ema(data, p):
+            if not data: return 0
+            k = 2 / (p + 1)
+            ema = data[0]
+            for val in data[1:]: ema = val * k + ema * (1 - k)
+            return ema
+        macd = get_ema(closes, fast) - get_ema(closes, slow)
+        return {"status": "ok", "macd": round(macd, 4)}
+
+    def calculate_rsi(self, symbol: str, interval: str = "60", period: int = 14) -> dict:
+        """Calculates RSI for the given symbol."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        closes = [float(k[4]) for k in reversed(klines)]
+        if len(closes) < period + 1: return {"status": "error", "msg": "Insufficient data"}
+        
+        deltas = [closes[i+1] - closes[i] for i in range(len(closes)-1)]
+        gains = [d if d > 0 else 0 for d in deltas]
+        losses = [-d if d < 0 else 0 for d in deltas]
+        avg_gain = sum(gains[-period:]) / period
+        avg_loss = sum(losses[-period:]) / period
+        if avg_loss == 0: return {"status": "ok", "rsi": 100.0}
+        rs = avg_gain / avg_loss
+        return {"status": "ok", "rsi": round(100 - (100 / (1 + rs)), 2)}
+
+    def calculate_ema(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        """Calculates EMA for the given symbol."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        closes = [float(k[4]) for k in reversed(klines)]
+        if len(closes) < period: return {"status": "error", "msg": "Insufficient data"}
+        
+        k = 2 / (period + 1)
+        ema = closes[0]
+        for p in closes[1:]:
+            ema = p * k + ema * (1 - k)
+        return {"status": "ok", "ema": round(ema, 2)}
+
+    def calculate_atr(self, symbol: str, interval: str = "60", period: int = 14) -> dict:
+        """Calculates ATR for the given symbol."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        if len(klines) < period + 1: return {"status": "error", "msg": "Insufficient data"}
+        
+        tr_list = []
+        for i in range(1, len(klines)):
+            high = float(klines[i][2])
+            low = float(klines[i][3])
+            prev_close = float(klines[i-1][4])
+            tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
+            tr_list.append(tr)
+        
+        atr = sum(tr_list[-period:]) / period
+        return {"status": "ok", "atr": round(atr, 4)}
+
+    def calculate_adx(self, symbol: str, interval: str = "60", period: int = 14) -> dict:
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        tr_list, pos_dm, neg_dm = [], [], []
+        for i in range(1, len(closes)):
+            tr = max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1]))
+            up_move = highs[i] - highs[i-1]
+            down_move = lows[i-1] - lows[i]
+            pd = max(up_move, 0) if up_move > down_move else 0
+            nd = max(down_move, 0) if down_move > up_move else 0
+            tr_list.append(tr)
+            pos_dm.append(pd)
+            neg_dm.append(nd)
+        sum_pos = sum(pos_dm[-period:])
+        sum_neg = sum(neg_dm[-period:])
+        denom = sum_pos + sum_neg + 1e-9
+        adx = 100 * abs(sum_pos - sum_neg) / denom
+        return {"status": "ok", "adx": round(adx, 2)}
+
+    def calculate_cci(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        closes = [float(k[4]) for k in reversed(klines)]
+        tp = [(h+l+c)/3 for h, l, c in zip(highs[-period:], lows[-period:], closes[-period:])]
+        sma = sum(tp) / period
+        md = sum(abs(x-sma) for x in tp) / period
+        return {"status": "ok", "cci": round((tp[-1]-sma)/(0.015*md) if md != 0 else 0, 2)}
+
+    def calculate_ichimoku(self, symbol: str, interval: str = "60", tenkan: int = 9, kijun: int = 26, senkou_b: int = 52) -> dict:
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=senkou_b + 50).get("list", [])
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        def get_midpoint(h, l, p):
+            return (max(h[-p:]) + min(l[-p:])) / 2
+        t = get_midpoint(highs, lows, tenkan)
+```python
+        k = get_midpoint(highs, lows, kijun)
+        return {"status": "ok", "tenkan": round(t, 4), "kijun": round(k, 4), "senkou_a": round((t+k)/2, 4), "senkou_b": round(get_midpoint(highs, lows, senkou_b), 4)}
+
+
+    def calculate_bollinger_bands(self, symbol: str, interval: str = "15", period: int = 20) -> dict:
+        """Calculates Bollinger Bands."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period).get("list", [])
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        if not closes:
+            return {"status": "error", "msg": "Insufficient data"}
+        
+        sma = sum(closes) / len(closes)
+        std_dev = statistics.stdev(closes) if len(closes) > 1 else 0
+        
+        upper = sma + (std_dev * 2)
+        lower = sma - (std_dev * 2)
+        
+        return {"status": "ok", "upper": round(upper, 2), "middle": round(sma, 2), "lower": round(lower, 2)}
+
+    def calculate_vwap(self, symbol: str, interval: str = "15", limit: int = 50) -> dict:
+        """Calculates VWAP (approximate using klines)."""
+        klines = self.get_klines(symbol=symbol, interval=interval,
+        fast_ema = _get_ema_series(vf, fast)
+        slow_ema = _get_ema_series(vf, slow)
+        return {"status": "ok", "klinger": round(fast_ema[-1] - slow_ema[-1], 2)}
+
+    def scan_scalping_opportunities(self, symbol: str, interval: str = "15") -> dict:
+        """Enhanced scanner using EMA, RSI, BB, VWAP, ATR, and Stoch."""
+        if not symbol:
+            return {"status": "error", "msg": "Symbol is required for scalping opportunities"}
+        
+        rsi = self.calculate_rsi(symbol=symbol, interval=interval).get("rsi", 50)
+        ema20 = self.calculate_ema(symbol=symbol, interval=interval, period=20).get("ema", 0)
+        bb = self.calculate_bollinger_bands(symbol=symbol, interval=interval).get("lower", 0)
+        vwap = self.calculate_vwap(symbol=symbol, interval=interval).get("vwap", 0)
+        atr = self.calculate_atr(symbol=symbol, interval=interval).get("atr", 0)
+        stoch = self.calculate_stochastic(symbol=symbol, interval=interval).get("k", 50)
+        ticker = self.get_ticker(symbol=symbol).get("list", [{}])[0]
+        price = float(ticker.get("lastPrice", 0))
+        
+        signal = "NEUTRAL"
+        # Mean reversion scalping setup
+        if price < bb and rsi < 35 and stoch < 20 and price > vwap:
+            signal = "BUY_REVERSION"
+        elif price > ema20 and rsi < 45 and stoch > 20:
+            signal = "BUY_TREND"
+        elif price > bb and rsi > 65 and stoch > 80 and price < vwap:
+            signal = "SELL_REVERSION"
+            
+        return {
+            "status": "ok", 
+            "symbol": symbol, 
+            "signal": signal, 
+            "rsi": rsi, 
+            "price": price, 
+            "ema20": ema20, 
+            "bb_lower": bb, 
+            "vwap": vwap,
+            "stoch_k": stoch,
+            "suggested_stop_dist": round(atr * 2, 4)
+        }
+
+    def calculate_cmf(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        """Calculates Chaikin Money Flow (CMF)."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        if len(klines) < period + 1: return {"status": "error", "msg": "Insufficient data"}
+        
+        mfv_list, vol_list = [], []
+        for k in reversed(klines):
+            h, l, c, v = float(k[2]), float(k[3]), float(k[4]), float(k[5])
+            mfv = (((c - l) - (h - c)) / (h - l) * v) if (h - l) != 0 else 0
+            mfv_list.append(mfv)
+            vol_list.append(v)
+            
+        cmf = sum(mfv_list[-period:]) / sum(vol_list[-period:])
+        return {"status": "ok", "cmf": round(cmf, 4)}
+
+    def calculate_adx_with_di(self, symbol: str, interval: str = "60", period: int = 14) -> dict:
+        """Calculates ADX with DI+ and DI-."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        tr_list, plus_dm, minus_dm = [], [], []
+        for i in range(1, len(closes)):
+            tr = max(highs[i] - lows[i], abs(highs[i] - closes[i-1]), abs(lows[i] - closes[i-1]))
+            up = highs[i] - highs[i-1]
+            down = lows[i-1] - lows[i]
+            plus_dm.append(max(up, 0) if up > down else 0)
+            minus_dm.append(max(down, 0) if down > up else 0)
+            tr_list.append(tr)
+            
+        tr_s = sum(tr_list[-period:])
+        pdm_s = sum(plus_dm[-period:])
+        mdm_s = sum(minus_dm[-period:])
+        
+        di_p = (pdm_s / tr_s) * 100 if tr_s != 0 else 0
+        di_m = (mdm_s / tr_s) * 100 if tr_s != 0 else 0
+        adx = (abs(di_p - di_m) / (di_p + di_m)) * 100 if (di_p + di_m) != 0 else 0
+        return {"status": "ok", "adx": round(adx, 2), "di_plus": round(di_p, 2), "di_minus": round(di_m, 2)}
+
+    def calculate_elder_ray_index(self, symbol: str, interval: str = "60", period: int = 13) -> dict:
+        """Calculates Elder Ray Index."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        if not klines or len(klines) < period: return {"status": "error", "msg": "Insufficient data"}
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        k = 2 / (period + 1)
+        ema = closes[0]
+        for p in closes[1:]: ema = p * k + ema * (1 - k)
+        return {"status": "ok", "bull_power": round(highs[-1] - ema, 4), "bear_power": round(lows[-1] - ema, 4), "ema": round(ema, 4)}
+
+    def calculate_kst(self, symbol: str, interval: str = "60") -> dict:
+        """Calculates Know Sure Thing (KST)."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=100).get("list", [])
+        if len(klines) < 35: return {"status": "error", "msg": "Insufficient data"}
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        def roc(data, p): return [(data[i] - data[i-p]) / data[i-p] * 100 for i in range(p, len(data))]
+        
+        r1, r2, r3, r4 = roc(closes, 10), roc(closes, 15), roc(closes, 20), roc(closes, 30)
+        kst = sum(r1[-10:])/10 + sum(r2[-15:])/15*2 + sum(r3[-20:])/20*3 + sum(r4[-30:])/30*4
+        return {"status": "ok", "kst": round(kst, 4)}
+
+    def calculate_tema(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        """Calculates Triple Exponential Moving Average (TEMA)."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        if not klines or len(klines) < period: return {"status": "error", "msg": "Insufficient data"}
+        closes = [float(k[4]) for k in reversed(klines)]
+        
+        def ema(data, p):
+            if not data: return 0
+            k = 2 / (p + 1)
+            ema_val = data[0]
+            for val in data[1:]: ema_val = val * k + ema_val * (1 - k)
+            return ema_val
+            
+        e1 = ema(closes, period)
+        e2 = ema([e1], period)
+        e3 = ema([e2], period)
+        return {"status": "ok", "tema": round(3*e1 - 3*e2 + e3, 4)}
+
+    def get_pnl_summary(self, days: int = 7) -> dict:
+        """Aggregates realized PnL over the specified number of days."""
+        from datetime import timedelta
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        history = self.get_pnl_history(limit=100).get("list", [])
+        
+        filtered = [p for p in history if datetime.fromtimestamp(int(p["updatedTime"])/1000, tz=timezone.utc) > cutoff]
+        total_pnl = sum(float(p["closedPnl"]) for p in filtered)
+        
+        return {
+            "status": "ok",
+            "days": days,
+            "total_realized_pnl": round(total_pnl, 2),
+            "trade_count": len(filtered),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+    def update_trailing_stop(self, symbol: str, trailing_stop_pct: float, category: str = "linear") -> dict:
+        """Applies a trailing stop to an open position."""
+        return self.set_trading_stop(symbol=symbol, trailing_stop=trailing_stop_pct, category=category)
+
+    def check_risk_limit(self, symbol: str, qty: float, price: float) -> dict:
+        """Checks if a proposed trade adheres to max position size constraints."""
+        max_size = float(os.getenv("MAX_POSITION_SIZE_USDT", "1000"))
+        notional = qty * price
+        
+        if notional > max_size:
+            return {"status": "error", "msg": f"Risk Limit Exceeded: Notional {notional} > Max {max_size}"}
+        return {"status": "ok", "msg": "Trade within risk limits"}
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # MARKET REGIME DETECTOR
+    # ══════════════════════════════════════════════════════════════════════════
+    def get_market_regime(
+        self,
+        symbol: str,
+        interval: str = "60",
+        lookback: int = 100,
+        category: str = "linear",
+    ) -> dict:
+        """
+        Classifies market regime using:
+        - ADX approximation (trend strength from True Range)
+        - Volatility (std-dev of returns)
+        - EMA-cross (short vs long EMA)
+
+        Regimes: TRENDING_UP | TRENDING_DOWN | RANGING | VOLATILE
+        """
+        klines_data = self.get_klines(
+            symbol=symbol,
+            interval=interval,
+            limit=lookback,
+            category=category,
+        )
+        klines = klines_data.get("list", [])
+        if len(klines) < 20:
+            return {"status": "error", "msg": "Insufficient kline data"}
+
+        # Bybit kline format: [startTime, open, high, low, close, volume, turnover]
+        closes = [float(k[4]) for k in reversed(klines)]
+        highs  = [float(k[2]) for k in reversed(klines)]
+        lows   = [float(k[3]) for k in reversed(klines)]
+
+        # ── Returns ───────────────────────────────────────────────────────
+        returns = [
+            (closes[i] - closes[i - 1]) / closes[i - 1]
+            for i in range(1, len(closes))
+        ]
+        volatility = statistics.stdev(returns) * 100  # as %
+
+        # ── Simple EMA ────────────────────────────────────────────────────
+        def _ema(data: List[float], period: int) -> float:
+            k = 2 / (period + 1)
+            ema = data[0]
+            for v in data[1:]:
+                ema = v * k + ema * (1 - k)
+            return ema
+
+        ema_short = _ema(closes, 10)
+        ema_long  = _ema(closes, 30)
+
+        # ── True Range approximation → trend strength ─────────────────────
+        trs: List[float] = []
+        for i in range(1, len(closes)):
+            tr = max(
+                highs[i] - lows[i],
+                abs(highs[i] - closes[i - 1]),
+                abs(lows[i] - closes[i - 1]),
+            )
+            trs.append(tr)
+        avg_tr = statistics.mean(trs[-14:]) if trs else 0
+        tr_ratio = avg_tr / closes[-1] * 100  # ATR%
+
+        # ── Regime classification ─────────────────────────────────────────
+        trending_up   = ema_short > ema_long * 1.001 and tr_ratio > 0.4
+        trending_down = ema_short < ema_long * 0.999 and tr_ratio > 0.4
+        high_vol      = volatility > 2.5
+
+        if high_vol and not (trending_up or trending_down):
+            regime = "VOLATILE"
+        elif trending_up:
+            regime = "TRENDING_UP"
+        elif trending_down:
+            regime = "TRENDING_DOWN"
+        else:
+            regime = "RANGING"
+
+        return {
+            "status": "ok",
+            "symbol": symbol.upper(),
+            "interval": interval,
+            "regime": regime,
+            "metrics": {
+                "ema_short": round(ema_short, 6),
+                "ema_long": round(ema_long, 6),
+                "ema_cross_pct": round(
+                    (ema_short - ema_long) / ema_long * 100, 4
+                ),
+                "volatility_pct": round(volatility, 4),
+                "atr_pct": round(tr_ratio, 4),
+                "last_close": closes[-1],
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # MULTI-SYMBOL SCANNER
+    # ══════════════════════════════════════════════════════════════════════════
+    def scan_symbols(
+        self,
+        symbols: List[str],
+        category: str = "linear",
+        include_regime: bool = False,
+    ) -> dict:
+        """
+        Scans multiple symbols for key market metrics.
+        Returns ranked list by 24h volume.
+        """
+        results: List[dict] = []
+
+        for sym in symbols:
+            try:
+                ticker_raw = self.get_ticker(
+                    symbol=sym, category=category
+                )
+                ticker_list = ticker_raw.get("list", [])
+                if not ticker_list:
+                    continue
+                t = ticker_list[0]
+
+                entry: dict = {
+                    "symbol": sym.upper(),
+                    "last_price": float(t.get("lastPrice", 0)),
+                    "change_24h_pct": float(
+                        t.get("price24hPcnt", 0)
+                    ) * 100,
+                    "volume_24h": float(t.get("volume24h", 0)),
+                    "turnover_24h": float(t.get("turnover24h", 0)),
+                    "high_24h": float(t.get("highPrice24h", 0)),
+                    "low_24h": float(t.get("lowPrice24h", 0)),
+                    "funding_rate": float(
+                        t.get("fundingRate", 0)
+                    ) * 100,
+                    "open_interest": float(
+                        t.get("openInterest", 0)
+                    ),
+                }
+
+                if include_regime:
+                    regime_data = self.get_market_regime(
+                        sym, category=category
+                    )
+                    entry["regime"] = regime_data.get(
+                        "regime", "UNKNOWN"
+                    )
+
+                results.append(entry)
+            except Exception as exc:
+                logger.warning("Scan failed for %s: %s", sym, exc)
+
+        results.sort(key=lambda x: x["turnover_24h"], reverse=True)
+        return {
+            "status": "ok",
+            "count": len(results),
+            "symbols": results,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def analyze_symbol(self, symbol: str) -> dict:
+        """Comprehensive multi-timeframe analysis."""
+        timeframes = ["15", "60", "240", "D"]
+        analysis = {}
+        for tf in timeframes:
+            try:
+                regime = self.get_market_regime(symbol, interval=tf)
+                rsi = self.calculate_rsi(symbol, interval=tf)
+                ema = self.calculate_ema(symbol, interval=tf)
+                atr = self.calculate_atr(symbol, interval=tf)
+                analysis[tf] = {
+                    "regime": regime.get("regime"),
+                    "rsi": rsi.get("rsi"),
+                    "ema": ema.get("ema"),
+                    "atr": atr.get("atr"),
+                    "volatility": regime.get("metrics", {}).get("volatility_pct")
+                }
+            except:
+                continue
+        
+        ticker_raw = self.get_ticker(symbol).get("list", [{}])
+        ticker = ticker_raw[0] if ticker_raw else {}
+        return {
+            "status": "ok",
+            "symbol": symbol.upper(),
+            "last_price": ticker.get("lastPrice"),
+            "price_24h_pcnt": ticker.get("price24hPcnt"),
+            "high_24h": ticker.get("highPrice24h"),
+            "low_24h": ticker.get("lowPrice24h"),
+            "analysis": analysis
+        }
+
+    def get_pnl_summary(self, symbol: Optional[str] = None, limit: int = 100, days: int = 7) -> dict:
+        """Generates a detailed PnL summary from closed trades."""
+        history_resp = self.get_pnl_history(symbol=symbol, limit=limit)
+        history = history_resp.get("list", [])
+        if not history:
+            return {"status": "ok", "msg": "No trade history found", "total_pnl": 0}
+        
+        from datetime import timedelta
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        
+        filtered = [
+            p for p in history 
+            if datetime.fromtimestamp(int(p.get("updatedTime", 0))/1000, tz=timezone.utc) > cutoff
+        ]
+        
+        if not filtered:
+            return {"status": "ok", "msg": f"No trades found in last {days} days", "total_pnl": 0}
+
+        total_pnl = sum(float(trade.get("closedPnl", 0)) for trade in filtered)
+        total_fees = sum(float(trade.get("openFee", 0)) + float(trade.get("closeFee", 0)) for trade in filtered)
+        wins = [t for t in filtered if float(t.get("closedPnl", 0)) > 0]
+        losses = [t for t in filtered if float(t.get("closedPnl", 0)) <= 0]
+        
+        return {
+            "status": "ok",
+            "trades_analyzed": len(filtered),
+            "total_pnl": round(total_pnl, 4),
+            "total_fees": round(total_fees, 4),
+            "net_pnl": round(total_pnl - total_fees, 4),
+            "win_rate": round(len(wins) / len(filtered) * 100, 2) if filtered else 0,
+            "avg_win": round(sum(float(t["closedPnl"]) for t in wins) / len(wins), 4) if wins else 0,
+            "avg_loss": round(sum(float(t["closedPnl"]) for t in losses) / len(losses), 4) if losses else 0,
+        }
+
+    def get_volume_imbalance(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        """Calculates order flow volume imbalance."""
+        # Utilizing orderbook analysis for imbalance calculation
+        analysis = self.get_orderbook_analysis(symbol=symbol)
+        return {"imbalance": analysis.get("obi", 0)}
+
+    def get_volume_at_price(self, symbol: str, depth: int = 50, category: str = "linear") -> dict:
+        """Aggregates volume at price levels."""
+        res = self.get_orderbook(symbol=symbol, limit=depth, category=category)
+        data = res.get("result", {})
+        return {
+            "status": "ok",
+            "bids": data.get("b", []),
+            "asks": data.get("a", [])
+        }
+
+    def calculate_vwma(self, symbol: str, interval: str = "60", period: int = 20) -> dict:
+        """Calculates VWMA."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 50).get("list", [])
+        closes = [float(k[4]) for k in reversed(klines)]
+        volumes = [float(k[5]) for k in reversed(klines)]
+        
+        pv = sum(c * v for c, v in zip(closes[-period:], volumes[-period:]))
+        v = sum(volumes[-period:])
+        return {"status": "ok", "vwma": round(pv / v if v != 0 else 0, 4)}
+
+    def calculate_bollinger_bands_pb(self, symbol: str, interval: str = "15", period: int = 20) -> dict:
+        """Calculates Bollinger Bands %B."""
+        bb = self.calculate_bollinger_bands(symbol=symbol, interval=interval, period=period)
+        if bb["status"] != "ok": return bb
+        
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=1).get("list", [])
+        price = float(klines[0][4])
+        
+        pb = (price - bb["lower"]) / (bb["upper"] - bb["lower"]) if (bb["upper"] - bb["lower"]) != 0 else 0
+        return {"status": "ok", "pb": round(pb, 4)}
+
+    def calculate_roc(self, symbol: str, interval: str = "60", period: int = 12) -> dict:
+        """Calculates Rate of Change."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 1).get("list", [])
+        closes = [float(k[4]) for k in reversed(klines)]
+        roc = ((closes[-1] - closes[-period-1]) / closes[-period-1]) * 100
+        return {"status": "ok", "roc": round(roc, 2)}
+
+    def calculate_mfi(self, symbol: str, interval: str = "60", period: int = 14) -> dict:
+        """Calculates Money Flow Index."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 1).get("list", [])
+        data = [{"h": float(k[2]), "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in reversed(klines)]
+        
+        tp = [(d["h"] + d["l"] + d["c"]) / 3 for d in data]
+        mf = [t * d["v"] for t, d in zip(tp, data)]
+        
+        pos_mf = sum(m for m, prev in zip(mf[1:], tp) if tp[tp.index(prev)+1] > prev)
+        neg_mf = sum(abs(m) for m, prev in zip(mf[1:], tp) if tp[tp.index(prev)+1] < prev)
+        
+        mfi = 100 - (100 / (1 + (pos_mf / neg_mf))) if neg_mf != 0 else 100
+        return {"status": "ok", "mfi": round(mfi, 2)}
+
+    def calculate_williams_r(self, symbol: str, interval: str = "15", period: int = 14) -> dict:
+        """Calculates Williams %R."""
+        klines = self.get_klines(symbol=symbol, interval=interval, limit=period + 1).get("list", [])
+        highs = [float(k[2]) for k in reversed(klines)]
+        lows = [float(k[3]) for k in reversed(klines)]
+        close = float(klines[0][4])
+        
+        h_max = max(highs[-period:])
+        l_min = min(lows[-period:])
+        
+        wr = (h_max - close) / (h_max - l_min) * -100 if h_max != l_min else 0
+        return {"status": "ok", "williams_r": round(wr, 2)}
+
+# ══════════════════════════════════════════════════════════════════════════
+# REAL-TIME WEBSOCKET MANAGER
+# ══════════════════════════════════════════════════════════════════════════
+class BybitWebSocketManager:
+    def __init__(self, config: TradingConfig):
+        self.config = config
+        self.public_url = "wss://stream.bybit.com/v5/public/linear"
+
+    async def stream_orderbook(self, symbol: str, duration: int = 10):
+        try:
+            import asyncio, websockets
+            async with websockets.connect(self.public_url) as ws:
+                await ws.send(json.dumps({"op": "subscribe", "args": [f"orderbook.1.{symbol}"]}))
+                end_time = time.time() + duration
+                while time.time() < end_time:
+                    msg = await ws.recv()
+                    data = json.loads(msg)
+                    if "data" in data: print(data["data"])
+                    await asyncio.sleep(0.01)
+        except ImportError:
+            print("Error: 'websockets' library not installed.")
+        except Exception as e:
+            print(f"WebSocket Error: {e}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# GLOBAL SINGLETON + UNIFIED run() ENTRY POINT
+# ══════════════════════════════════════════════════════════════════════════════
+_realm: Optional[BybitRealm] = None
+_realm_lock = threading.Lock()
+
+
+def get_realm() -> BybitRealm:
+    """Thread-safe singleton factory."""
+    global _realm
+    if _realm is None:
+        with _realm_lock:
+            if _realm is None:
+                _realm = BybitRealm()
+    return _realm
+
+
+def run(
+    action: str,
+    # ── Order params ──────────────────────────────────────────────────────────
+    symbol: Optional[str] = None,
+    side: Optional[Literal["Buy", "Sell"]] = None,
+    qty: Optional[float] = None,
+    price: Optional[float] = None,
+    order_type: str = "Limit",
+    order_id: Optional[str] = None,
+    client_oid: Optional[str] = None,
+    time_in_force: str = "GTC",
+    reduce_only: bool = False,
+    trigger_price: Optional[float] = None,
+    trigger_by: Optional[str] = None,
+    tp_order_type: Optional[str] = None,
+    sl_order_type: Optional[str] = None,
+    # ── Risk params ───────────────────────────────────────────────────────────
+    stop_loss: Optional[float] = None,    take_profit: Optional[float] = None,
+    trailing_stop: Optional[float] = None,
+    tp_pct: Optional[float] = None,
+    sl_pct: Optional[float] = None,
+    trailing_stop_pct: Optional[float] = None,
+    leverage: Optional[int] = None,
+    # ── Market / analysis params ──────────────────────────────────────────────
+    category: str = "linear",
+    depth: int = 50,
+    limit: int = 50,
+    interval: str = "60",
+    lookback: int = 100,
+    wall_multiplier: float = 3.5,
+    symbols: Optional[List[str]] = None,
+    include_regime: bool = False,
+    settle_coin: Optional[str] = None,
+    # ── Account params ────────────────────────────────────────────────────────
+    account_type: str = "UNIFIED",
+    # ── Batch orders ──────────────────────────────────────────────────────────
+    orders: Optional[List[dict]] = None,
+    # ── Journal ───────────────────────────────────────────────────────────────
+    journal_symbol: Optional[str] = None,
+    journal_limit: int = 50,
+    # ── Misc ──────────────────────────────────────────────────────────────────
+    **kwargs,
+) -> dict:
+    """
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║  Unified Entry Point — Bybit Realm v5.0                        ║
+    ║                                                                  ║
+    ║  Actions:                                                        ║
+    ║  health_check          get_wallet_balance    get_account_info   ║
+    ║  get_positions         get_position_risk     get_fee_rate       ║
+    ║  set_leverage          set_trading_stop      set_position_mode  ║
+    ║  get_executions        get_pnl_history       panic_close        ║
+    ║  bulk_update_tp_sl     get_account_summary   get_pnl_summary    ║
+    ║  update_trailing_stop  set_tp_sl             check_risk_limit   ║
+    ║  check_balance         close_position                           ║
+    ║  get_open_positions_summary  send_telegram_alert                ║
+    ║  export_trade_history                                           ║
+    ║  calculate_rsi         calculate_sma          calculate_ema      ║
+    ║  calculate_macd        calculate_bollinger_bands               ║
+    ║  calculate_vwap        calculate_atr          calculate_stoch  ║
+    ║  scan_scalping_opportunities                                   ║
+    ║  place_order           amend_order           cancel_order       ║
+    ║  cancel_all_orders     get_open_orders       get_order_history  ║
+    ║  batch_place_orders    place_smart_trade                        ║
+    ║  get_ticker            get_orderbook         get_klines         ║
+    ║  get_recent_trades     get_instruments_info  get_funding_rate   ║
+    ║  get_open_interest     get_volatility_index                     ║
+    ║  get_orderbook_analysis  get_volume_at_price  get_market_regime ║
+    ║  scan_symbols          get_journal                              ║
+    ╚══════════════════════════════════════════════════════════════════╝
+    """
+    bot = get_realm()
+
+    # Automatically log every action
+    logger.info(f"Executing Action: {action} | Symbol: {symbol} | Qty: {qty} | Price: {price} | Params: {kwargs}")
+
+    try:
+        # ── Health ───────────────────────────────────────────────────────────
+        if action == "health_check":
+            return bot.health_check()
+
+        # ── Account ──────────────────────────────────────────────────────────
+        elif action == "get_wallet_balance":
+            return bot.get_wallet_balance(account_type=account_type)
+
+        elif action == "get_account_info":
+            return bot.get_account_info()
+
+        elif action == "get_fee_rate":
+            return bot.get_fee_rate(category=category, symbol=symbol)
+
+        elif action == "get_positions":
+            return bot.get_positions(
+                category=category,
+                symbol=symbol,
+                settle_coin=settle_coin,
+            )
+
+        elif action == "get_position_risk":
+            return bot.get_position_risk(
+                category=category, symbol=symbol
+            )
+        
+        elif action == "panic_close":
+            return bot.panic_close(category=category)
+        
+        elif action == "bulk_update_tp_sl":
+            return bot.bulk_update_tp_sl(category=category, tp=take_profit, sl=stop_loss)
+            
+        elif action == "check_balance":
+            return bot.get_wallet_balance(account_type=account_type)
+
+        elif action == "close_position":
+            return bot.close_position(symbol=symbol, category=category)
+            
+        elif action == "get_account_summary":
+            return bot.get_account_summary()
+        
+        elif action == "send_open_positions_summary":
+            return bot.get_open_positions_summary(category=category)
+
+        elif action == "alert":
+            return {"status": "ok" if bot.alert(message=kwargs.get("message", "Test Alert"), level=kwargs.get("level", "INFO")) else "error"}
+
+        elif action == "export_trade_history":
+            return bot.export_trade_history(symbol=symbol, filename=kwargs.get("filename", "trade_history.csv"))
+        
+        elif action == "set_tp_sl":
+            return bot.set_tp_sl(symbol=symbol, tp=take_profit, sl=stop_loss, category=category)
+        
+        elif action == "calculate_rsi":
+            return bot.calculate_rsi(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+            
+        elif action == "calculate_macd":
+            return bot.calculate_macd(symbol=symbol, interval=interval, fast=int(kwargs.get("fast", 12)), slow=int(kwargs.get("slow", 26)), signal=int(kwargs.get("signal", 9)))
+            
+        elif action == "calculate_adx":
+            return bot.calculate_adx(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+            
+        elif action == "calculate_cci":
+            return bot.calculate_cci(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+            
+        elif action == "calculate_ichimoku":
+            return bot.calculate_ichimoku(symbol=symbol, interval=interval, tenkan=int(kwargs.get("tenkan", 9)), kijun=int(kwargs.get("kijun", 26)), senkou_b=int(kwargs.get("senkou_b", 52)))
+            
+        elif action == "calculate_sma":
+            return bot.calculate_sma(symbol=symbol, interval=interval, period=int(kwargs.get("period", 50)))
+            
+        elif action == "calculate_ema":
+            return bot.calculate_ema(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+            
+        elif action == "calculate_bollinger_bands":
+            return bot.calculate_bollinger_bands(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+            
+        elif action == "calculate_vwap":
+            return bot.calculate_vwap(symbol=symbol, interval=interval)
+            
+        elif action == "calculate_atr":
+            return bot.calculate_atr(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+            
+        elif action == "calculate_stochastic":
+            return bot.calculate_stochastic(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)), smooth_k=int(kwargs.get("smooth_k", 3)), smooth_d=int(kwargs.get("smooth_d", 3)))
+        
+        elif action == "micro_scalp":
+            return bot.micro_scalp(
+                symbol=symbol,
+                qty=float(kwargs.get("qty", 0.01)),
+                fee_rate=float(kwargs.get("fee_rate", 0.0005)),
+                target_profit=float(kwargs.get("target_profit", 0.05)),
+                category=category
+            )
+            
+        elif action == "stream_orderbook":
+            ws = BybitWebSocketManager(bot.config)
+            asyncio.run(ws.stream_orderbook(symbol=symbol, duration=int(kwargs.get("duration", 10))))
+            return {"status": "ok", "msg": "Stream ended"}
+            
+        elif action == "calculate_all_indicators":
+            return bot.calculate_all_indicators(symbol=symbol, interval=interval)
+        
+        elif action == "calculate_hma":
+            return bot.calculate_hma(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+            
+        elif action == "calculate_fractals":
+            return bot.calculate_fractals(symbol=symbol, interval=interval)
+            
+        elif action == "calculate_pivot_points":
+            return bot.calculate_pivot_points(symbol=symbol, interval=interval)
+            
+        elif action == "calculate_klinger":
+            return bot.calculate_klinger(symbol=symbol, interval=interval, fast=int(kwargs.get("fast", 34)), slow=int(kwargs.get("slow", 55)))
+            
+        elif action == "calculate_cmf":
+            return bot.calculate_cmf(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+            
+        elif action == "calculate_adx_with_di":
+            return bot.calculate_adx_with_di(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+            
+        elif action == "calculate_elder_ray_index":
+            return bot.calculate_elder_ray_index(symbol=symbol, interval=interval, period=int(kwargs.get("period", 13)))
+            
+        elif action == "calculate_kst":
+            return bot.calculate_kst(symbol=symbol, interval=interval)
+            
+        elif action == "calculate_tema":
+            return bot.calculate_tema(symbol=symbol, interval=interval, period=int(kwargs.get("period", 20)))
+        
+        elif action == "calculate_ehler_rsi":
+            return bot.calculate_ehler_rsi(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+            
+        elif action == "calculate_ehler_stochastic":
+            return bot.calculate_ehler_stochastic(symbol=symbol, interval=interval, period=int(kwargs.get("period", 14)))
+        elif action == "scan_scalping_opportunities":
+            return bot.scan_scalping_opportunities(symbol=symbol, interval=interval)
+        
+        elif action == "get_pnl_summary":
+            return bot.get_pnl_summary(days=int(kwargs.get("days", 7)))
+
+        elif action == "update_trailing_stop":
+            return bot.update_trailing_stop(symbol=symbol, trailing_stop_pct=trailing_stop_pct, category=category)
+
+        elif action == "check_risk_limit":
+            return bot.check_risk_limit(symbol=symbol, qty=qty, price=price)
+
+        elif action == "set_leverage":
+            return bot.set_leverage(
+                symbol=symbol,
+                leverage=leverage,
+                category=category,
+            )
+
+        elif action == "set_trading_stop":
+            return bot.set_trading_stop(
+                symbol=symbol,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                trailing_stop=trailing_stop,
+                category=category,
+            )
+
+        elif action == "place_breakeven_order":
+            return bot.place_breakeven_order(symbol=symbol, fee_rate=float(kwargs.get("fee_rate", 0.0005)), category=category)
+
+        elif action == "set_position_mode":
+            return bot.set_position_mode(
+                coin=kwargs.get("coin", "USDT"),
+                mode=kwargs.get("mode", 0),
+                category=category,
+            )
+
+        elif action == "get_executions":
+            return bot.get_executions(
+                category=category, symbol=symbol, limit=limit
+            )
+
+        elif action == "get_pnl_history":
+            return bot.get_pnl_history(
+                category=category, symbol=symbol, limit=limit
+            )
+
+        # ── Orders ───────────────────────────────────────────────────────────
+        elif action == "place_order":
+            return bot.place_order(
+                symbol=symbol,
+                side=side,
+                qty=qty,
+                price=price,
+                order_type=order_type,
+                category=category,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                trailing_stop=trailing_stop,
+                reduce_only=reduce_only,
+                time_in_force=time_in_force,
+                client_oid=client_oid,
+                trigger_price=trigger_price,
+                trigger_by=trigger_by,
+                tp_order_type=tp_order_type,
+                sl_order_type=sl_order_type,
+                **kwargs,
+            )
+
+        elif action == "place_smart_trade":
+            return bot.place_smart_trade(
+                symbol=symbol,
+                side=side,
+                qty=qty,
+                price=price,
+                tp_pct=tp_pct,
+                sl_pct=sl_pct,
+                trailing_stop_pct=trailing_stop_pct,
+                category=category,
+            )
+
+        elif action == "amend_order":
+            return bot.amend_order(
+                symbol=symbol,
+                order_id=order_id,
+                client_oid=client_oid,
+                qty=qty,
+                price=price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                category=category,
+            )
+
+        elif action == "cancel_order":
+            return bot.cancel_order(
+                symbol=symbol,
+                order_id=order_id,
+                client_oid=client_oid,
+                category=category,
+            )
+
+        elif action == "cancel_all_orders":
+            return bot.cancel_all_orders(
+                symbol=symbol, category=category
+            )
+
+        elif action == "get_open_orders":
+            return bot.get_open_orders(
+                symbol=symbol, category=category, limit=limit
+            )
+
+        elif action == "get_order_history":
+            return bot.get_order_history(
+                symbol=symbol, category=category, limit=limit
+            )
+
+        elif action == "batch_place_orders":
+            if not orders:
+                return {
+                    "status": "error",
+                    "msg": "orders list is required for batch_place_orders",
+                }
+            return bot.batch_place_orders(
+                orders=orders, category=category
+            )
+
+        # ── Market Data ──────────────────────────────────────────────────────
+        elif action == "get_ticker":
+            return bot.get_ticker(symbol=symbol, category=category)
+
+        elif action == "get_orderbook":
+            return bot.get_orderbook(
+                symbol=symbol, limit=limit, category=category
+            )
+
+        elif action == "get_klines":
+            return bot.get_klines(
+                symbol=symbol,
+                interval=interval,
+                limit=limit,
+                category=category,
+            )
+
+        elif action == "get_recent_trades":
+            return bot.get_recent_trades(
+                symbol=symbol, limit=limit, category=category
+            )
+
+        elif action == "get_instruments_info":
+            return bot.get_instruments_info(
+                category=category, symbol=symbol, limit=limit
+            )
+
+        elif action == "get_funding_rate":
+            return bot.get_funding_rate(
+                symbol=symbol, category=category, limit=limit
+            )
+
+        elif action == "get_open_interest":
+            return bot.get_open_interest(
+                symbol=symbol,
+                interval=interval,
+                category=category,
+            )
+
+        elif action == "scan_symbols":
+            if not symbols:
+                return {
+                    "status": "error",
+                    "msg": "symbols list is required for scan_symbols",
+                }
+            return bot.scan_symbols(
+                symbols=symbols,
+                category=category,
+                include_regime=include_regime,
+            )
+
+        # ── Journal / Analysis ────────────────────────────────────────────────
+        elif action == "get_journal":
+            entries = bot.journal.get_entries(
+                symbol=journal_symbol, limit=journal_limit
+            )
+            return {
+                "status": "ok",
+                "count": len(entries),
+                "entries": entries,
+            }
+
+        elif action == "calculate_orderflow_delta":
+            return bot.calculate_orderflow_delta(
+                symbol=symbol,
+                interval=interval,
+                limit=int(kwargs.get("limit", 100)),
+            )
+
+        elif action == "calculate_orderbook_imbalance":
+            return bot.calculate_orderbook_imbalance(
+                symbol=symbol,
+                depth=int(kwargs.get("depth", 50)),
+                tier_size=int(kwargs.get("tier_size", 10)),
+                spoof_threshold=float(kwargs.get("spoof_threshold", 5.0)),
+            )
+
+        elif action == "calculate_liquidity_heatmap":
+            return bot.calculate_liquidity_heatmap(
+                symbol=symbol,
+                interval=interval,
+                depth=int(kwargs.get("depth", 100)),
+                bucket_count=int(kwargs.get("bucket_count", 20)),
+                kline_limit=int(kwargs.get("kline_limit", 100)),
+            )
+
+        elif action == "calculate_market_depth_profile":
+            order_sizes_raw   = kwargs.get("order_sizes", "100,500,1000,5000")
+            distance_pcts_raw = kwargs.get("distance_pcts", "0.1,0.25,0.5,1.0,2.0")
+            order_sizes_list  = [float(x) for x in str(order_sizes_raw).split(",")]
+            distance_pcts_list = [float(x) for x in str(distance_pcts_raw).split(",")]
+            return bot.calculate_market_depth_profile(
+                symbol=symbol,
+                depth=int(kwargs.get("depth", 200)),
+                order_sizes=order_sizes_list,
+                distance_pcts=distance_pcts_list,
+            )
+        
+        elif action == "calculate_sr_levels":
+            return bot.calculate_sr_levels(
+                symbol=symbol,
+                top_n=int(kwargs.get("top_n", 7)),
+                vol_cut=float(kwargs.get("vol_cut", 0.4))
+            )
+            
+        elif action == "get_orderbook_analysis":
+            pass
+        elif action == "calculate_limit_micro_profit":
+            return bot.calculate_limit_micro_profit(
+                entry_price=float(kwargs["entry_price"]),
+                limit_price=float(kwargs["limit_price"]),
+                side=kwargs["side"],
+                qty=float(kwargs["qty"])
+            )
+        elif action == "calculate_depth_weighted_profit":
+            return bot.calculate_depth_weighted_profit(
+                symbol=symbol,
+                entry_price=float(kwargs["entry_price"]),
+                limit_price=float(kwargs["limit_price"]),
+                side=kwargs["side"],
+                qty=float(kwargs["qty"])
+            )
+            return bot.get_orderbook_analysis(symbol=symbol, depth=int(kwargs.get("depth", 50)))
+
+        elif action == "calculate_support_resistance_levels":
+            return bot.calculate_support_resistance_levels(
+                symbol=symbol, 
+                interval=interval, 
+                depth=int(kwargs.get("depth", 50)), 
+                wall_multiplier=float(kwargs.get("wall_multiplier", 3.0))
+            )
+
+        elif action == "calculate_fibonacci_levels":
+            return bot.calculate_fibonacci_levels(
+                symbol=symbol, 
+                interval=interval, 
+                lookback=int(kwargs.get("lookback", 50))
+            )
+
+        elif action == "generate_market_depth_report":
+            return bot.generate_market_depth_report(symbol=symbol)
+
+        elif action == "get_orderbook_analysis":
+            return bot.get_orderbook_analysis(symbol=symbol, depth=int(kwargs.get("depth", 50)))
+
+        elif action == "detect_high_confluence_levels":
+            return bot.detect_high_confluence_levels(
+                symbol=symbol, 
+                interval=interval, 
+                depth=int(kwargs.get("depth", 50))
+            )
+
+    except Exception as exc:
+        logger.error("run(%s) raised: %s", action, exc, exc_info=True)
+        return {"status": "error", "action": action, "msg": str(exc)}
+
+
+def export_data(data: dict, filename: str, format: str):
+    """Exports data to JSON or CSV."""
+    if format == "json":
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=2)
+    elif format == "csv":
+        items = data.get("list", [data])
+        if not items: return
+        with open(filename, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=items[0].keys())
+            writer.writeheader()
+            writer.writerows(items)
+    print(f"Data exported to {filename}")
+
+def pretty_print_result(action: str, result: dict):
+    """Prints results in a human-friendly format."""
+    if result is None:
+        print("\033[93mNo result returned.\033[0m")
+        return
+    if result.get("status") == "error":
+        print(f"\033[91mERROR: {result.get('msg')}\033[0m")
+        return
+
+    # If it's a simple status message
+    if "msg" in result and len(result) <= 2:
+        print(f"\033[92m{result['msg']}\033[0m")
+        return
+
+    print(f"\n\033[94m═══ {action.upper()} ═══\033[0m")
+    
+    # Custom formatters for specific actions
+    if action == "get_positions":
+        positions = result.get("list", [])
+        if not positions:
+            print("No open positions.")
+        for pos in positions:
+            symbol = pos.get("symbol")
+            side = pos.get("side")
+            size = pos.get("size")
+            pnl = float(pos.get("unrealisedPnl", 0))
+            color = "\033[92m" if pnl > 0 else "\033[91m"
+            print(f"{symbol} | {side} | Size: {size} | PnL: {color}{pnl:+.4f}\033[0m")
+
+    elif action == "get_wallet_balance":
+        coins = result.get("list", [{}])[0].get("coin", [])
+        for c in coins:
+            balance = c.get("walletBalance", "0")
+            if float(balance) > 0:
+                print(f"{c['coin']}: {balance}")
+
+    elif action == "analyze_symbol":
+        print(f"Symbol: {result.get('symbol')} | Price: {result.get('last_price')}")
+        print("-" * 40)
+        for tf, data in result.get("analysis", {}).items():
+            print(f"[{tf:>3}] Regime: {data['regime']:<15} | RSI: {data['rsi']:>5} | EMA: {data['ema']}")
+    elif action == "calculate_orderflow_delta":
+        print(f"Symbol: {result.get('symbol')} | Net Delta: {result.get('delta')}")
+
+    elif action == "calculate_market_depth_profile":
+        print(f"Symbol: {result.get('symbol')} | Mid Price: {result.get('mid_price')}")
+        print(f"{'Level':<10} | {'Bid Vol':<15} | {'Ask Vol':<15}")
+        print("-" * 45)
+        for pct, vols in result.get("profile", {}).items():
+            print(f"{pct:<10} | {vols['bid_vol']:<15} | {vols['ask_vol']:<15}")
+
+    elif action == "calculate_sr_levels":
+        print(f"S/R Levels for {result.get('symbol')}:")
+        print("Support:", result.get("support_levels", []))
+        print("Resistance:", result.get("resistance_levels", []))
+
+    elif action == "calculate_fibonacci_levels":
+        print(f"Fibonacci Levels for {result.get('status')}:")
+        for level, price in result.get("levels", {}).items():
+            print(f"{level:>6}: {price:.4f}")
+
+    elif action == "detect_high_confluence_levels":
+        print(f"High Confluence Zones for {result.get('symbol')}:")
+        for zone in result.get("high_confluence_zones", []):
+            color = "\033[92m" if zone['type'] == "Support" else "\033[91m"
+            print(f"{color}{zone['type']:<10}\033[0m | Price: {zone['price']:<10.4f} | Confluence: {zone['score']}")
+
+    elif action == "generate_market_depth_report":
+        print(f"Market Depth Report for {result.get('symbol')}:")
+        print("Support:", result.get("support_zones"))
+        print("Resistance:", result.get("resistance_zones"))
+
+    elif action == "deep_level_sort":
+        print(f"Deep Orderbook Levels for {result.get('symbol')}:")
+        print(f"{'Side':<10} | {'Avg Price':<10} | {'Cum Vol':<10}")
+        print("-" * 35)
+        for b in result.get("bid_levels", []):
+            print(f"\033[92m{'Bid':<10}\033[0m | {b[0]:<10.4f} | {b[1]:<10.2f}")
+        for a in result.get("ask_levels", []):
+            print(f"\033[91m{'Ask':<10}\033[0m | {a[0]:<10.4f} | {a[1]:<10.2f}")
+
+    elif action == "get_ticker":
+        for t in result.get("list", []):
+            color = "\033[92m" if float(t.get("price24hPcnt", 0)) > 0 else "\033[91m"
+            print(f"{t['symbol']} | Price: {t['lastPrice']} | 24h: {color}{float(t.get('price24hPcnt', 0))*100:+.2f}%\033[0m")
+
+    elif action == "get_open_orders":
+        for o in result.get("list", []):
+            print(f"{o['symbol']} | {o['side']} | {o['orderType']} | {o['price']} | {o['orderStatus']}")
+
+    elif action == "get_funding_rate":
+        for f in result.get("list", []):
+            print(f"{f['symbol']} | Rate: {float(f['fundingRate'])*100:.4f}% | Next: {f['nextFundingTime']}")
+
+    else:
+        # Fallback to JSON
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+    import os
+
+    # Check for argc environment variables first
+    if "argc_action" in os.environ:
+        action = os.environ.get("argc_action")
+        symbol = os.environ.get("argc_symbol")
+        side = os.environ.get("argc_side")
+        qty = os.environ.get("argc_qty")
+        price = os.environ.get("argc_price")
+        stop_loss = os.environ.get("argc_stop_loss")
+        take_profit = os.environ.get("argc_take_profit")
+        category = os.environ.get("argc_category", "linear")
+        output_json = os.environ.get("argc_json") == "true"
+        
+        # Cast types
+        if qty: qty = float(qty)
+        if price: price = float(price)
+        if stop_loss: stop_loss = float(stop_loss)
+        if take_profit: take_profit = float(take_profit)
+        
+        # Collect all other argc_ variables as kwargs
+        kwargs = {}
+        for k, v in os.environ.items():
+            if k.startswith("argc_") and k not in ["argc_action", "argc_symbol", "argc_side", "argc_qty", "argc_price", "argc_stop_loss", "argc_take_profit", "argc_category", "argc_json"]:
+                # Cast common types
+                if v.lower() == "true": val = True
+                elif v.lower() == "false": val = False
+                else:
+                    try: val = float(v) if "." in v else int(v)
+                    except: val = v
+                kwargs[k[5:]] = val
+                
+        result = run(
+            action=action,
+            symbol=symbol,
+            side=side,
+            qty=qty,
+            price=price,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            category=category,
+            **kwargs
+        )
+        if output_json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        else:
+            pretty_print_result(action, result)
+        sys.exit(0 if result is None or result.get("status") != "error" else 1)
+
+    parser = argparse.ArgumentParser(description="Bybit Realm Trading CLI")
+    parser.add_argument("--action", required=True, help="Action to perform")
+    parser.add_argument("--symbol", help="Trading symbol")
+    parser.add_argument("--side", choices=["Buy", "Sell"], help="Order side")
+    parser.add_argument("--qty", type=float, help="Order quantity")
+    parser.add_argument('--entry_price', type=float, help='Entry price for the position')
+    parser.add_argument('--limit_price', type=float, help='Limit price for the order')
+    parser.add_argument("--price", type=float, help="Order price")
+    parser.add_argument("--stop-loss", type=float, dest="stop_loss")
+    parser.add_argument("--take-profit", type=float, dest="take_profit")
+    parser.add_argument("--json", action="store_true", help="Output raw JSON instead of pretty print")
+    parser.add_argument("--export", help="Export data to file: filename.ext (supported: .json, .csv)")
+    parser.add_argument("--category", default="linear")
+
+    args = parser.parse_args()
+
+    # Consolidate remaining kwargs
+    kwargs = {k: v for k, v in vars(args).items() if k not in ["action", "symbol", "side", "qty", "price", "stop_loss", "take_profit", "category", "json", "export"]}
+    
+    result = run(
+        action=args.action,
+        symbol=args.symbol,
+        side=args.side,
+        qty=args.qty,
+        price=args.price,
+        stop_loss=args.stop_loss,
+        take_profit=args.take_profit,
+        category=args.category,
+        **kwargs
+    )
+
+    if args.export:
+        fmt = args.export.split('.')[-1]
+        export_data(result, args.export, fmt)
+    elif args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        pretty_print_result(args.action, result)
+    
+    if result is None: sys.exit(0)
+    sys.exit(0 if result.get("status") != "error" else 1)

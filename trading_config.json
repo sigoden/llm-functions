@@ -1,0 +1,29 @@
+{
+  "interval": 10,
+  "auto_trade": false,
+  "base_qty": 0.001,
+  "min_profit": 2.0,
+  "category": "linear",
+  "maker_fee": 0.0001,
+  "taker_fee": 0.0006,
+  "use_tor": true,
+  "tor_socks_port": 9050,
+  "max_daily_loss": 50.0,
+  "max_position_pct": 10.0,
+  "api_key": null,
+  "api_secret": null,
+  "symbols": [
+    {
+      "symbol": "BTCUSDT",
+      "leverage": 5.0,
+      "hedge_mode": false,
+      "orderbook_depth": 200,
+      "max_daily_loss": 50.0,
+      "max_position_pct": 10.0,
+      "profit_close_pct": 1.5,
+      "use_conditional": true,
+      "maker_fee": 0.0002,
+      "taker_fee": 0.00055
+    }
+  ]
+}

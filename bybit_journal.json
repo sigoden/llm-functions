@@ -1,0 +1,1744 @@
+[
+  {
+    "id": "9fc2091e-ce28-41bc-814d-c6678a27e4d9",
+    "timestamp": "2026-05-28T13:35:27.882631+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.5",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "orderId": "e88a722f-b079-4445-a1a3-69ba4094910c",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "e7b21ace-4e46-45ac-a60d-e7fa46dc6c0e",
+    "timestamp": "2026-05-28T13:40:04.714036+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "0.4",
+      "timeInForce": "GTC",
+      "price": "80.9095",
+      "reduceOnly": true
+    },
+    "result": {
+      "orderId": "075fac7b-8f8d-4c2c-bd46-b9024b0d7ec5",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "94b660be-4cfd-4705-a7be-59dc1ce3a046",
+    "timestamp": "2026-05-28T13:42:21.948773+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "1.6",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "status": "error",
+      "code": 110017,
+      "msg": "reduce-only order has same side with current position"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "c0c31fe9-c1d9-40b9-916f-1bbec2d75542",
+    "timestamp": "2026-05-28T13:42:32.273996+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.6",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "orderId": "a3128064-2e4d-49b2-9176-11123abf3b20",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "0cfbd53a-e158-4945-a56d-30d790146870",
+    "timestamp": "2026-05-28T13:43:08.887757+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.6",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "orderId": "12ac1dca-2a64-435a-8de8-35939174774a",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "c6ae0883-d21c-4378-8889-a95a673c1b35",
+    "timestamp": "2026-05-28T13:44:40.131329+00:00",
+    "action": "place_order",
+    "symbol": "SOLUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SOLUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.5",
+      "timeInForce": "GTC",
+      "stopLoss": "80.2",
+      "takeProfit": "82.5",
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "orderId": "b507e07b-1b03-47d5-86a1-89012da953b3",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "61ec4de9-1216-4dd4-b2ed-21d792ce4de3",
+    "timestamp": "2026-05-28T13:47:08.620034+00:00",
+    "action": "place_order",
+    "symbol": "1000SHIBUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "1000SHIBUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "5000.0",
+      "timeInForce": "GTC",
+      "stopLoss": "0.025",
+      "takeProfit": "0.024",
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "params error: symbol invalid 1000SHIBUSDT"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "193bf5ef-e8fc-4ad6-a90d-f684427be268",
+    "timestamp": "2026-05-28T13:48:39.378554+00:00",
+    "action": "place_order",
+    "symbol": "DOGEUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "DOGEUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "500.0",
+      "timeInForce": "GTC",
+      "stopLoss": "0.0985",
+      "takeProfit": "0.0965",
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "orderId": "93e4b1e9-ac8a-44b5-8b46-70d7389ff4a5",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "887a07cc-947d-4aec-804c-f310c8b0f930",
+    "timestamp": "2026-05-28T13:51:15.254787+00:00",
+    "action": "place_order",
+    "symbol": "AVAXUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "AVAXUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "20.0",
+      "timeInForce": "GTC",
+      "stopLoss": "8.9",
+      "takeProfit": "8.8",
+      "fee_rate": "0.0005",
+      "target_profit": "0.05"
+    },
+    "result": {
+      "status": "error",
+      "code": 110007,
+      "msg": "ab not enough for new order"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "a5f68ae0-7d60-4e8c-9b40-8301864115f5",
+    "timestamp": "2026-05-28T18:51:49.765360+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "0.001",
+      "timeInForce": "GTC",
+      "price": "73605.0",
+      "stopLoss": "73595.0",
+      "takeProfit": "73620.0"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "35f87766-dad8-48a9-8e07-c5c45b7fcc75",
+    "timestamp": "2026-05-29T11:11:57.019452+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "2e-05",
+      "timeInForce": "PostOnly",
+      "price": "73608.930263"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "03f59b44-42c6-43a1-a9cc-88cf6bc76e99",
+    "timestamp": "2026-05-29T11:12:45.745932+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "2e-05",
+      "timeInForce": "PostOnly",
+      "price": "73606.930163"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780053165736
+    },
+    "status": "success"
+  },
+  {
+    "id": "3b2e0fa3-4488-4a91-b456-f685bd02ac06",
+    "timestamp": "2026-05-31T12:26:35.201320+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "800.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "3a90d943-9acf-4c31-9ef9-dd19375b9817",
+    "timestamp": "2026-05-31T12:26:39.094655+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "82.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "1e358ec7-e534-43ab-a190-94774a90a837",
+    "timestamp": "2026-05-31T12:27:55.595343+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "800.0",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "607496e4-9651-48d7-8161-e56779ac016a",
+    "timestamp": "2026-05-31T12:27:59.375058+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "82.0",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "54793eef-06ee-4b5c-b4a6-ab68c9945a10",
+    "timestamp": "2026-05-31T12:29:20.079310+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "800.0",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "4e705cd8-1dab-44f6-aa9a-0861577f2270",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780230560213
+    },
+    "status": "success"
+  },
+  {
+    "id": "604d3b6e-988a-48e3-aa1d-e85a26e6245d",
+    "timestamp": "2026-05-31T12:29:24.728423+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "82.0",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "1006cbc6-8e11-4426-a462-80b3dc07d835",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780230564864
+    },
+    "status": "success"
+  },
+  {
+    "id": "cd76f4ad-eff0-4a43-ab22-ca715cfac89a",
+    "timestamp": "2026-05-31T12:40:18.945652+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "276.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "c57af87c-93e8-4b8f-a3b7-fe33223deefc",
+    "timestamp": "2026-05-31T12:40:32.818866+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "276.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 110094,
+      "retMsg": "Order does not meet minimum order value 5USDT",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780231232744
+    },
+    "status": "success"
+  },
+  {
+    "id": "1b6fe109-b674-4c61-94e1-6a46c9fe4bb1",
+    "timestamp": "2026-05-31T12:41:54.235625+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "78573803-6c90-445e-8691-171bcb9c14d0",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780231313227
+    },
+    "status": "success"
+  },
+  {
+    "id": "2ac456b4-1504-4810-8707-313d440f148c",
+    "timestamp": "2026-05-31T12:43:20.678316+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Stop",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "stopLoss": "0.0185",
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "bef804fa-f85c-4df0-be71-0625cd56982a",
+    "timestamp": "2026-05-31T12:43:33.008006+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "price": "0.0182",
+      "json": "False"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "740558a6-6187-461e-bd34-97bcd0e465bc",
+    "timestamp": "2026-05-31T12:44:51.326332+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Stop",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "stopLoss": "0.0185",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Price or BBO is required for limit orders",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780231491274
+    },
+    "status": "success"
+  },
+  {
+    "id": "54998a3e-5cdd-4201-9732-0550796306ca",
+    "timestamp": "2026-05-31T12:45:15.226400+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "price": "0.0182",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "5ccb1f73-9560-45d6-869f-78837e6bb179",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780231511313
+    },
+    "status": "success"
+  },
+  {
+    "id": "6364b4db-9334-44d0-86fd-6cc539722092",
+    "timestamp": "2026-05-31T13:42:45.195862+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Stop",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "stopLoss": "0.0185",
+      "triggerPrice": "0.0185",
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "TriggerDirection invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780234965200
+    },
+    "status": "success"
+  },
+  {
+    "id": "d4fd6ab0-d7aa-40eb-96d8-3dd963532033",
+    "timestamp": "2026-05-31T13:42:59.717138+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Stop",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "triggerPrice": "0.0185",
+      "triggerDirection": 1,
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Price or BBO is required for limit orders",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780234979740
+    },
+    "status": "success"
+  },
+  {
+    "id": "80b55cab-017f-4d6e-aace-27e760e51863",
+    "timestamp": "2026-05-31T13:43:10.813807+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Stop",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "price": "0.0185",
+      "triggerPrice": "0.0185",
+      "triggerDirection": 1,
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "OrderType invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780234990777
+    },
+    "status": "success"
+  },
+  {
+    "id": "ec03d37b-657d-4ae9-9e77-97476912f0f5",
+    "timestamp": "2026-05-31T13:43:33.131077+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Conditional",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "triggerPrice": "0.0185",
+      "triggerDirection": 1,
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Price or BBO is required for limit orders",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780235013199
+    },
+    "status": "success"
+  },
+  {
+    "id": "b4961852-986d-4ba9-af2e-af61c949b3c6",
+    "timestamp": "2026-05-31T13:43:51.739849+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Conditional",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "triggerPrice": "0.0185",
+      "triggerDirection": 1,
+      "basePrice": "0.0",
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Price or BBO is required for limit orders",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780235029756
+    },
+    "status": "success"
+  },
+  {
+    "id": "1ff5e394-13e9-472f-8b22-3c58fb7d6335",
+    "timestamp": "2026-05-31T13:44:23.910895+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "triggerPrice": "0.0185",
+      "triggerDirection": 1,
+      "basePrice": "0.0",
+      "triggerBy": "MarkPrice",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "c43d81b5-77b8-4c77-83f3-de0f7e60c5e9",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780235063956
+    },
+    "status": "success"
+  },
+  {
+    "id": "2c0cb330-a533-4b34-88b8-66a304b71a22",
+    "timestamp": "2026-05-31T13:54:21.234494+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "reduceOnly": true,
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "5be24386-50e2-426f-8d62-3ce06fa269f8",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780235661317
+    },
+    "status": "success"
+  },
+  {
+    "id": "1184611e-2c28-4dc4-80ec-6782fe42413f",
+    "timestamp": "2026-05-31T13:58:52.233570+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "7e-05",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780235932374
+    },
+    "status": "success"
+  },
+  {
+    "id": "a9920b5a-8ba7-43a7-89e3-249ab8a22e07",
+    "timestamp": "2026-05-31T13:58:56.883531+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "21.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 110094,
+      "retMsg": "Order does not meet minimum order value 5USDT",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780235937025
+    },
+    "status": "success"
+  },
+  {
+    "id": "b385397c-93a3-405e-b2ce-3d91819952b2",
+    "timestamp": "2026-05-31T14:01:00.872074+00:00",
+    "action": "place_order",
+    "symbol": "DOGEUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "DOGEUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "14.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 110094,
+      "retMsg": "Order does not meet minimum order value 5USDT",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780236060910
+    },
+    "status": "success"
+  },
+  {
+    "id": "bef91114-ffc0-4470-9459-7c11c31c5152",
+    "timestamp": "2026-05-31T14:48:54.892151+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277.36988089410994",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "b84859e8-7f04-4f32-b44d-660ac7ba13a2",
+    "timestamp": "2026-05-31T14:51:38.941790+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277.7323966672112",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "d93b0624-3bfa-44b9-b3b0-fbda510e4dbd",
+    "timestamp": "2026-05-31T14:51:55.790827+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277.7323966672112",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780239115901
+    },
+    "status": "success"
+  },
+  {
+    "id": "96b3a8f8-bc14-4eeb-bb87-377f829f11fa",
+    "timestamp": "2026-05-31T14:52:34.216731+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277.80804009151325",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780239154333
+    },
+    "status": "success"
+  },
+  {
+    "id": "9bf5c61f-1ed1-4a4a-a3da-7918ce0e245f",
+    "timestamp": "2026-05-31T14:53:03.309526+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "retCode": 110094,
+      "retMsg": "Order does not meet minimum order value 5USDT",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780239183423
+    },
+    "status": "success"
+  },
+  {
+    "id": "bc583357-25f5-42b4-835c-70699686a528",
+    "timestamp": "2026-05-31T14:53:54.036465+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "277",
+      "timeInForce": "GTC"
+    },
+    "result": {
+      "retCode": 110094,
+      "retMsg": "Order does not meet minimum order value 5USDT",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780239234037
+    },
+    "status": "success"
+  },
+  {
+    "id": "59d662ca-9571-4a3b-ab6f-38a4f042a968",
+    "timestamp": "2026-05-31T14:56:21.494852+00:00",
+    "action": "place_order",
+    "symbol": "SUNUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "SUNUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "300.0",
+      "timeInForce": "GTC",
+      "json": "False"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "120ec063-d9bd-443e-bd80-97db96fef524",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780239381340
+    },
+    "status": "success"
+  },
+  {
+    "id": "84a1a488-0a18-4cc9-bb9d-ccda3dfd7822",
+    "timestamp": "2026-05-31T17:38:14.732851+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "6.924079504724666e-05",
+      "timeInForce": "GTC",
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249094783
+    },
+    "status": "success"
+  },
+  {
+    "id": "b5e16657-362d-4579-82c6-09e95ca90457",
+    "timestamp": "2026-05-31T17:38:19.200802+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "6.924079504724666e-05",
+      "timeInForce": "GTC",
+      "price": "74378.11764705883",
+      "reduceOnly": true,
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249099325
+    },
+    "status": "success"
+  },
+  {
+    "id": "9c35f7d0-1fd9-4b4c-823d-d17fcec1fb73",
+    "timestamp": "2026-05-31T17:38:26.665432+00:00",
+    "action": "place_order",
+    "symbol": "ETHUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ETHUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "0.0025421701160425886",
+      "timeInForce": "GTC",
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249106811
+    },
+    "status": "success"
+  },
+  {
+    "id": "57679847-8f79-47ad-bd6f-37fe485c728e",
+    "timestamp": "2026-05-31T17:38:31.825059+00:00",
+    "action": "place_order",
+    "symbol": "ETHUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ETHUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "0.0025421701160425886",
+      "timeInForce": "GTC",
+      "price": "2025.8282352941178",
+      "reduceOnly": true,
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "The number of contracts exceeds minimum limit allowed",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249111924
+    },
+    "status": "success"
+  },
+  {
+    "id": "7bb7d1f5-3fda-474d-97a7-312b79da19bc",
+    "timestamp": "2026-05-31T17:38:42.894726+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "21.86026575225032",
+      "timeInForce": "GTC",
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249122854
+    },
+    "status": "success"
+  },
+  {
+    "id": "379d091f-5f7a-4450-bbdc-035e8383e0e9",
+    "timestamp": "2026-05-31T17:38:48.905519+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "21.86026575225032",
+      "timeInForce": "GTC",
+      "price": "0.23558725490196078",
+      "reduceOnly": true,
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249129038
+    },
+    "status": "success"
+  },
+  {
+    "id": "18383f0e-0d1e-4df1-935f-a1c59ed44e79",
+    "timestamp": "2026-05-31T17:38:57.526476+00:00",
+    "action": "place_order",
+    "symbol": "DOGEUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "DOGEUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "51.307847082494966",
+      "timeInForce": "GTC",
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249137629
+    },
+    "status": "success"
+  },
+  {
+    "id": "66f6acc0-bcbd-40d0-aae7-00ec3c6ae23a",
+    "timestamp": "2026-05-31T17:39:02.218781+00:00",
+    "action": "place_order",
+    "symbol": "DOGEUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "DOGEUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "51.307847082494966",
+      "timeInForce": "GTC",
+      "price": "0.10037450980392157",
+      "reduceOnly": true,
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249142284
+    },
+    "status": "success"
+  },
+  {
+    "id": "6b9f71dd-9921-4f79-8efb-6dbb4816e371",
+    "timestamp": "2026-05-31T17:39:12.227591+00:00",
+    "action": "place_order",
+    "symbol": "TRXUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "TRXUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "14.606484133348607",
+      "timeInForce": "GTC",
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249152300
+    },
+    "status": "success"
+  },
+  {
+    "id": "5ebe9b72-e825-47cf-b9bb-6026ea251255",
+    "timestamp": "2026-05-31T17:39:18.153996+00:00",
+    "action": "place_order",
+    "symbol": "TRXUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "TRXUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "14.606484133348607",
+      "timeInForce": "GTC",
+      "price": "0.352583137254902",
+      "reduceOnly": true,
+      "json": "True"
+    },
+    "result": {
+      "retCode": 10001,
+      "retMsg": "Qty invalid",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780249158289
+    },
+    "status": "success"
+  },
+  {
+    "id": "2df3f6a3-81ec-4ef6-8a3f-f77112a7ee10",
+    "timestamp": "2026-06-01T03:14:12.354424+00:00",
+    "action": "place_order",
+    "symbol": "LINKUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "price": null,
+      "stopLoss": null,
+      "takeProfit": null,
+      "trailingStop": "0.0",
+      "orderLinkId": "client_001",
+      "triggerPrice": null,
+      "triggerBy": "0",
+      "tpOrderType": "NONE",
+      "slOrderType": "NONE"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "d54a0b26-cca1-45a9-b85c-cbd326494033",
+    "timestamp": "2026-06-01T03:15:52.850203+00:00",
+    "action": "place_order",
+    "symbol": "LINKUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "profit_goal": "1.0"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "54537e6a-49bb-476e-bdee-b07ff520d156",
+    "timestamp": "2026-06-01T03:28:30.394164+00:00",
+    "action": "place_order",
+    "symbol": "LINKUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "profit_goal": "1.0"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "484132b0-4d14-4bab-a0f6-1f91c8f10f23",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780284510530
+    },
+    "status": "success"
+  },
+  {
+    "id": "a9f4f8a8-8bde-45b5-826d-d35c7b780b39",
+    "timestamp": "2026-06-01T03:31:56.632406+00:00",
+    "action": "place_order",
+    "symbol": "LINKUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "LINKUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "4.0",
+      "timeInForce": "GTC",
+      "profit_goal": "1.0"
+    },
+    "result": {
+      "retCode": 0,
+      "retMsg": "OK",
+      "result": {
+        "orderId": "6f490235-2817-45f7-89c5-7383f4fbc40e",
+        "orderLinkId": ""
+      },
+      "retExtInfo": {},
+      "time": 1780284716772
+    },
+    "status": "success"
+  },
+  {
+    "id": "edee592a-bb62-4d39-80e4-87faad3a89c8",
+    "timestamp": "2026-06-02T02:43:40.657847+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "1000.0",
+      "timeInForce": "GTC",
+      "price": "0.2267",
+      "stopLoss": "0.2265",
+      "takeProfit": "0.2268",
+      "orderLinkId": "confirm_ada_001",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "8dd9c7e1-379c-4888-9ea5-a0dcf81c69f1",
+    "timestamp": "2026-06-02T02:44:20.716614+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "price": "0.2267",
+      "stopLoss": "0.2265",
+      "takeProfit": "0.2268",
+      "orderLinkId": "confirm_ada_001",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "ff9b83c9-6203-40c9-a56f-e2293b8e1f15",
+    "timestamp": "2026-06-02T02:44:47.153003+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "price": "0.2267",
+      "orderLinkId": "confirm_ada_001"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "35604af6-6f04-45a0-a8d4-9d0216d00586",
+    "timestamp": "2026-06-02T02:45:10.064461+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "0.01",
+      "timeInForce": "GTC",
+      "price": "0.2267",
+      "stopLoss": "0.2265",
+      "takeProfit": "0.2268",
+      "orderLinkId": "confirm_ada_001",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "d47e2fe8-724c-45ed-8f49-13507b1ca37e",
+    "timestamp": "2026-06-02T03:07:11.233812+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "21.958717610891522",
+      "timeInForce": "GTC",
+      "price": "0.2277",
+      "stopLoss": "0.2274",
+      "takeProfit": "0.228",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_ada_001",
+      "triggerPrice": "",
+      "triggerBy": "",
+      "tpOrderType": "TakeProfit",
+      "slOrderType": "StopLoss"
+    },
+    "result": {
+      "retCode": 170137,
+      "retMsg": "Order quantity has too many decimals.",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780369631537
+    },
+    "status": "success"
+  },
+  {
+    "id": "06ec4fa2-c401-4d0a-9d33-9e938e55934b",
+    "timestamp": "2026-06-02T03:07:29.753291+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "21.958717610891522",
+      "timeInForce": "GTC",
+      "price": "0.2277",
+      "stopLoss": "0.2274",
+      "takeProfit": "0.228",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_ada_001",
+      "triggerPrice": "",
+      "triggerBy": "",
+      "tpOrderType": "TakeProfit",
+      "slOrderType": "StopLoss"
+    },
+    "result": {
+      "retCode": 170137,
+      "retMsg": "Order quantity has too many decimals.",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780369650064
+    },
+    "status": "success"
+  },
+  {
+    "id": "ec18f9ec-f50a-47de-86e0-5be766ad5992",
+    "timestamp": "2026-06-02T03:07:47.436150+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "21.958717610891522",
+      "timeInForce": "GTC",
+      "price": "0.2277",
+      "stopLoss": "0.2274",
+      "takeProfit": "0.228",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_ada_001",
+      "triggerPrice": "",
+      "triggerBy": "",
+      "tpOrderType": "TakeProfit",
+      "slOrderType": "StopLoss"
+    },
+    "result": {
+      "retCode": 170137,
+      "retMsg": "Order quantity has too many decimals.",
+      "result": {},
+      "retExtInfo": {},
+      "time": 1780369667725
+    },
+    "status": "success"
+  },
+  {
+    "id": "0e267b83-1423-4147-b8f0-b6903330ab27",
+    "timestamp": "2026-06-02T03:52:58.230279+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "22.0",
+      "timeInForce": "GTC",
+      "price": "0.2277",
+      "stopLoss": "0.2274",
+      "takeProfit": "0.2283",
+      "trailingStop": "0.0",
+      "orderLinkId": "client_001",
+      "triggerPrice": "0.2277",
+      "triggerBy": "price",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "code": 170322,
+      "msg": "Take-profit limit orders must include a specified limit order price."
+    },
+    "status": "failed"
+  },
+  {
+    "id": "d664f650-709e-473b-ad19-e8a6432b90fd",
+    "timestamp": "2026-06-02T04:43:36.255254+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "22",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "0.2274",
+      "stopLoss": "0.2272",
+      "takeProfit": "0.2276",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_001",
+      "triggerPrice": "0.0000",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "TriggerDirection invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "332e6946-3151-460e-8911-5145609c85a3",
+    "timestamp": "2026-06-02T04:44:18.207247+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "22",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "0.2274",
+      "stopLoss": "0.0000",
+      "takeProfit": "0.0000",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_001",
+      "triggerPrice": "0.0000"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "TriggerDirection invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "a2a2838a-9789-4db3-820e-6c08a218762a",
+    "timestamp": "2026-06-02T04:45:20.636702+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "22",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "0.2274",
+      "stopLoss": "0.0000",
+      "takeProfit": "0.0000",
+      "trailingStop": "0.0",
+      "orderLinkId": "confirm_001",
+      "triggerPrice": "0.2274",
+      "triggerBy": "price"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "TriggerDirection invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "f36b2553-b758-4f40-958c-6a69bda85254",
+    "timestamp": "2026-07-21T19:49:33.934448+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "28.75215641173088",
+      "timeInForce": "GTC",
+      "reduceOnly": false
+    },
+    "result": {
+      "status": "error",
+      "code": 170148,
+      "msg": "Market order amount decimal too long"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "f13159aa-11cb-44ff-ba8c-fd5a2040435c",
+    "timestamp": "2026-07-21T21:10:03.814647+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "spot",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "500.0",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "0.0100",
+      "trailingStop": "0.0",
+      "orderLinkId": "client_oid_1",
+      "triggerPrice": "0.0000",
+      "triggerBy": "0",
+      "tpOrderType": "0",
+      "slOrderType": "0"
+    },
+    "result": {
+      "status": "error",
+      "code": 170131,
+      "msg": "Insufficient balance."
+    },
+    "status": "failed"
+  },
+  {
+    "id": "afc4eb02-c41c-48a5-b717-d6ecdaccd1e4",
+    "timestamp": "2026-07-21T21:11:40.187846+00:00",
+    "action": "place_order",
+    "symbol": "ADAUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "ADAUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "13",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "0.3800",
+      "stopLoss": "0.3000",
+      "takeProfit": "0.4800",
+      "orderLinkId": "client_oid_1",
+      "triggerPrice": "0.0000",
+      "triggerBy": "0",
+      "tpOrderType": "Limit",
+      "slOrderType": "Limit"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "TriggerDirection invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "cd029286-a80f-461f-b5c5-83b894bc01d3",
+    "timestamp": "2026-07-23T07:23:50.953030+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "0.001",
+      "timeInForce": "GTC",
+      "price": "65428.6",
+      "stopLoss": "62928.6",
+      "takeProfit": "70428.6"
+    },
+    "result": {
+      "status": "error",
+      "code": 110007,
+      "msg": "ab not enough for new order"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "1bde7ec6-9d3d-4603-a155-5a22323a0325",
+    "timestamp": "2026-08-17T15:09:42.576541+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Limit",
+      "qty": "1",
+      "timeInForce": "GTC",
+      "reduceOnly": false,
+      "price": "63000.0"
+    },
+    "result": {
+      "status": "error",
+      "code": 10003,
+      "msg": "API key is invalid."
+    },
+    "status": "failed"
+  }
+]

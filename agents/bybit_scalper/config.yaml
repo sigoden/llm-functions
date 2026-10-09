@@ -1,0 +1,26 @@
+model: openai:gpt-4o
+temperature: 0.05
+top_p: 0.85
+
+use_tools: "fs,bybit_scalper"
+agent_prelude: "bybit_scalper_session"
+
+variables:
+  default_symbol: "SOLUSDT"
+  default_leverage: "10"
+  target_micro_profit: "0.10"
+  max_spread_pct: "0.035"
+  max_notional_usdt: "100"
+  max_account_risk_pct: "0.50"
+  max_daily_loss_usdt: "5"
+  max_open_positions: "1"
+  cooldown_seconds: "60"
+  min_reward_risk: "1.25"
+  maker_fee_pct: "0.020"
+  taker_fee_pct: "0.055"
+  use_testnet: "true"
+  live_trading_enabled: "false"
+  allow_live_trading: "false"
+  live_confirmation_token: "I_UNDERSTAND_LIVE_RISK"
+  position_mode: "auto"
+  trigger_by: "MarkPrice"

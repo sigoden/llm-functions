@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 set -e
 
 # @describe Read the contents of a file at the specified path.
@@ -6,10 +6,10 @@ set -e
 
 # @option --path! The path of the file to read
 
-# @env LLM_OUTPUT=/dev/stdout The output path
+# @env LLM_OUTPUT=/dev/fd/1 The output path
 
 main() {
-    cat "$argc_path" >> "$LLM_OUTPUT"
+    cat "$argc_path"
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

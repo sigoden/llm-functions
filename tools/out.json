@@ -1,0 +1,25 @@
+{
+  "symbol": "BTCUSDT",
+  "side": "sell",
+  "quantity": 1,
+  "entry_price": 50000.0,
+  "spread": 10.0,
+  "target_profit_usdt": 5.0,
+  "leverage": 1,
+  "exit_price": 50005.0,
+  "risk_reward_ratio": 2.0,
+  "kelly_win_rate": 0.55,
+  "risk_amount_usdt": 42.5,
+  "bids": [
+    {
+      "price": 50000.0,
+      "qty": 0.1
+    }
+  ],
+  "asks": [
+    {
+      "price": 50010.0,
+      "qty": 0.1
+    }
+  ]
+}

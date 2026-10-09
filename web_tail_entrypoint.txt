@@ -1,0 +1,100 @@
+    parser.add_argument("--region",   default=DEFAULT_REGION,
+                        help=f"Region code (default: {DEFAULT_REGION})")
+    parser.add_argument("--lang",     default=DEFAULT_LANG,
+                        help=f"Language code (default: {DEFAULT_LANG})")
+    parser.add_argument("--searx-url", default=DEFAULT_SEARX_URL, dest="searx_url",
+                        help=f"Searx instance URL (default: {DEFAULT_SEARX_URL})")
+    parser.add_argument("--max-crawl-size", type=int, default=DEFAULT_MAX_CRAWL_SIZE,
+                        dest="max_crawl_size",
+                        help=f"Max crawl page size bytes (default: {DEFAULT_MAX_CRAWL_SIZE})")
+
+    # Flags
+    parser.add_argument("--crawl",      action="store_true",
+                        help="Fetch and extract content from result URLs")
+    parser.add_argument("--download",   action="store_true",
+                        help="Download files from result URLs")
+    parser.add_argument("--verbose","-v", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("--no-robots",  action="store_true", dest="no_robots",
+                        help="Ignore robots.txt")
+    parser.add_argument("--json",       action="store_true", dest="json_output",
+                        help="Force JSON output mode")
+    parser.add_argument("--quiet",      action="store_true",
+                        help="Suppress status messages")
+    parser.add_argument("--no-verify",  action="store_true", dest="no_verify",
+                        help="Disable SSL certificate verification")
+    parser.add_argument("--dedupe",     action="store_true",
+                        help="Remove duplicate URLs from results")
+    parser.add_argument("--no-anti-bot", action="store_true", dest="no_anti_bot",
+                        help="Disable enhanced anti-bot detection features")
+    parser.add_argument("--proxy-rotation", action="store_true", dest="proxy_rotation",
+                        help="Enable proxy rotation for anti-bot evasion")
+
+    return parser
+
+
+def _search_brave(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query Brave Search API (requires API key).
+    
+    This is a placeholder implementation - would need API key integration.
+    """
+    logger.warning("Brave search backend not yet implemented")
+    return []
+
+# ==============================================================================
+# SECTION 12: Entry point
+# ==============================================================================
+
+# ... (previous code) ...
+
+# ==============================================================================
+# SECTION 12: Entry point
+# ==============================================================================
+
+def run(
+    # ... (parameters for run function) ...
+) -> Dict[str, Any]:
+    # ... (function body) ...
+    pass # Placeholder for brevity, actual function body is complex
+
+# Ensure the script's entry point is the 'run' function
+if __name__ == "__main__":
+    import argparse
+
+    _parser = _build_parser()
+    _cli    = _parser.parse_args()
+
+    _result = run(
+        query          = _cli.query,
+        limit          = _cli.limit,
+        backend        = _cli.backend,
+        format         = _cli.format,
+        output         = _cli.output,
+        type           = _cli.type,
+        depth          = _cli.depth,
+        timeout        = _cli.timeout,
+        delay          = _cli.delay,
+        proxy          = _cli.proxy,
+        user_agent     = _cli.user_agent,
+        header         = _cli.header or [],
+        content_length = _cli.content_length,
+        threads        = _cli.threads,
+        safe           = _cli.safe,
+        region         = _cli.region,
+        lang           = _cli.lang,
+        searx_url      = _cli.searx_url,
+        max_crawl_size = _cli.max_crawl_size,
+        crawl          = _cli.crawl,
+        download       = _cli.download,
+        verbose        = _cli.verbose,
+        no_robots      = _cli.no_robots,
+        json_output    = _cli.json_output,
+        quiet          = _cli.quiet,
+        no_verify      = _cli.no_verify,
+        dedupe         = _cli.dedupe,
+        no_anti_bot    = _cli.no_anti_bot,
+        proxy_rotation = _cli.proxy_rotation,
+    )
+
+    sys.exit(0 if _result.get("success") else 1)

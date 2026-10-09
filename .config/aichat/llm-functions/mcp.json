@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "web-search": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/web-search/build/index.js"],
+      "prefix": true
+    }
+  }
+}

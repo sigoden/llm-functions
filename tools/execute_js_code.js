@@ -1,5 +1,5 @@
 /**
- * Execute the javascript code in node.js.
+ * @describe Execute the javascript code in node.js.
  * @typedef {Object} Args
  * @property {string} code - Javascript code to execute, such as `console.log("hello world")`
  * @param {Args} args
@@ -12,11 +12,15 @@ exports.run = function ({ code }) {
     if (callback) callback();
   };
 
-  const value = eval(code);
-  if (value !== undefined) {
-    output += value;
+  try {
+    const value = eval(code);
+    if (value !== undefined) {
+      output += value;
+    }
+  } catch (err) {
+    output += err.stack || err.message;
   }
 
   process.stdout.write = oldStdoutWrite;
   return output;
-}
+};

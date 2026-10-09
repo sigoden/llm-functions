@@ -1,0 +1,8 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+
+if [[ -f "/data/data/com.termux/files/home/.config/aichat/llm-functions/.venv/bin/activate" ]]; then
+    source "/data/data/com.termux/files/home/.config/aichat/llm-functions/.venv/bin/activate"
+fi
+
+python "/data/data/com.termux/files/home/.config/aichat/llm-functions/scripts/run-tool.py" "$(basename "$0")" "$@"

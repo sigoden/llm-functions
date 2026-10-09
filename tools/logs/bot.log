@@ -1,0 +1,37 @@
+2026-07-01 05:02:52,610 [INFO] Created default config.yaml
+2026-07-01 05:02:52,618 [INFO] 🚀 Starting Pyrmethus Protocol…
+2026-07-01 05:02:52,712 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.63.236.149:5000
+2026-07-01 05:02:52,712 [INFO] [33mPress CTRL+C to quit[0m
+2026-07-06 11:52:46,089 [INFO] 🚀 Starting Pyrmethus Protocol…
+2026-07-06 11:52:46,231 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.63.236.149:5000
+2026-07-06 11:52:46,232 [INFO] [33mPress CTRL+C to quit[0m
+2026-07-06 12:51:45,678 [INFO] Received message from David Gokhshtein | group= isGroup=False datetime=1783360297753 appId=com.twitter.android pattern=['*']
+2026-07-06 12:51:45,686 [INFO] Received message from David Gokhshtein | group= isGroup=False datetime=1783360297753 appId=com.twitter.android pattern=['*']
+2026-07-06 12:51:45,788 [INFO] Chat history length for David Gokhshtein: 5/5
+2026-07-06 12:51:45,791 [INFO] Chat history length for David Gokhshtein: 5/5
+2026-07-06 12:51:45,932 [INFO] Received message from David Gokhshtein | group= isGroup=False datetime=1783360299955 appId=com.twitter.android pattern=['*']
+2026-07-06 12:51:45,943 [INFO] Received message from David Gokhshtein | group= isGroup=False datetime=1783360299955 appId=com.twitter.android pattern=['*']
+2026-07-06 12:51:45,945 [INFO] Chat history length for David Gokhshtein: 5/5
+2026-07-06 12:51:45,954 [INFO] Chat history length for David Gokhshtein: 5/5
+2026-07-06 12:51:48,185 [INFO] Sender: David Gokhshtein | Sent: Saylor’s Strategy sells Bitcoin - Markets reacted positively. | Received: been so busy lol. we'll chat later for sure!
+2026-07-06 12:51:48,193 [INFO] 127.0.0.1 - - [06/Jul/2026 12:51:48] "POST /pyrmethus_autoreply_webhook HTTP/1.1" 200 -
+2026-07-06 12:51:48,371 [INFO] Sender: David Gokhshtein | Sent: Saylor’s Strategy sells Bitcoin - Markets reacted positively. | Received: g2g but hit me up later!
+2026-07-06 12:51:48,373 [INFO] 127.0.0.1 - - [06/Jul/2026 12:51:48] "POST /pyrmethus_autoreply_webhook HTTP/1.1" 200 -
+2026-07-06 12:51:50,262 [INFO] Sender: David Gokhshtein | Sent: Are you bullish on crypto again! | Received: I need to go soon, talk to you later! 👋
+2026-07-06 12:51:50,265 [INFO] 127.0.0.1 - - [06/Jul/2026 12:51:50] "POST /pyrmethus_autoreply_webhook HTTP/1.1" 200 -
+2026-07-06 12:51:54,453 [INFO] Sender: David Gokhshtein | Sent: Are you bullish on crypto again! | Received: Yeah, I've been saying this! 😤
+
+When people start seeing dips as opportunities instead of running for the exits, that's when you know we've turned the corner. 
+
+The crowd went from panic to "I'll just buy more" real quick.
+
+That's the shift. The psychology flipped before the price did. The charts catch up — they always do.
+
+Are you positioned? 👀
+2026-07-06 12:51:54,457 [INFO] 127.0.0.1 - - [06/Jul/2026 12:51:54] "POST /pyrmethus_autoreply_webhook HTTP/1.1" 200 -

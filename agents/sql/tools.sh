@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 
 set -e
 
@@ -36,7 +36,7 @@ describe_table() {
 }
 
 _run_sql() {
-    usql "$LLM_AGENT_VAR_DSN" -c "$1" >> "$LLM_OUTPUT"
+    usql "$LLM_AGENT_VAR_DSN" -c "$1" >>> "$LLM_OUTPUT"1
 }
 
 # See more details at https://github.com/sigoden/argc

@@ -1,0 +1,11 @@
+{
+  "testnet": false,
+  "leverage": 5.0,
+  "target_profit_pct": 0.05,
+  "maker_fee": 0.0002,
+  "symbols": {
+    "LINKUSDT": {"qty": 1.0, "tick_size_fallback": 0.01},
+    "BTCUSDT": {"qty": 0.001, "tick_size_fallback": 0.1},
+    "ETHUSDT": {"qty": 0.01, "tick_size_fallback": 0.01}
+  }
+}

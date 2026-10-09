@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+echo "=== Termux Information ==="
+echo "Termux version: $(termux-info | grep 'Termux version' || echo 'unknown')"
+echo "Android version: $(getprop ro.build.version.release)"
+echo "Device: $(getprop ro.product.model)"
+echo "Arch: $(uname -m)"
+echo "Kernel: $(uname -r)"
+echo "Packages installed: $(dpkg -l | wc -l)"
+echo "Storage: $(df -h $HOME | tail -1 | awk '{print $2 " total, " $3 " used, " $4 " available"}')"

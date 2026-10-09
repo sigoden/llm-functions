@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 
 # Usage: ./run-tool.sh <tool-name> <tool-data>
 

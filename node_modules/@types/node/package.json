@@ -1,0 +1,59 @@
+{
+    "name": "@types/node",
+    "version": "6.14.13",
+    "description": "TypeScript definitions for Node.js",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Microsoft TypeScript",
+            "url": "https://github.com/Microsoft",
+            "githubUsername": "Microsoft"
+        },
+        {
+            "name": "DefinitelyTyped",
+            "url": "https://github.com/DefinitelyTyped",
+            "githubUsername": "DefinitelyTyped"
+        },
+        {
+            "name": "Wilco Bakker",
+            "url": "https://github.com/WilcoBakker",
+            "githubUsername": "WilcoBakker"
+        },
+        {
+            "name": "Thomas Bouldin",
+            "url": "https://github.com/inlined",
+            "githubUsername": "inlined"
+        },
+        {
+            "name": "Sebastian Silbermann",
+            "url": "https://github.com/eps1lon",
+            "githubUsername": "eps1lon"
+        },
+        {
+            "name": "Alorel",
+            "url": "https://github.com/Alorel",
+            "githubUsername": "Alorel"
+        },
+        {
+            "name": "Hoàng Văn Khải",
+            "url": "https://github.com/KSXGitHub",
+            "githubUsername": "KSXGitHub"
+        },
+        {
+            "name": "Sander Koenders",
+            "url": "https://github.com/Archcry",
+            "githubUsername": "Archcry"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/node"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "bc67298ac72ea3924d614c0dffa81f062cb2b94fee147c6d54cd8e62cd4326ca",
+    "typeScriptVersion": "3.2"
+}

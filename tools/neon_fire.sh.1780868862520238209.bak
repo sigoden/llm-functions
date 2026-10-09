@@ -1,0 +1,47 @@
+#!/bin/bash
+# ════════════════════════════════════════════════════════════════════
+#  NEON FIRE THEME - Warm Reds / Oranges / Yellows / Magenta
+# ════════════════════════════════════════════════════════════════════
+
+export CYBER_THEME="fire"
+
+# Fire Color Palette - Warm Tones
+export CYBER_PINK="\033[38;5;201m"    # Hot pink
+export CYBER_CYAN="\033[38;5;208m"   # Orange
+export CYBER_YELLOW="\033[38;5;226m" # Bright yellow
+export CYBER_ORANGE="\033[38;5;202m" # Red-orange
+export CYBER_RED="\033[38;5;196m"    # Bright red
+export CYBER_GREEN="\033[38;5;46m"   # Green (contrast)
+export CYBER_BLUE="\033[38;5;21m"     # Dark blue
+export CYBER_PURPLE="\033[38;5;129m" # Purple
+export CYBER_WHITE="\033[38;5;255m"  # White
+export CYBER_GRAY="\033[38;5;244m"   # Gray
+export CYBER_BG="\033[48;5;52m"      # Dark red bg
+
+# Block Characters - Bold/Fiery style
+export BLOCK_TL="┏"
+export BLOCK_TR="┓"
+export BLOCK_BL="┗"
+export BLOCK_BR="┛"
+export BLOCK_V="┃"
+export BLOCK_H="━"
+export BLOCK_DOT="●"
+
+# Header & UI
+export HEADER_TEXT=" 🔥 FIRE MODE "
+export ICON_SUCCESS="✓"
+export ICON_ERROR="✗"
+export ICON_WARNING="⚠"
+export ICON_INFO="ℹ"
+export ICON_CLOCK="⏱"
+export ICON_TAG="⚑"
+
+# Output path
+export LLM_OUTPUT="/dev/stdout"
+
+# Source the core engine
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/execute_command.sh"
+
+# Run sample command
+main "echo 'Feeling the heat...'"

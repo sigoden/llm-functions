@@ -1,0 +1,22 @@
+{
+  "name": "mcp-bridge",
+  "version": "1.0.0",
+  "description": "Let MCP tools be used by LLM functions",
+  "license": "MIT",
+  "author": "sigoden <sigoden@gmail.com>",
+  "homepage": "https://github.com/sigoden/llm-functions/tree/main/mcp/bridge",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sigoden/llm-functions.git",
+    "directory": "mcp/bridge"
+  },
+  "private": true,
+  "type": "module",
+  "bin": {
+    "mcp-bridge": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3",
+    "express": "^4.21.2"
+  }
+}

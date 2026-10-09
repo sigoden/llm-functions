@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "web-search": {
+      "command": "node",
+      "args": ["/data/data/com.termux/files/home/web-search/build/index.js"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "dummy_token"
+      }
+    }
+  }
+}

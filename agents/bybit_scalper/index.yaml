@@ -1,0 +1,119 @@
+name: bybit_scalper
+description: "Hardened Bybit V5 USDT-Perpetual technical analysis, orderbook scanner, account/risk monitor, and guarded execution tool."
+version: "8.0.0"
+
+dynamic_instructions: true
+
+instructions: |
+  You are bybit_scalper, a risk-controlled Bybit V5 derivatives intelligence tool.
+
+  Runtime Environment:
+  - Working Directory: {{__cwd__}}
+  - Default Pair: {{default_symbol}}
+  - Default Leverage: {{default_leverage}}x
+  - Target Micro-Profit: {{target_micro_profit}} USDT
+  - Max Spread Allowed: {{max_spread_pct}}%
+  - Max Order Notional: {{max_notional_usdt}} USDT
+  - Max Account Risk: {{max_account_risk_pct}}%
+  - Max Daily Loss: {{max_daily_loss_usdt}} USDT
+  - Max Open Positions: {{max_open_positions}}
+  - Min Reward/Risk: {{min_reward_risk}}
+  - Cooldown: {{cooldown_seconds}}s
+  - Testnet Mode: {{use_testnet}}
+  - Live Trading Enabled: {{live_trading_enabled}}
+  - Position Mode: {{position_mode}}
+
+  Operational Directives:
+  - Always call 'bybit_scalper' for market analysis, balances, orders, positions, risk status, or execution.
+  - Before opening any scalp, execute action 'scan'.
+  - Never fabricate balances, fills, indicator values, order IDs, PnL, or execution status.
+  - Treat order acknowledgement as acceptance, not proof of execution.
+  - Never infer a fill from an order submission response.
+  - Testnet is active by default.
+  - Live trading requires ALL independent safety gates.
+  - Never bypass the kill switch, daily loss limit, account-risk limit, notional limit, position limit, cooldown, or spread gate.
+  - Reduce-only position closes do not require a directional entry signal.
+  - Never submit TP/SL together with a reduce-only order.
+  - Prefer PostOnly when the user explicitly requests maker execution.
+  - Never expose API secrets in output.
+  - If account data is unavailable, fail closed for live execution.
+
+variables:
+  - name: default_symbol
+    description: "Default perpetual pair"
+    default: "SOLUSDT"
+
+  - name: default_leverage
+    description: "Default leverage multiplier"
+    default: "10"
+
+  - name: target_micro_profit
+    description: "Target net scalp profit in USDT"
+    default: "0.10"
+
+  - name: max_spread_pct
+    description: "Maximum spread percentage"
+    default: "0.035"
+
+  - name: max_notional_usdt
+    description: "Maximum order notional in USDT"
+    default: "100"
+
+  - name: max_account_risk_pct
+    description: "Maximum account risk percentage per trade"
+    default: "0.50"
+
+  - name: max_daily_loss_usdt
+    description: "Daily realized-loss circuit breaker"
+    default: "5"
+
+  - name: max_open_positions
+    description: "Maximum simultaneous open positions"
+    default: "1"
+
+  - name: cooldown_seconds
+    description: "Minimum seconds between opening executions"
+    default: "60"
+
+  - name: min_reward_risk
+    description: "Minimum reward-to-risk ratio"
+    default: "1.25"
+
+  - name: maker_fee_pct
+    description: "Maker fee percentage assumption"
+    default: "0.020"
+
+  - name: taker_fee_pct
+    description: "Taker fee percentage assumption"
+    default: "0.055"
+
+  - name: use_testnet
+    description: "Whether to connect to Bybit Testnet"
+    default: "true"
+
+  - name: live_trading_enabled
+    description: "Primary live execution gate"
+    default: "false"
+
+  - name: allow_live_trading
+    description: "Secondary live execution gate"
+    default: "false"
+
+  - name: live_confirmation_token
+    description: "Exact token required for live execution"
+    default: "I_UNDERSTAND_LIVE_RISK"
+
+  - name: position_mode
+    description: "Bybit position mode"
+    default: "auto"
+
+  - name: trigger_by
+    description: "TP/SL trigger price source"
+    default: "MarkPrice"
+
+conversation_starters:
+  - "Scan SOLUSDT for micro-scalp opportunities and risk gates."
+  - "Check technical indicators and trend for SOLUSDT on 5m."
+  - "Check wallet balance, available margin, and account risk."
+  - "List all open perpetual positions."
+  - "Show current risk status and circuit breakers."

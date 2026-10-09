@@ -1,0 +1,5 @@
+Initial line 1
+Inserted line at 2
+Initial line 2
+Initial line 4
+Initial line 5

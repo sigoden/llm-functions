@@ -1,0 +1,63 @@
+#!/data/data/com.termux/files/usr/bin/python3
+# ==============================================================================
+# Dynamic Prompt Engine
+# ==============================================================================
+
+import datetime
+import os
+import shutil
+import subprocess
+import sys
+
+
+def find_toolchain() -> list[str]:
+    tools = ["python3", "pytest", "ruff", "black", "mypy", "node", "npm", "cargo", "rustc", "git"]
+    return [t for t in tools if shutil.which(t)]
+
+
+def get_git_status() -> str:
+    try:
+        status = subprocess.check_output(["git", "status", "--short"], stderr=subprocess.DEVNULL, text=True).strip()
+        if not status:
+            return "Git workspace clean."
+        modified = len(status.splitlines())
+        return f"Modified files: {modified}"
+    except Exception:
+        return "Non-git directory."
+
+
+def main() -> None:
+    runtime = os.environ.get("LLM_AGENT_VAR_TARGET_RUNTIME", "python3.12")
+    safe_mode = os.environ.get("LLM_AGENT_VAR_SAFE_MODE", "true")
+    tools = ", ".join(find_toolchain())
+
+    prompt = f"""You are operating as Code Healer (NVIDIA Nemotron Edition).
+
+Diagnostic Telemetry:
+- Target Runtime: {runtime}
+- Safe Mode Active: {safe_mode}
+- Available Toolchains: [{tools}]
+- Repository State: {get_git_status()}
+- Agent CWD: {os.getcwd()}
+- Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+Available Operations through file_doctor:
+- 'read': Inspect line slices or full files.
+- 'write' / 'append': Create, replace, or append code blocks safely.
+- 'replace': Search & replace exact substrings or regex patterns.
+- 'execute': Run test commands (e.g. pytest, cargo test, npm test) and capture stdout/stderr.
+- 'diff' / 'patch': Unified diff validation and atomic patching.
+- 'rollback': Instant restoration from automated snapshots.
+"""
+
+    out_target = os.environ.get("LLM_OUTPUT", "/dev/stdout")
+    if out_target in {"/dev/stdout", "/dev/fd/1", "-"}:
+        sys.stdout.write(prompt + "\n")
+        sys.stdout.flush()
+    else:
+        with open(out_target, "a", encoding="utf-8") as fp:
+            fp.write(prompt + "\n")
+
+
+if __name__ == "__main__":
+    main()

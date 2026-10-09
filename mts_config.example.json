@@ -1,0 +1,46 @@
+{
+  "_comment": "Copy to $MCP_SANDBOX_ROOT/mts_config.json. Every key can also be set via the environment variable shown in MTS_README.md. Values here take precedence over env vars.",
+
+  "bind_host": "127.0.0.1",
+  "http_port": 8000,
+  "require_auth": true,
+  "api_token": "change-me-to-a-long-random-string",
+  "allow_token_in_query": false,
+  "cors_origin": "*",
+  "log_level": "INFO",
+
+  "enable_dangerous": false,
+  "allow_destructive_bash": false,
+  "allowed_bash_commands": ["echo", "cat", "head", "tail", "wc", "grep", "sed", "awk", "sort",
+                            "uniq", "cut", "tr", "date", "sleep", "ls", "pwd", "basename",
+                            "dirname", "stat", "find", "diff", "du", "df", "file", "which",
+                            "mkdir", "cp", "mv"],
+
+  "allow_private_networks": false,
+  "blocked_hosts": ["metadata.google.internal", "metadata.goog", "instance-data", "169.254.169.254"],
+  "http_timeout": 15,
+  "max_http_bytes": 2097152,
+  "max_download_bytes": 67108864,
+  "max_request_bytes": 2097152,
+  "max_text_chars": 64000,
+  "max_retry_attempts": 3,
+  "retry_backoff": 0.5,
+
+  "max_search_results": 50,
+  "search_engines": "auto",
+  "search_parallelism": 6,
+  "search_cache_ttl": 300,
+  "fetch_cache_ttl": 120,
+  "cache_max_entries": 512,
+
+  "brave_api_key": "",
+  "tavily_api_key": "",
+  "serpapi_key": "",
+  "google_api_key": "",
+  "google_cse_id": "",
+  "searxng_url": "",
+  "github_token": "",
+
+  "memory_file": "~/.mcp_memory.json",
+  "max_memory_bytes": 8388608
+}

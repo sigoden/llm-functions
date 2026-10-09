@@ -1,0 +1,90 @@
+#!/bin/bash
+# =============================================================================
+# update_system.sh
+# 
+# Updates your Android/HyperOS environment with a robust edit_tool
+# that works around the read-only erofs root filesystem.
+# 
+# Features:
+#   - Full v4.0 tool with all operations (read, write, replace, search, etc.)
+#   - Android-aware sandbox (/data, /storage, /mnt, /sdcard are allowed)
+#   - Installed to /data/local/tmp (writable location)
+#   - Wrapper for easy calling from aichat/agent framework
+# =============================================================================
+
+set -eo pipefail
+
+echo "=== Updating System & Installing Full edit_tool v4.0-android ==="
+
+INSTALL_DIR="/data/local/tmp"
+TOOL_PY="$INSTALL_DIR/edit_tool.py"
+WRAPPER="$INSTALL_DIR/edit_tool"
+CURRENT_DIR="$(pwd)"
+
+mkdir -p "$INSTALL_DIR"
+
+echo "Installing full-featured tool to $INSTALL_DIR..."
+
+cat > "$TOOL_PY" << 'EOF'
+#!/usr/bin/env python3
+"""File editing and manipulation tool - Android Optimized v4.0"""
+
+from __future__ import annotations
+
+import difflib
+import hashlib
+import json
+import logging
+import os
+import re
+import shutil
+import stat as stat_module
+import sys
+import tempfile
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional
+
+__version__ = "4.0-android"
+__all__ = ["run", "read", "write", "append", "replace", "list_dir", "file_search",
+           "diff", "info", "find_files", "grep_dir", "checksum", "head", "tail"]
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_MAX_READ = 10_485_760
+DEFAULT_MAX_WRITE = 104_857_600
+DEFAULT_ENCODING = "utf-8"
+MAX_BACKUPS = 5
+
+
+class AndroidFileEditor:
+    def __init__(self):
+        self.roots = [
+            Path("/data").resolve(),
+            Path("/storage").resolve(),
+            Path("/sdcard").resolve(),
+            Path("/mnt").resolve(),
+            Path.cwd().resolve(),
+            Path(__file__).parent.resolve(),
+            Path.home().resolve(),
+            Path("/tmp").resolve(),
+        ]
+        self.root_strs = [str(r) + os.sep for r in self.roots]
+        logger.debug("Android sandbox roots: %s", [str(r.name) for r in self.roots])
+
+    def _validate_path(self, file_path: str, allow_write: bool = True) -> Optional[Path]:
+        if not file_path or not isinstance(file_path, str):
+            return None
+
+        raw = Path(file_path)
+        if ".." in raw.parts:
+            logger.warning("Traversal blocked: %s", file_path)
+            return None
+
+        try:
+            path = raw.resolve()
+        except Exception:
+            return None
+
+        if not self._is_allowed(path):
+            logger.warning("Path outside sandbox: %s b

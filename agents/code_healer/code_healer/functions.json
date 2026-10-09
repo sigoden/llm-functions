@@ -1,0 +1,64 @@
+[
+  {
+    "name": "file_doctor",
+    "description": "Multi-function file surgeon: reads, writes, appends, replaces strings/regex, generates diffs, patches, checks syntax, executes shell/test commands, and rolls back backups.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "read",
+            "write",
+            "append",
+            "replace",
+            "diff",
+            "patch",
+            "syntax_check",
+            "execute",
+            "rollback"
+          ],
+          "description": "The file or execution operation to perform"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target file or directory path (resolves relative to agent workspace)"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content string for 'write', 'append', 'patch', or 'diff'"
+        },
+        "find": {
+          "type": "string",
+          "description": "Target substring or regex pattern for 'replace' action"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Replacement string for 'replace' action"
+        },
+        "is_regex": {
+          "type": "boolean",
+          "description": "Whether 'find' is a regular expression in 'replace' action (default: false)"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run for 'execute' action (e.g., 'pytest tests/', 'cargo check')"
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Command execution timeout in seconds (default: 30)"
+        },
+        "line_start": {
+          "type": "integer",
+          "description": "Start line number for 'read' action (1-indexed)"
+        },
+        "line_end": {
+          "type": "integer",
+          "description": "End line number for 'read' action (1-indexed)"
+        }
+      },
+      "required": ["action"]
+    },
+    "agent": true
+  }
+]

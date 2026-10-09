@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# @describe Smart Automated Scalper for ETHUSDT
+# @option --interval <SEC> Monitoring interval (default: 5)
+# @option --auto-trade <BOOL> Execute trades automatically (default: false)
+# @option --qty <QTY> Quantity to trade (default: 0.2)
+
+import time
+import json
+import argparse
+import bybit_core
+
+def get_market_metrics(bids, asks):
+    """Analyze orderbook depth and volume metrics."""
+    # Volume weighted average of top 10
+    buy_vol = sum(float(b[1]) for b in bids[:10])
+    sell_vol = sum(float(a[1]) for a in asks[:10])
+    
+    # Simple wall detection (> 50 size)
+    buy_walls = [b for b in bids if float(b[1]) > 50]
+    sell_walls = [a for a in asks if float(a[1]) > 50]
+    
+    return buy_vol, sell_vol, buy_walls, sell_walls
+
+def run(interval=5, auto_trade=False, qty="0.2"):
+    print(f"--- Monitoring ETHUSDT (Auto-Trade: {auto_trade}) ---")
+    while True:
+        try:
+            resp = bybit_core.api_request("GET", "/v5/market/orderbook", params={"category": "linear", "symbol": "ETHUSDT", "limit": 50})
+            if resp.get("retCode") == 0:
+                res = resp.get("result", {})
+                bids, asks = res.get("b", []), res.get("a", [])
+                
+                if bids and asks:
+                    buy_vol, sell_vol, b_walls, a_walls = get_market_metrics(bids, asks)
+                    price = float(bids[0][0])
+                    
+                    print(f"[{time.strftime('%H:%M:%S')}] P: {price} | B-Vol: {buy_vol:.2f} | S-Vol: {sell_vol:.2f}")
+                    
+                    # Strategy: Short if heavy sell walls + price nearing them, Long if heavy buy walls
+                    if auto_trade:
+                        if a_walls and float(a_walls[0][0]) < price + 0.3:
+                            print(">>> EXEC: Short triggered by sell wall")
+                            bybit_core.api_request("POST", "/v5/order/create", params={"category": "linear", "symbol": "ETHUSDT", "side": "Sell", "orderType": "Market", "qty": qty}, signed=True)
+                        elif b_walls and float(b_walls[0][0]) > price - 0.3:
+                            print(">>> EXEC: Long triggered by buy wall")
+                            bybit_core.api_request("POST", "/v5/order/create", params={"category": "linear", "symbol": "ETHUSDT", "side": "Buy", "orderType": "Market", "qty": qty}, signed=True)
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--interval", type=int, default=5)
+    parser.add_argument("--auto-trade", type=lambda x: str(x).lower() == "true", default=False)
+    parser.add_argument("--qty", default="0.2")
+    args = parser.parse_args()
+    run(args.interval, args.auto_trade, args.qty)

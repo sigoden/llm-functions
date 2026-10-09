@@ -1,0 +1,2 @@
+Line 1: Initial content\nLine 2: Updated content\nLine 3: Final content
+Line 4: Appended content\n

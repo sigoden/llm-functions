@@ -1,0 +1,1150 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:09:43 UTC         
+║  Last Price    : 63920.5000          Change    : N/A
+║  Mark Price    : 63913.3000              Index     : 63934.3400
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██████░░░░░░░░░░  42%  MILD BEAR FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63912.6000  /  63912.7000
+  │ Mid / Micro-Price      : 63912.6500  /  63912.6074
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ──────█████───────────  -0.504  [ASK HEAVY ▼]
+  │ Depth Bid / Ask        :        5.8  /        17.7
+  │ Depth Ratio @1%        : Bids 0.33x vs Asks
+  │   Depth ±0.1%          : Bid:     5.8  Ask:    17.7  Ratio:0.33x
+  │   Depth ±0.5%          : Bid:     5.8  Ask:    17.7  Ratio:0.33x
+  │   Depth ±1.0%          : Bid:     5.8  Ask:    17.7  Ratio:0.33x
+  │   Depth ±2.0%          : Bid:     5.8  Ask:    17.7  Ratio:0.33x
+  │ Slip Buy / Sell        : 0.63 bps  /  0.79 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0068%
+  │ Absorption Sup         : 63912.5000  ▲ Below Price
+  │ Absorption Res         : 63912.7000  ▲ Below Price
+  │   OB Support S1        : 63912.6500  (Vol: 5.8, -0.01%)
+  │   OB Resistance R1     : 63912.6500  (Vol: 17.7, +-0.01%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       1.03 @ 63904.6000  [0.025% below price]
+  │   Bid Wall #2          :       0.75 @ 63904.5000  [0.025% below price]
+  │   Bid Wall #3          :       0.74 @ 63908.3000  [0.019% below price]
+  │   Ask Wall #1          :       7.34 @ 63912.7000  [-0.012% above price]
+  │   Ask Wall #2          :       2.59 @ 63919.0000  [-0.002% above price]
+  │   Ask Wall #3          :       1.67 @ 63918.4000  [-0.003% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        3.9  /         3.4  Total:7.2
+  │ Flow Imbalance         : ──────────────────────  +0.070  [NEUTRAL]
+  │ Aggressor (20T)        : ───────────███████████  +1.000
+  │ Price Velocity         : +0.00397%
+  │ Large Trade Flow       : ───────────██─────────  +0.271  (7 whale trades)
+  │ Whale Buy/Sell Vol     :      1.7  /       1.0
+  │ Trades Sampled         : 200  Avg:0.036  Max:0.701
+  │ VPIN Proxy             : 0.6607  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 410 min remaining
+  │ Mark/Index Basis       : -0.03291%
+  │ Open Interest          :      56,704.74  ≈ $3,624.19M
+  │ OI Change              : -2.611%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.593  S:0.407  Net:+0.185
+  │ L/S Trend              : -0.0036  BALANCED
+  │ Volume 24H             :     114,786.38  Turnover: $7,203.5M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57841.5365  (9.51% below current price)
+  │   Shorts @10x          : 69985.0635  (9.49% above current price)
+  │   Longs @20x           : 61356.7680  (4.01% below current price)
+  │   Shorts @20x          : 66469.8320  (3.99% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: ASK-HEAVY -0.50 (sell pressure)
+  │  ⚑ Depth Ratio 1%: Asks 3.03x deeper than bids
+  │  ⚑ Bid Wall: 1.0 @ 63904.60 (support)
+  │  ⚑ Ask Wall: 7.3 @ 63912.70 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ VPIN: 0.661 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +1.00 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↑ Price + ↑ OI = TREND CONFIRMED
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:10:13 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63844.1600              Index     : 63866.2300
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██░░░░░░░░░░░░░░  18%  STRONG BEAR FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63860.3000  /  63860.4000
+  │ Mid / Micro-Price      : 63860.3500  /  63860.3036
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ────────███───────────  -0.311  [ASK HEAVY ▼]
+  │ Depth Bid / Ask        :       12.6  /        24.0
+  │ Depth Ratio @1%        : Bids 0.53x vs Asks
+  │   Depth ±0.1%          : Bid:    12.6  Ask:    24.0  Ratio:0.53x
+  │   Depth ±0.5%          : Bid:    12.6  Ask:    24.0  Ratio:0.53x
+  │   Depth ±1.0%          : Bid:    12.6  Ask:    24.0  Ratio:0.53x
+  │   Depth ±2.0%          : Bid:    12.6  Ask:    24.0  Ratio:0.53x
+  │ Slip Buy / Sell        : 0.70 bps  /  0.74 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0065%
+  │ Absorption Sup         : 63856.2000  ▲ Below Price
+  │ Absorption Res         : 63860.4000  ▲ Below Price
+  │   OB Support S1        : 63860.3500  (Vol: 12.6, -0.09%)
+  │   OB Resistance R1     : 63860.3500  (Vol: 24.0, +-0.09%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       3.57 @ 63853.7000  [0.105% below price]
+  │   Bid Wall #2          :       3.29 @ 63856.1000  [0.101% below price]
+  │   Bid Wall #3          :       1.54 @ 63855.1000  [0.102% below price]
+  │   Ask Wall #1          :      10.49 @ 63860.4000  [-0.094% above price]
+  │   Ask Wall #2          :       1.72 @ 63860.5000  [-0.094% above price]
+  │   Ask Wall #3          :       1.49 @ 63866.7000  [-0.084% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        0.0  /         3.8  Total:3.8
+  │ Flow Imbalance         : ─██████████───────────  -0.999  [TAKER SELL ▼]
+  │ Aggressor (20T)        : ███████████───────────  -1.000
+  │ Price Velocity         : +0.02296%
+  │ Large Trade Flow       : ███████████───────────  -1.000  (5 whale trades)
+  │ Whale Buy/Sell Vol     :      0.0  /       1.8
+  │ Trades Sampled         : 200  Avg:0.019  Max:0.773
+  │ VPIN Proxy             : 0.9991  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 409 min remaining
+  │ Mark/Index Basis       : -0.03456%
+  │ Open Interest          :      56,722.89  ≈ $3,621.43M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     114,850.51  Turnover: $7,207.6M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57778.9648  (9.61% below current price)
+  │   Shorts @10x          : 69909.3552  (9.37% above current price)
+  │   Longs @20x           : 61290.3936  (4.11% below current price)
+  │   Shorts @20x          : 66397.9264  (3.88% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: ASK-HEAVY -0.31 (sell pressure)
+  │  ⚑ Depth Ratio 1%: Asks 1.90x deeper than bids
+  │  ⚑ Bid Wall: 3.6 @ 63853.70 (support)
+  │  ⚑ Ask Wall: 10.5 @ 63860.40 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: -1.00 Taker Sell Dominated
+  │  ⚑ Large Trades: Whale Sell Pressure -1.00
+  │  ⚑ VPIN: 0.999 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: -1.00 Recent taker selling
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:10:41 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63795.0800              Index     : 63817.4900
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : █████████████░░░  85%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63791.4000  /  63791.5000
+  │ Mid / Micro-Price      : 63791.4500  /  63791.4707
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────███────────  +0.281  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       20.6  /        11.5
+  │ Depth Ratio @1%        : Bids 1.78x vs Asks
+  │   Depth ±0.1%          : Bid:    20.6  Ask:    11.5  Ratio:1.78x
+  │   Depth ±0.5%          : Bid:    20.6  Ask:    11.5  Ratio:1.78x
+  │   Depth ±1.0%          : Bid:    20.6  Ask:    11.5  Ratio:1.78x
+  │   Depth ±2.0%          : Bid:    20.6  Ask:    11.5  Ratio:1.78x
+  │ Slip Buy / Sell        : 0.84 bps  /  0.54 bps
+  │ Impact @$100k          : Buy:0.0063%  Sell:0.0001%
+  │ Absorption Sup         : 63791.4000  ▲ Below Price
+  │ Absorption Res         : 63795.1000  ▲ Below Price
+  │   OB Support S1        : 63791.4500  (Vol: 20.6, -0.20%)
+  │   OB Resistance R1     : 63791.4500  (Vol: 11.5, +-0.20%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       4.26 @ 63785.3000  [0.212% below price]
+  │   Bid Wall #2          :       4.25 @ 63786.5000  [0.210% below price]
+  │   Bid Wall #3          :       3.57 @ 63785.2000  [0.212% below price]
+  │   Ask Wall #1          :       2.52 @ 63797.7000  [-0.192% above price]
+  │   Ask Wall #2          :       1.41 @ 63795.5000  [-0.196% above price]
+  │   Ask Wall #3          :       1.20 @ 63799.0000  [-0.190% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        2.0  /         2.0  Total:4.0
+  │ Flow Imbalance         : ──────────────────────  -0.018  [NEUTRAL]
+  │ Aggressor (20T)        : ───────────████───────  +0.400
+  │ Price Velocity         : +0.02072%
+  │ Large Trade Flow       : ───────────███────────  +0.296  (10 whale trades)
+  │ Whale Buy/Sell Vol     :      1.3  /       0.7
+  │ Trades Sampled         : 200  Avg:0.020  Max:0.399
+  │ VPIN Proxy             : 0.6107  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 409 min remaining
+  │ Mark/Index Basis       : -0.03512%
+  │ Open Interest          :      56,730.63  ≈ $3,619.13M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     114,882.70  Turnover: $7,209.6M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57734.5474  (9.68% below current price)
+  │   Shorts @10x          : 69855.6126  (9.29% above current price)
+  │   Longs @20x           : 61243.2768  (4.19% below current price)
+  │   Shorts @20x          : 66346.8832  (3.80% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.28 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 1.78x deeper than asks
+  │  ⚑ Bid Wall: 4.3 @ 63785.30 (support)
+  │  ⚑ Ask Wall: 2.5 @ 63797.70 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ VPIN: 0.611 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.40 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:11:09 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63803.7000              Index     : 63823.6800
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : █████████████░░░  83%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63803.7000  /  63803.8000
+  │ Mid / Micro-Price      : 63803.7500  /  63803.7886
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────███████────  +0.712  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       37.0  /         6.2
+  │ Depth Ratio @1%        : Bids 5.95x vs Asks
+  │   Depth ±0.1%          : Bid:    37.0  Ask:     6.2  Ratio:5.95x
+  │   Depth ±0.5%          : Bid:    37.0  Ask:     6.2  Ratio:5.95x
+  │   Depth ±1.0%          : Bid:    37.0  Ask:     6.2  Ratio:5.95x
+  │   Depth ±2.0%          : Bid:    37.0  Ask:     6.2  Ratio:5.95x
+  │ Slip Buy / Sell        : 0.93 bps  /  0.62 bps
+  │ Impact @$100k          : Buy:0.0057%  Sell:0.0001%
+  │ Absorption Sup         : 63803.7000  ▲ Below Price
+  │ Absorption Res         : 63803.8000  ▲ Below Price
+  │   OB Support S1        : 63803.7500  (Vol: 37.0, -0.18%)
+  │   OB Resistance R1     : 63803.7500  (Vol: 6.2, +-0.18%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       9.20 @ 63803.7000  [0.183% below price]
+  │   Bid Wall #2          :       4.15 @ 63800.3000  [0.188% below price]
+  │   Bid Wall #3          :       3.56 @ 63798.3000  [0.191% below price]
+  │   Ask Wall #1          :       1.42 @ 63811.3000  [-0.171% above price]
+  │   Ask Wall #2          :       1.18 @ 63803.8000  [-0.183% above price]
+  │   Ask Wall #3          :       0.94 @ 63812.3000  [-0.169% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        1.9  /         2.8  Total:4.7
+  │ Flow Imbalance         : ─────────██───────────  -0.186  [TAKER SELL ▼]
+  │ Aggressor (20T)        : ──────────────────────  +0.025
+  │ Price Velocity         : -0.00429%
+  │ Large Trade Flow       : ──────────█───────────  -0.118  (6 whale trades)
+  │ Whale Buy/Sell Vol     :      1.2  /       1.5
+  │ Trades Sampled         : 200  Avg:0.024  Max:0.809
+  │ VPIN Proxy             : 0.7989  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 408 min remaining
+  │ Mark/Index Basis       : -0.03130%
+  │ Open Interest          :      56,710.64  ≈ $3,618.35M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     114,899.67  Turnover: $7,210.7M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57742.3485  (9.67% below current price)
+  │   Shorts @10x          : 69865.0515  (9.30% above current price)
+  │   Longs @20x           : 61251.5520  (4.18% below current price)
+  │   Shorts @20x          : 66355.8480  (3.81% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.71 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 5.95x deeper than asks
+  │  ⚑ Bid Wall: 9.2 @ 63803.70 (support)
+  │  ⚑ Ask Wall: 1.4 @ 63811.30 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ VPIN: 0.799 - ELEVATED (informed trading risk)
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:11:39 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63748.1000              Index     : 63766.2400
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ███████████░░░░░  72%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63741.0000  /  63741.1000
+  │ Mid / Micro-Price      : 63741.0500  /  63741.0985
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────████████───  +0.750  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       32.8  /         4.7
+  │ Depth Ratio @1%        : Bids 7.00x vs Asks
+  │   Depth ±0.1%          : Bid:    32.8  Ask:     4.7  Ratio:7.00x
+  │   Depth ±0.5%          : Bid:    32.8  Ask:     4.7  Ratio:7.00x
+  │   Depth ±1.0%          : Bid:    32.8  Ask:     4.7  Ratio:7.00x
+  │   Depth ±2.0%          : Bid:    32.8  Ask:     4.7  Ratio:7.00x
+  │ Slip Buy / Sell        : 0.86 bps  /  0.73 bps
+  │ Impact @$100k          : Buy:0.0089%  Sell:0.0001%
+  │ Absorption Sup         : 63741.0000  ▲ Below Price
+  │ Absorption Res         : 63745.8000  ▲ Below Price
+  │   OB Support S1        : 63741.0500  (Vol: 32.8, -0.28%)
+  │   OB Resistance R1     : 63741.0500  (Vol: 4.7, +-0.28%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       9.22 @ 63741.0000  [0.281% below price]
+  │   Bid Wall #2          :       3.74 @ 63738.0000  [0.286% below price]
+  │   Bid Wall #3          :       3.31 @ 63733.6000  [0.292% below price]
+  │   Ask Wall #1          :       0.94 @ 63748.3000  [-0.269% above price]
+  │   Ask Wall #2          :       0.76 @ 63748.1000  [-0.270% above price]
+  │   Ask Wall #3          :       0.76 @ 63746.0000  [-0.273% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        2.3  /         1.4  Total:3.7
+  │ Flow Imbalance         : ───────────██─────────  +0.257  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────████████───  +0.774
+  │ Price Velocity         : -0.01810%
+  │ Large Trade Flow       : ──────█████───────────  -0.492  (2 whale trades)
+  │ Whale Buy/Sell Vol     :      0.4  /       1.2
+  │ Trades Sampled         : 200  Avg:0.018  Max:1.177
+  │ VPIN Proxy             : 0.8918  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 408 min remaining
+  │ Mark/Index Basis       : -0.02845%
+  │ Open Interest          :      56,708.69  ≈ $3,615.07M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     114,953.90  Turnover: $7,214.2M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57692.0305  (9.74% below current price)
+  │   Shorts @10x          : 69804.1695  (9.20% above current price)
+  │   Longs @20x           : 61198.1760  (4.26% below current price)
+  │   Shorts @20x          : 66298.0240  (3.72% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.75 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 7.00x deeper than asks
+  │  ⚑ Bid Wall: 9.2 @ 63741.00 (support)
+  │  ⚑ Ask Wall: 0.9 @ 63748.30 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.26 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Sell Pressure -0.49
+  │  ⚑ VPIN: 0.892 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.77 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:12:09 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63750.1000              Index     : 63771.6100
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : █████████████░░░  85%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63740.5000  /  63740.6000
+  │ Mid / Micro-Price      : 63740.5500  /  63740.5967
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────███████────  +0.661  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       22.6  /         4.6
+  │ Depth Ratio @1%        : Bids 4.90x vs Asks
+  │   Depth ±0.1%          : Bid:    22.6  Ask:     4.6  Ratio:4.90x
+  │   Depth ±0.5%          : Bid:    22.6  Ask:     4.6  Ratio:4.90x
+  │   Depth ±1.0%          : Bid:    22.6  Ask:     4.6  Ratio:4.90x
+  │   Depth ±2.0%          : Bid:    22.6  Ask:     4.6  Ratio:4.90x
+  │ Slip Buy / Sell        : 1.00 bps  /  0.66 bps
+  │ Impact @$100k          : Buy:0.0107%  Sell:0.0001%
+  │ Absorption Sup         : 63740.5000  ▲ Below Price
+  │ Absorption Res         : 63743.8000  ▲ Below Price
+  │   OB Support S1        : 63740.5500  (Vol: 22.6, -0.28%)
+  │   OB Resistance R1     : 63740.5500  (Vol: 4.6, +-0.28%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :      10.35 @ 63740.5000  [0.282% below price]
+  │   Bid Wall #2          :       4.53 @ 63734.2000  [0.291% below price]
+  │   Ask Wall #1          :       0.94 @ 63750.4000  [-0.266% above price]
+  │   Ask Wall #2          :       0.70 @ 63749.1000  [-0.268% above price]
+  │   Ask Wall #3          :       0.69 @ 63747.4000  [-0.271% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        2.1  /         1.5  Total:3.5
+  │ Flow Imbalance         : ───────────█──────────  +0.178  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────███████████  +1.000
+  │ Price Velocity         : -0.01606%
+  │ Large Trade Flow       : ──────────────────────  -0.007  (7 whale trades)
+  │ Whale Buy/Sell Vol     :      0.8  /       0.8
+  │ Trades Sampled         : 200  Avg:0.018  Max:0.362
+  │ VPIN Proxy             : 0.7983  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 407 min remaining
+  │ Mark/Index Basis       : -0.03373%
+  │ Open Interest          :      56,709.38  ≈ $3,615.23M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     114,987.03  Turnover: $7,216.3M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57693.8405  (9.74% below current price)
+  │   Shorts @10x          : 69806.3595  (9.21% above current price)
+  │   Longs @20x           : 61200.0960  (4.26% below current price)
+  │   Shorts @20x          : 66300.1040  (3.72% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.66 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 4.90x deeper than asks
+  │  ⚑ Bid Wall: 10.3 @ 63740.50 (support)
+  │  ⚑ Ask Wall: 0.9 @ 63750.40 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ VPIN: 0.798 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +1.00 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:12:41 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63786.3000              Index     : 63806.8700
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██████████████░░  90%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63772.8000  /  63772.9000
+  │ Mid / Micro-Price      : 63772.8500  /  63772.8394
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────█████──────  +0.482  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       27.2  /         9.5
+  │ Depth Ratio @1%        : Bids 2.86x vs Asks
+  │   Depth ±0.1%          : Bid:    27.2  Ask:     9.5  Ratio:2.86x
+  │   Depth ±0.5%          : Bid:    27.2  Ask:     9.5  Ratio:2.86x
+  │   Depth ±1.0%          : Bid:    27.2  Ask:     9.5  Ratio:2.86x
+  │   Depth ±2.0%          : Bid:    27.2  Ask:     9.5  Ratio:2.86x
+  │ Slip Buy / Sell        : 0.94 bps  /  0.99 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0001%
+  │ Absorption Sup         : 63770.7000  ▲ Below Price
+  │ Absorption Res         : 63772.9000  ▲ Below Price
+  │   OB Support S1        : 63772.8500  (Vol: 27.2, -0.23%)
+  │   OB Resistance R1     : 63772.8500  (Vol: 9.5, +-0.23%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       5.72 @ 63763.2000  [0.246% below price]
+  │   Bid Wall #2          :       3.69 @ 63763.1000  [0.246% below price]
+  │   Bid Wall #3          :       2.48 @ 63766.7000  [0.241% below price]
+  │   Ask Wall #1          :       3.30 @ 63772.9000  [-0.231% above price]
+  │   Ask Wall #2          :       1.64 @ 63781.1000  [-0.218% above price]
+  │   Ask Wall #3          :       1.13 @ 63780.6000  [-0.219% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        3.0  /         0.5  Total:3.5
+  │ Flow Imbalance         : ───────────███████────  +0.715  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────██████████─  +0.977
+  │ Price Velocity         : -0.01602%
+  │ Large Trade Flow       : ───────────███████────  +0.682  (3 whale trades)
+  │ Whale Buy/Sell Vol     :      1.1  /       0.2
+  │ Trades Sampled         : 200  Avg:0.017  Max:0.957
+  │ VPIN Proxy             : 0.9096  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 407 min remaining
+  │ Mark/Index Basis       : -0.03224%
+  │ Open Interest          :      56,695.74  ≈ $3,616.41M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     115,009.67  Turnover: $7,217.8M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57726.6015  (9.69% below current price)
+  │   Shorts @10x          : 69845.9985  (9.27% above current price)
+  │   Longs @20x           : 61234.8480  (4.20% below current price)
+  │   Shorts @20x          : 66337.7520  (3.78% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.48 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 2.86x deeper than asks
+  │  ⚑ Bid Wall: 5.7 @ 63763.20 (support)
+  │  ⚑ Ask Wall: 3.3 @ 63772.90 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.71 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Buy Pressure +0.68
+  │  ⚑ VPIN: 0.910 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.98 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:13:09 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63824.4000              Index     : 63846.4200
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ████████░░░░░░░░  54%  NEUTRAL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63825.5000  /  63825.6000
+  │ Mid / Micro-Price      : 63825.5500  /  63825.5939
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────████████───  +0.728  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       39.4  /         6.2
+  │ Depth Ratio @1%        : Bids 6.36x vs Asks
+  │   Depth ±0.1%          : Bid:    39.4  Ask:     6.2  Ratio:6.36x
+  │   Depth ±0.5%          : Bid:    39.4  Ask:     6.2  Ratio:6.36x
+  │   Depth ±1.0%          : Bid:    39.4  Ask:     6.2  Ratio:6.36x
+  │   Depth ±2.0%          : Bid:    39.4  Ask:     6.2  Ratio:6.36x
+  │ Slip Buy / Sell        : 0.93 bps  /  0.80 bps
+  │ Impact @$100k          : Buy:0.0060%  Sell:0.0001%
+  │ Absorption Sup         : 63825.5000  ▲ Below Price
+  │ Absorption Res         : 63828.0000  ▲ Below Price
+  │   OB Support S1        : 63825.5500  (Vol: 39.4, -0.15%)
+  │   OB Resistance R1     : 63825.5500  (Vol: 6.2, +-0.15%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       7.49 @ 63825.5000  [0.149% below price]
+  │   Bid Wall #2          :       4.23 @ 63822.4000  [0.153% below price]
+  │   Bid Wall #3          :       3.62 @ 63816.2000  [0.163% below price]
+  │   Ask Wall #1          :       1.35 @ 63834.3000  [-0.135% above price]
+  │   Ask Wall #2          :       0.69 @ 63831.1000  [-0.140% above price]
+  │   Ask Wall #3          :       0.69 @ 63829.0000  [-0.143% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        0.3  /         2.8  Total:3.1
+  │ Flow Imbalance         : ───████████───────────  -0.792  [TAKER SELL ▼]
+  │ Aggressor (20T)        : ───────────█████████──  +0.818
+  │ Price Velocity         : +0.00354%
+  │ Large Trade Flow       : ───████████───────────  -0.805  (4 whale trades)
+  │ Whale Buy/Sell Vol     :      0.2  /       1.7
+  │ Trades Sampled         : 200  Avg:0.015  Max:0.796
+  │ VPIN Proxy             : 0.7427  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 406 min remaining
+  │ Mark/Index Basis       : -0.03449%
+  │ Open Interest          :      56,694.43  ≈ $3,618.49M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     115,040.20  Turnover: $7,219.7M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57761.0820  (9.64% below current price)
+  │   Shorts @10x          : 69887.7180  (9.34% above current price)
+  │   Longs @20x           : 61271.4240  (4.14% below current price)
+  │   Shorts @20x          : 66377.3760  (3.84% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.73 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 6.36x deeper than asks
+  │  ⚑ Bid Wall: 7.5 @ 63825.50 (support)
+  │  ⚑ Ask Wall: 1.3 @ 63834.30 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: -0.79 Taker Sell Dominated
+  │  ⚑ Large Trades: Whale Sell Pressure -0.81
+  │  ⚑ VPIN: 0.743 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.82 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:13:36 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63841.2000              Index     : 63860.8600
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ███████████░░░░░  72%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63841.2000  /  63841.3000
+  │ Mid / Micro-Price      : 63841.2500  /  63841.2690
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────██████─────  +0.587  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       28.7  /         7.5
+  │ Depth Ratio @1%        : Bids 3.84x vs Asks
+  │   Depth ±0.1%          : Bid:    28.7  Ask:     7.5  Ratio:3.84x
+  │   Depth ±0.5%          : Bid:    28.7  Ask:     7.5  Ratio:3.84x
+  │   Depth ±1.0%          : Bid:    28.7  Ask:     7.5  Ratio:3.84x
+  │   Depth ±2.0%          : Bid:    28.7  Ask:     7.5  Ratio:3.84x
+  │ Slip Buy / Sell        : 1.00 bps  /  0.78 bps
+  │ Impact @$100k          : Buy:0.0012%  Sell:0.0001%
+  │ Absorption Sup         : 63841.2000  ▲ Below Price
+  │ Absorption Res         : 63841.3000  ▲ Below Price
+  │   OB Support S1        : 63841.2500  (Vol: 28.7, -0.12%)
+  │   OB Resistance R1     : 63841.2500  (Vol: 7.5, +-0.12%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       4.52 @ 63832.8000  [0.137% below price]
+  │   Bid Wall #2          :       3.62 @ 63835.0000  [0.134% below price]
+  │   Bid Wall #3          :       3.43 @ 63841.2000  [0.124% below price]
+  │   Ask Wall #1          :       1.54 @ 63841.3000  [-0.124% above price]
+  │   Ask Wall #2          :       1.43 @ 63849.3000  [-0.111% above price]
+  │   Ask Wall #3          :       0.94 @ 63849.4000  [-0.111% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        1.1  /         0.7  Total:1.8
+  │ Flow Imbalance         : ───────────██─────────  +0.235  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────███████████  +1.000
+  │ Price Velocity         : -0.02813%
+  │ Large Trade Flow       : ────███████───────────  -0.637  (3 whale trades)
+  │ Whale Buy/Sell Vol     :      0.1  /       0.6
+  │ Trades Sampled         : 200  Avg:0.009  Max:0.434
+  │ VPIN Proxy             : 0.8723  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 406 min remaining
+  │ Mark/Index Basis       : -0.03079%
+  │ Open Interest          :      56,687.03  ≈ $3,618.97M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     115,054.29  Turnover: $7,220.6M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57776.2860  (9.61% below current price)
+  │   Shorts @10x          : 69906.1140  (9.36% above current price)
+  │   Longs @20x           : 61287.5520  (4.12% below current price)
+  │   Shorts @20x          : 66394.8480  (3.87% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.59 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 3.84x deeper than asks
+  │  ⚑ Bid Wall: 4.5 @ 63832.80 (support)
+  │  ⚑ Ask Wall: 1.5 @ 63841.30 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.23 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Sell Pressure -0.64
+  │  ⚑ VPIN: 0.872 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +1.00 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:14:16 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63830.2700              Index     : 63851.7300
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██████████████░░  90%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63840.8000  /  63840.9000
+  │ Mid / Micro-Price      : 63840.8500  /  63840.8666
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────█████──────  +0.467  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       24.3  /         8.8
+  │ Depth Ratio @1%        : Bids 2.75x vs Asks
+  │   Depth ±0.1%          : Bid:    24.3  Ask:     8.8  Ratio:2.75x
+  │   Depth ±0.5%          : Bid:    24.3  Ask:     8.8  Ratio:2.75x
+  │   Depth ±1.0%          : Bid:    24.3  Ask:     8.8  Ratio:2.75x
+  │   Depth ±2.0%          : Bid:    24.3  Ask:     8.8  Ratio:2.75x
+  │ Slip Buy / Sell        : 0.84 bps  /  0.75 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0001%
+  │ Absorption Sup         : 63840.8000  ▲ Below Price
+  │ Absorption Res         : 63840.9000  ▲ Below Price
+  │   OB Support S1        : 63840.8500  (Vol: 24.3, -0.12%)
+  │   OB Resistance R1     : 63840.8500  (Vol: 8.8, +-0.12%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       3.87 @ 63840.8000  [0.125% below price]
+  │   Bid Wall #2          :       3.57 @ 63834.8000  [0.134% below price]
+  │   Bid Wall #3          :       3.52 @ 63833.4000  [0.136% below price]
+  │   Ask Wall #1          :       1.95 @ 63840.9000  [-0.125% above price]
+  │   Ask Wall #2          :       1.42 @ 63848.2000  [-0.113% above price]
+  │   Ask Wall #3          :       1.19 @ 63848.5000  [-0.113% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        1.5  /         0.4  Total:1.9
+  │ Flow Imbalance         : ───────────██████─────  +0.554  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────██████████─  +0.959
+  │ Price Velocity         : -0.00548%
+  │ Large Trade Flow       : ───────────████████───  +0.785  (6 whale trades)
+  │ Whale Buy/Sell Vol     :      1.0  /       0.1
+  │ Trades Sampled         : 200  Avg:0.009  Max:0.276
+  │ VPIN Proxy             : 0.8297  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 405 min remaining
+  │ Mark/Index Basis       : -0.03361%
+  │ Open Interest          :      56,690.57  ≈ $3,618.57M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     115,062.77  Turnover: $7,221.2M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57766.3944  (9.63% below current price)
+  │   Shorts @10x          : 69894.1457  (9.35% above current price)
+  │   Longs @20x           : 61277.0592  (4.14% below current price)
+  │   Shorts @20x          : 66383.4808  (3.85% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.47 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 2.75x deeper than asks
+  │  ⚑ Bid Wall: 3.9 @ 63840.80 (support)
+  │  ⚑ Ask Wall: 1.9 @ 63840.90 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.55 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Buy Pressure +0.78
+  │  ⚑ VPIN: 0.830 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.96 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:14:45 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63841.6100              Index     : 63862.4900
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : █████████████░░░  85%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63849.9000  /  63850.0000
+  │ Mid / Micro-Price      : 63849.9500  /  63849.9023
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────█──────────  +0.155  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       21.7  /        15.9
+  │ Depth Ratio @1%        : Bids 1.37x vs Asks
+  │   Depth ±0.1%          : Bid:    21.7  Ask:    15.9  Ratio:1.37x
+  │   Depth ±0.5%          : Bid:    21.7  Ask:    15.9  Ratio:1.37x
+  │   Depth ±1.0%          : Bid:    21.7  Ask:    15.9  Ratio:1.37x
+  │   Depth ±2.0%          : Bid:    21.7  Ask:    15.9  Ratio:1.37x
+  │ Slip Buy / Sell        : 0.71 bps  /  1.03 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0056%
+  │ Absorption Sup         : 63844.0000  ▲ Below Price
+  │ Absorption Res         : 63850.0000  ▲ Below Price
+  │   OB Support S1        : 63849.9500  (Vol: 21.7, -0.11%)
+  │   OB Resistance R1     : 63849.9500  (Vol: 15.9, +-0.11%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       3.86 @ 63842.2000  [0.122% below price]
+  │   Bid Wall #2          :       3.56 @ 63842.1000  [0.123% below price]
+  │   Bid Wall #3          :       3.39 @ 63841.9000  [0.123% below price]
+  │   Ask Wall #1          :       4.62 @ 63850.0000  [-0.110% above price]
+  │   Ask Wall #2          :       2.88 @ 63856.1000  [-0.101% above price]
+  │   Ask Wall #3          :       2.12 @ 63856.0000  [-0.101% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        1.5  /         1.3  Total:2.8
+  │ Flow Imbalance         : ──────────────────────  +0.060  [NEUTRAL]
+  │ Aggressor (20T)        : ───────────███████████  +1.000
+  │ Price Velocity         : -0.01049%
+  │ Large Trade Flow       : ──────────────────────  -0.028  (12 whale trades)
+  │ Whale Buy/Sell Vol     :      0.7  /       0.7
+  │ Trades Sampled         : 200  Avg:0.014  Max:0.252
+  │ VPIN Proxy             : 0.8490  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 405 min remaining
+  │ Mark/Index Basis       : -0.03270%
+  │ Open Interest          :      56,692.15  ≈ $3,619.32M
+  │ OI Change              : -2.830%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.595  S:0.405  Net:+0.189
+  │ L/S Trend              : -0.0028  BALANCED
+  │ Volume 24H             :     115,062.39  Turnover: $7,221.2M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57776.6571  (9.61% below current price)
+  │   Shorts @10x          : 69906.5630  (9.36% above current price)
+  │   Longs @20x           : 61287.9456  (4.12% below current price)
+  │   Shorts @20x          : 66395.2744  (3.87% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.16 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 1.37x deeper than asks
+  │  ⚑ Bid Wall: 3.9 @ 63842.20 (support)
+  │  ⚑ Ask Wall: 4.6 @ 63850.00 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ VPIN: 0.849 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +1.00 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:15:22 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63841.6600              Index     : 63863.8200
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ███████░░░░░░░░░  45%  NEUTRAL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63841.5000  /  63841.6000
+  │ Mid / Micro-Price      : 63841.5500  /  63841.5800
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────██─────────  +0.265  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       18.0  /        10.5
+  │ Depth Ratio @1%        : Bids 1.72x vs Asks
+  │   Depth ±0.1%          : Bid:    18.0  Ask:    10.5  Ratio:1.72x
+  │   Depth ±0.5%          : Bid:    18.0  Ask:    10.5  Ratio:1.72x
+  │   Depth ±1.0%          : Bid:    18.0  Ask:    10.5  Ratio:1.72x
+  │   Depth ±2.0%          : Bid:    18.0  Ask:    10.5  Ratio:1.72x
+  │ Slip Buy / Sell        : 0.96 bps  /  0.76 bps
+  │ Impact @$100k          : Buy:0.0060%  Sell:0.0001%
+  │ Absorption Sup         : 63841.5000  ▲ Below Price
+  │ Absorption Res         : 63845.4000  ▲ Below Price
+  │   OB Support S1        : 63841.5500  (Vol: 18.0, -0.12%)
+  │   OB Resistance R1     : 63841.5500  (Vol: 10.5, +-0.12%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       3.63 @ 63841.5000  [0.124% below price]
+  │   Bid Wall #2          :       3.59 @ 63835.7000  [0.133% below price]
+  │   Bid Wall #3          :       2.57 @ 63835.9000  [0.132% below price]
+  │   Ask Wall #1          :       2.45 @ 63850.0000  [-0.110% above price]
+  │   Ask Wall #2          :       1.41 @ 63848.7000  [-0.112% above price]
+  │   Ask Wall #3          :       1.18 @ 63849.1000  [-0.112% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        0.4  /         1.3  Total:1.7
+  │ Flow Imbalance         : ─────██████───────────  -0.550  [TAKER SELL ▼]
+  │ Aggressor (20T)        : ███████████───────────  -1.000
+  │ Price Velocity         : +0.00470%
+  │ Large Trade Flow       : ███████████───────────  -1.000  (8 whale trades)
+  │ Whale Buy/Sell Vol     :      0.0  /       0.8
+  │ Trades Sampled         : 200  Avg:0.008  Max:0.146
+  │ VPIN Proxy             : 0.7693  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 404 min remaining
+  │ Mark/Index Basis       : -0.03470%
+  │ Open Interest          :      56,683.95  ≈ $3,618.80M
+  │ OI Change              : -2.820%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.594  S:0.406  Net:+0.187
+  │ L/S Trend              : -0.0016  BALANCED
+  │ Volume 24H             :     115,082.53  Turnover: $7,222.4M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57776.7023  (9.61% below current price)
+  │   Shorts @10x          : 69906.6177  (9.36% above current price)
+  │   Longs @20x           : 61287.9936  (4.12% below current price)
+  │   Shorts @20x          : 66395.3264  (3.87% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.26 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 1.72x deeper than asks
+  │  ⚑ Bid Wall: 3.6 @ 63841.50 (support)
+  │  ⚑ Ask Wall: 2.5 @ 63850.00 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: -0.55 Taker Sell Dominated
+  │  ⚑ Large Trades: Whale Sell Pressure -1.00
+  │  ⚑ VPIN: 0.769 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: -1.00 Recent taker selling
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:15:59 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63874.9000              Index     : 63888.2400
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██████████████░░  90%  STRONG BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63853.7000  /  63853.8000
+  │ Mid / Micro-Price      : 63853.7500  /  63853.7340
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ───────────██─────────  +0.198  [BID HEAVY ▲]
+  │ Depth Bid / Ask        :       17.5  /        11.7
+  │ Depth Ratio @1%        : Bids 1.49x vs Asks
+  │   Depth ±0.1%          : Bid:    17.5  Ask:    11.7  Ratio:1.49x
+  │   Depth ±0.5%          : Bid:    17.5  Ask:    11.7  Ratio:1.49x
+  │   Depth ±1.0%          : Bid:    17.5  Ask:    11.7  Ratio:1.49x
+  │   Depth ±2.0%          : Bid:    17.5  Ask:    11.7  Ratio:1.49x
+  │ Slip Buy / Sell        : 0.74 bps  /  0.79 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0021%
+  │ Absorption Sup         : 63852.4000  ▲ Below Price
+  │ Absorption Res         : 63853.8000  ▲ Below Price
+  │   OB Support S1        : 63853.7500  (Vol: 17.5, -0.10%)
+  │   OB Resistance R1     : 63853.7500  (Vol: 11.7, +-0.10%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       3.83 @ 63846.9000  [0.115% below price]
+  │   Bid Wall #2          :       2.09 @ 63845.9000  [0.117% below price]
+  │   Bid Wall #3          :       1.63 @ 63848.1000  [0.113% below price]
+  │   Ask Wall #1          :       2.59 @ 63859.8000  [-0.095% above price]
+  │   Ask Wall #2          :       2.34 @ 63859.9000  [-0.095% above price]
+  │   Ask Wall #3          :       2.15 @ 63853.8000  [-0.104% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        1.7  /         0.3  Total:2.0
+  │ Flow Imbalance         : ───────────███████────  +0.700  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────██████████─  +0.947
+  │ Price Velocity         : -0.01328%
+  │ Large Trade Flow       : ───────────███████████  +1.000  (9 whale trades)
+  │ Whale Buy/Sell Vol     :      1.1  /       0.0
+  │ Trades Sampled         : 200  Avg:0.010  Max:0.245
+  │ VPIN Proxy             : 0.8098  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 404 min remaining
+  │ Mark/Index Basis       : -0.02088%
+  │ Open Interest          :      56,682.93  ≈ $3,620.62M
+  │ OI Change              : -2.820%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.594  S:0.406  Net:+0.187
+  │ L/S Trend              : -0.0016  BALANCED
+  │ Volume 24H             :     115,104.66  Turnover: $7,223.9M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57806.7845  (9.56% below current price)
+  │   Shorts @10x          : 69943.0155  (9.42% above current price)
+  │   Longs @20x           : 61319.9040  (4.07% below current price)
+  │   Shorts @20x          : 66429.8960  (3.93% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: BID-HEAVY +0.20 (buy pressure)
+  │  ⚑ Depth Ratio 1%: Bids 1.49x deeper than asks
+  │  ⚑ Bid Wall: 3.8 @ 63846.90 (support)
+  │  ⚑ Ask Wall: 2.6 @ 63859.80 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.70 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Buy Pressure +1.00
+  │  ⚑ VPIN: 0.810 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.95 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEON MARKET TREND OBSERVATORY  v3.0  │  L2 + MICROSTRUCTURE FEED            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Timestamp     : 2026-07-06 17:16:31 UTC         
+║  Last Price    : 63920.5000          Change    : ─ 0.000%
+║  Mark Price    : 63861.3000              Index     : 63883.3200
+║  Regime        : STRONG UPTREND     
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TA Confluence  : ████████████████  100%  STRONG BULL
+║  L2 Flow Score  : ██████████░░░░░░  63%  MILD BULL FLOW
+
+╠─  ◈ A. ORDERBOOK MICROSTRUCTURE  ─────────────────────────────────────────────╣
+  │ Best Bid / Ask         : 63861.3000  /  63861.4000
+  │ Mid / Micro-Price      : 63861.3500  /  63861.3151
+  │ Spread                 : 0.1000  (0.02 bps)
+  │ OB Imbalance           : ────███████───────────  -0.674  [ASK HEAVY ▼]
+  │ Depth Bid / Ask        :        4.3  /        22.3
+  │ Depth Ratio @1%        : Bids 0.19x vs Asks
+  │   Depth ±0.1%          : Bid:     4.3  Ask:    22.3  Ratio:0.19x
+  │   Depth ±0.5%          : Bid:     4.3  Ask:    22.3  Ratio:0.19x
+  │   Depth ±1.0%          : Bid:     4.3  Ask:    22.3  Ratio:0.19x
+  │   Depth ±2.0%          : Bid:     4.3  Ask:    22.3  Ratio:0.19x
+  │ Slip Buy / Sell        : 0.61 bps  /  0.69 bps
+  │ Impact @$100k          : Buy:0.0001%  Sell:0.0015%
+  │ Absorption Sup         : 63861.3000  ▲ Below Price
+  │ Absorption Res         : 63861.4000  ▲ Below Price
+  │   OB Support S1        : 63861.3500  (Vol: 4.3, -0.09%)
+  │   OB Resistance R1     : 63861.3500  (Vol: 22.3, +-0.09%)
+
+╠─  ◈ A.2  WHALE WALLS  (Orders > 3× Average Size)  ────────────────────────────╣
+  │   Bid Wall #1          :       1.70 @ 63860.4000  [0.094% below price]
+  │   Bid Wall #2          :       0.78 @ 63861.3000  [0.093% below price]
+  │   Bid Wall #3          :       0.53 @ 63855.7000  [0.101% below price]
+  │   Ask Wall #1          :       6.40 @ 63863.9000  [-0.089% above price]
+  │   Ask Wall #2          :       4.36 @ 63861.4000  [-0.092% above price]
+  │   Ask Wall #3          :       2.42 @ 63867.4000  [-0.083% above price]
+
+╠─  ◈ B. TRADE FLOW & AGGRESSOR ANALYSIS  ──────────────────────────────────────╣
+  │ Taker Buy / Sell       :        5.9  /         3.2  Total:9.0
+  │ Flow Imbalance         : ───────────███────────  +0.296  [TAKER BUY ▲]
+  │ Aggressor (20T)        : ───────────██████████─  +0.993
+  │ Price Velocity         : -0.00285%
+  │ Large Trade Flow       : ───────────██████─────  +0.552  (10 whale trades)
+  │ Whale Buy/Sell Vol     :      3.8  /       1.1
+  │ Trades Sampled         : 200  Avg:0.045  Max:0.864
+  │ VPIN Proxy             : 0.7063  [HIGH - Informed Trader Risk]
+
+╠─  ◈ C. FUNDING RATE, OPEN INTEREST & SENTIMENT  ──────────────────────────────╣
+  │ Funding Rate           : +0.010000%  Annualized: +10.95%
+  │ Funding Bias           : NEUTRAL
+  │ Next Funding           : 403 min remaining
+  │ Mark/Index Basis       : -0.03447%
+  │ Open Interest          :      56,685.71  ≈ $3,620.02M
+  │ OI Change              : -2.820%  Trend: ↑ Growing
+  │ Long/Short Ratio       : ███████████░░░░░░░░░  L:0.594  S:0.406  Net:+0.187
+  │ L/S Trend              : -0.0016  BALANCED
+  │ Volume 24H             :     115,133.44  Turnover: $7,225.7M
+  │ 24H High / Low         : 63987.1000  /  61272.5000  Range: 4.43%
+
+╠─  ◈ C.2  ESTIMATED LIQUIDATION CASCADE ZONES  ────────────────────────────────╣
+  (Simplified estimates - not precise per-position liq. prices)
+  │   Longs @10x           : 57794.4765  (9.58% below current price)
+  │   Shorts @10x          : 69928.1235  (9.40% above current price)
+  │   Longs @20x           : 61306.8480  (4.09% below current price)
+  │   Shorts @20x          : 66415.7520  (3.90% above current price)
+
+╠─  ◈ D. L2 MICROSTRUCTURE SIGNAL NOTES  ───────────────────────────────────────╣
+  │  ⚑ OB Imbalance: ASK-HEAVY -0.67 (sell pressure)
+  │  ⚑ Depth Ratio 1%: Asks 5.14x deeper than bids
+  │  ⚑ Bid Wall: 1.7 @ 63860.40 (support)
+  │  ⚑ Ask Wall: 6.4 @ 63863.90 (resistance)
+  │  ⚑ Spread: 0.02bps - Tight (high liquidity)
+  │  ⚑ Trade Flow: +0.30 Taker Buy Dominated
+  │  ⚑ Large Trades: Whale Buy Pressure +0.55
+  │  ⚑ VPIN: 0.706 - ELEVATED (informed trading risk)
+  │  ⚑ Aggressor: +0.99 Recent taker buying
+  │  ⚑ OI Trend: Growing (new money entering market)
+  │  ⚑ L/S Ratio: Longs dominant +0.19 (contrarian bearish)
+  │  ⚑ OI/Price Signal: ↓ Price + ↑ OI = SHORT SQUEEZE RISK
+  │  ⚑ L/S Sentiment:   BALANCED
+
+==============================================================================

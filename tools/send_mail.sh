@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 set -e
 
 # @describe Send a email.
@@ -10,7 +10,7 @@ set -e
 # @env EMAIL_SMTP_USER! The SMTP User, e.g. alice@gmail.com
 # @env EMAIL_SMTP_PASS! The SMTP Password
 # @env EMAIL_SENDER_NAME The sender name
-# @env LLM_OUTPUT=/dev/stdout The output path
+# @env LLM_OUTPUT=/dev/fd/1 The output path
 
 main() {
     sender_name="${EMAIL_SENDER_NAME:-$(echo "$EMAIL_SMTP_USER" | awk -F'@' '{print $1}')}"
@@ -25,7 +25,7 @@ $argc_body" | \
         --mail-from "$EMAIL_SMTP_USER" \
         --mail-rcpt "$argc_recipient" \
         --upload-file -
-    echo "Email sent successfully" >> "$LLM_OUTPUT"
+    echo "Email sent successfully" >&1
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

@@ -1,0 +1,165 @@
+[
+  {
+    "id": "bd5b09e8-d191-4a8d-bc0f-561304d25571",
+    "timestamp": "2026-06-05T13:55:12.806744+00:00",
+    "action": "place_order",
+    "symbol": "DOTUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "DOTUSDT",
+      "side": "Sell",
+      "orderType": "Market",
+      "qty": "10.0",
+      "timeInForce": "GTC",
+      "price": "0.0",
+      "reduceOnly": true
+    },
+    "result": {
+      "status": "error",
+      "msg": "CIRCUIT_BREAKER_TRIPPED: Equity below threshold"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "23300a82-4881-4149-8daa-7f42de718ad1",
+    "timestamp": "2026-06-09T05:42:22.709858+00:00",
+    "action": "place_order",
+    "symbol": "LINKUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "LINKUSDT",
+      "side": "Sell",
+      "orderType": "Limit",
+      "qty": "1.0",
+      "timeInForce": "GTC",
+      "price": "7.99",
+      "stopLoss": "8.005",
+      "takeProfit": "7.975"
+    },
+    "result": {
+      "orderId": "240fb140-39c4-4a35-a3ee-1fd0274a5c67",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  },
+  {
+    "id": "33da70fe-62bc-43fe-892d-f0196c5ecc0d",
+    "timestamp": "2026-06-30T08:19:02.310629+00:00",
+    "action": "place_order",
+    "symbol": "XLMUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "XLMUSDT",
+      "side": "SELL",
+      "orderType": "MARKET",
+      "qty": "27",
+      "timeInForce": "GTC",
+      "reduceOnly": false
+    },
+    "result": {
+      "status": "error",
+      "code": 110094,
+      "msg": "Order does not meet minimum order value 5USDT"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "0ab22680-a04a-4ae8-8085-277b4371c065",
+    "timestamp": "2026-07-18T20:10:51.945670+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": null,
+      "orderType": "Market",
+      "qty": "0.902",
+      "timeInForce": "GTC",
+      "price": "8.3",
+      "stopLoss": "8.3",
+      "takeProfit": "8.3",
+      "orderLinkId": "ultra_micro_001",
+      "maker_fee": "0.001",
+      "target": "0.07",
+      "risk_reward": "0.14",
+      "profit_usdt": "0.07",
+      "iceberg_slices": "1",
+      "taker_fee": "0.001",
+      "kelly_win": "0.71"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "Side invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "1daddc62-3883-4453-9cc1-18f7781fb610",
+    "timestamp": "2026-07-18T20:11:19.140871+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "0.902",
+      "timeInForce": "GTC",
+      "price": "8.3",
+      "stopLoss": "8.3",
+      "takeProfit": "8.3",
+      "orderLinkId": "ultra_micro_001"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "PartialTakeProfit:83000 set for Buy position should be higher than base_price:645784000??LastPrice"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "e1aa1f22-dc25-490a-b7af-7d810c162dba",
+    "timestamp": "2026-07-18T20:11:51.677872+00:00",
+    "action": "place_order",
+    "symbol": "BTCUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "BTCUSDT",
+      "side": null,
+      "orderType": "Limit",
+      "qty": "0.902",
+      "timeInForce": "GTC",
+      "price": "1999999.8",
+      "stopLoss": "1999999.8",
+      "takeProfit": "1999999.8",
+      "orderLinkId": "ultra_micro_001"
+    },
+    "result": {
+      "status": "error",
+      "code": 10001,
+      "msg": "Side invalid"
+    },
+    "status": "failed"
+  },
+  {
+    "id": "e978f625-546c-4602-809d-c2f839520c4b",
+    "timestamp": "2026-07-28T14:00:06.302477+00:00",
+    "action": "place_order",
+    "symbol": "NEARUSDT",
+    "payload": {
+      "category": "linear",
+      "symbol": "NEARUSDT",
+      "side": "Buy",
+      "orderType": "Market",
+      "qty": "3",
+      "timeInForce": "GTC",
+      "reduceOnly": false
+    },
+    "result": {
+      "orderId": "869ea820-5173-4881-82a0-30173e7720b4",
+      "orderLinkId": ""
+    },
+    "status": "success"
+  }
+]

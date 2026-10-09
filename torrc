@@ -1,0 +1,64 @@
+# Tor configuration for Bybit API access with SOCKS5 proxy
+# Optimized for cryptocurrency trading platforms
+
+## Basic Tor Configuration
+SocksPort 9050
+ControlPort 9051
+CookieAuthentication 1
+CookieAuthFile tor_control_cookie
+
+## Network Configuration
+# Exit nodes in regions with better crypto exchange access
+ExitNodes {de},{nl},{ch},{se},{is},{ee},{lv}
+StrictNodes 1
+
+## Connection Optimization
+# Reduce timeouts for trading applications
+CircuitBuildTimeout 30
+CircuitIdleTimeout 300
+NewCircuitPeriod 60
+
+# Connection limits
+MaxClientCircuitsPending 48
+NumCPUs 4
+
+## SOCKS5 Configuration
+# Allow SOCKS5 connections
+SocksPolicy accept *
+SocksPort 9050 IsolateDestAddr IsolateDestPort
+
+## DNS Configuration
+# Use Tor's DNS resolver
+DNSPort 5353
+AutomapHostsOnResolve 1
+AutomapHostsSuffixes .exit,.onion
+
+## Performance Tuning
+# Bandwidth limits (adjust based on your connection)
+RelayBandwidthRate 1000 KB
+RelayBandwidthBurst 2000 KB
+
+# Keepalive settings
+KeepalivePeriod 600
+
+## Security Settings
+# Disable potentially problematic features
+UseEntryGuards 1
+NumEntryGuards 3
+
+## Logging
+Log notice file tor_notice.log
+Log info file tor_info.log
+
+## Directory Configuration
+DataDirectory tor_data
+
+## Bridge Configuration (if needed)
+# Uncomment and add bridges if direct connection fails
+#Bridge obfs4 1.2.3.4:1234 ABCDEF1234567890 cert=ABCDEFGHIJKLM+123456 iat-mode=0
+#UseBridges 1
+
+## Specific for Bybit API
+# Create dedicated circuits for Bybit domains
+LongLivedPorts 443
+CircuitStreamTimeout 60

@@ -1,0 +1,168 @@
+{
+  "key": "YDC_API_KEY",
+  "value": "ydc-sk-3be25b63a354f86f-...cZsqdcYZe3xHo2qxVUZxEmTI1wAzlfG8-23e9d3b8",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "api",
+    "you.com",
+    "authentication"
+  ],
+  "timestamp": "2026-05-04T07:42:27-05:00"
+}
+{
+  "key": "YDC_API_KEY",
+  "value": "ydc-sk-3be25b63a354f86f-qdcYZe3xHo2qxVUZxEmTI1wAzlfG8-23e9d3b8",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "api",
+    "you.com",
+    "authentication"
+  ],
+  "timestamp": "2026-05-04T07:43:49-05:00"
+}
+{
+  "key": "YOU_API_KEY",
+  "value": "ydc-sk-3be25b63a354f86f-qdcYZe3xHo2qxVUZxEmTI1wAzlfG8-23e9d3b8",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "api",
+    "you.com",
+    "authentication"
+  ],
+  "timestamp": "2026-05-04T07:44:23-05:00"
+}
+{
+  "key": "bybit_config",
+  "value": "{\"api_key\": \"qqnukht65yDsP1r79t\", \"api_secret\": \"bcM965FGtrPyDGivezYnScPoSUwKqXyiak4X\", \"testnet\": false, \"default_risk_usdt\": 50, \"default_profit_usdt\": 10, \"default_timeframe\": \"15\", \"min_trade_size_usdt\": 10, \"max_position_size_usdt\": 1000}",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "bybit",
+    "trading",
+    "config"
+  ],
+  "timestamp": "2026-05-05T23:10:33+00:00"
+}
+{
+  "key": "bybit_api_keys",
+  "value": "BYBIT_API_KEY=qqnukht65yDsP1r79t\nBYBIT_API_SECRET=bcM965FGtrPyDGivezYnScPoSUwKqXyiak4X\nBYBIT_TESTNET=false",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "bybit",
+    "api",
+    "credentials",
+    "trading"
+  ],
+  "timestamp": "2026-05-07T21:11:05+00:00"
+}
+{
+  "key": "bybit_credentials",
+  "value": "BYBIT_API_KEY=qqnukht65yDsP1r79t\nBYBIT_API_SECRET=bcM965FGtrPyDGivezYnScPoSUwKqXyiak4X\nBYBIT_TESTNET=false",
+  "type": "preference",
+  "session": "default",
+  "tags": [],
+  "timestamp": "2026-05-07T21:18:24+00:00"
+}
+{
+  "key": "bybit_api",
+  "value": "qqnukht65yDsP1r79t",
+  "type": "preference",
+  "session": "main",
+  "tags": [],
+  "timestamp": "2026-05-07T21:34:49+00:00"
+}
+{
+  "key": "bybit_secret",
+  "value": "bcM965FGtrPyDGivezYnScPoSUwKqXyiak4X",
+  "type": "preference",
+  "session": "main",
+  "tags": [],
+  "timestamp": "2026-05-07T21:34:51+00:00"
+}
+{
+  "key": "bybit_testnet",
+  "value": "false",
+  "type": "preference",
+  "session": "main",
+  "tags": [],
+  "timestamp": "2026-05-07T21:34:57+00:00"
+}
+{
+  "key": "torsocks_enabled",
+  "value": "true",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "torsocks",
+    "proxy",
+    "tor"
+  ],
+  "timestamp": "2026-05-08T02:56:24+00:00"
+}
+{
+  "key": "use_torsocks",
+  "value": "true",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "torsocks",
+    "proxy",
+    "tor"
+  ],
+  "timestamp": "2026-05-08T02:56:26+00:00"
+}
+{
+  "key": "trade_setup_linkusdt",
+  "value": "TRADE SETUP - LINKUSDT\nAction: Buy 10 LINK\nEntry Target: ~$10.16-$10.20 USDT\nTake Profit: $10.21-$10.25 USDT (+$0.05 target)\nPosition Value: ~$101.6-$102 USDT\nExpected P&L: +$0.50 USDT\nStatus: API connectivity issues preventing execution\nCurrent Price: $10.16 (CoinMarketCap)\nMarket Cap: $7.4B USD\n24h Volume: $734M USD\nRisk Level: Low (conservative target)\nNotes: Bybit API blocked due to geographic restrictions",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "trade",
+    "linkusdt",
+    "setup",
+    "pending"
+  ],
+  "timestamp": "2026-05-14T04:05:45+00:00"
+}
+{
+  "key": "final_trade_recommendation",
+  "value": "FINAL TRADE RECOMMENDATION - LINKUSDT\nStatus: READY FOR EXECUTION\nCurrent Price: $10.308-$10.309 USDT\nTarget Price: $10.359 USDT (+$0.05 profit)\nPosition Size: 10 LINK\nOrder Value: $103.09 USD\nExpected P&L: +$0.50 USD\nMarket Conditions: Excellent (0.01% spread, strong depth)\nAPI Status: Data access restored via TOR\nExecution Method: Manual web interface recommended\nRisk Assessment: Conservative - High probability of success\nTime Sensitivity: Market favorable for immediate execution\nStop Loss Recommended: $10.25 (1% risk)",
+  "type": "preference",
+  "session": "default",
+  "tags": [
+    "trade",
+    "final",
+    "linkusdt",
+    "ready"
+  ],
+  "timestamp": "2026-05-14T06:26:41+00:00"
+}
+{
+  "key": "BYBIT_API_KEY",
+  "value": "qqnukht65yDsP1r79t",
+  "type": "preference",
+  "session": "default",
+  "tags": [],
+  "timestamp": "2026-05-20T17:49:57+00:00"
+}
+{
+  "key": "BYBIT_API_SECRET",
+  "value": "bcM965FGtrPyDGivezYnScPoSUwKqXyiak4X",
+  "type": "preference",
+  "session": "default",
+  "tags": [],
+  "timestamp": "2026-05-20T17:49:59+00:00"
+}
+{
+  "key": "BYBIT_ENV",
+  "value": "mainnet",
+  "type": "preference",
+  "session": "default",
+  "tags": [],
+  "timestamp": "2026-05-20T17:50:01+00:00"
+}
+{"key": "user_shell", "value": "zsh", "type": "preference", "session": "default", "tags": ["shell", "environment"], "timestamp": "2026-07-31T04:16:56Z"}

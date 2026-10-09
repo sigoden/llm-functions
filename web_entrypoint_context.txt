@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# web_search.py — Advanced Web Search Tool v1.0.0
+# argc/aichat compatible · Multi-backend · Content extraction
+#
+# @describe Advanced web search tool supporting multiple backends with content
+#           crawling, downloading, and flexible output formatting.
+#
+# @option --query! <TEXT>                          Search query (required)
+# @option --limit <NUM>                            Maximum results to return (default: 10)
+# @option --backend <BACKEND>                      Search backend: ddg|bing|searx (default: ddg)
+# @option --format <FORMAT>                        Output format: json|jsonl|markdown|csv|tsv (default: json)
+# @option --output <FILE>                          Save results to file path
+# @option --type <TYPE>                            Search type: web|image|news (default: web)
+# @option --depth <NUM>                            Crawl depth for recursive crawling (default: 1)
+# @option --timeout <SECONDS>                      HTTP request timeout in seconds (default: 15)
+# @option --delay <SECONDS>                        Delay between requests in seconds (default: 1.0)
+# @option --proxy <URL>                            HTTP/HTTPS proxy URL
+# @option --user-agent <TEXT>                      Custom User-Agent string
+# @option --header <KEY:VALUE>                     Extra HTTP header (repeatable)
+# @option --content-length <NUM>                   Maximum content length per page (default: 3000)
+# @option --threads <NUM>                          Parallel crawl/download threads (default: 4)
+# @option --safe <LEVEL>                           Safe search: off|moderate|strict (default: moderate)
+# @option --region <CODE>                          Region/market code e.g. us-en (default: us-en)
+# @option --lang <CODE>                            Language code e.g. en-US (default: en-US)
+# @option --searx-url <URL>                        Custom Searx instance URL
+# @option --max-crawl-size <NUM>                   Max page size to crawl in bytes (default: 5242880)
+# @flag   --crawl                                  Fetch and extract content from result URLs
+# @flag   --download                               Download files from result URLs
+# @flag   --verbose                                Enable verbose/debug output
+# @flag   --no-robots                              Ignore robots.txt restrictions
+# @flag   --json                                   Force JSON output (no colors)
+# @flag   --quiet                                  Suppress status messages
+# @flag   --no-verify                              Disable SSL certificate verification
+# @flag   --dedupe                                 Remove duplicate URLs from results
+# @flag   --no-anti-bot                            Disable enhanced anti-bot detection features
+# @flag   --proxy-rotation                          Enable proxy rotation for anti-bot evasion
+#
+# @env LLM_OUTPUT=/dev/fd/1                        Output path for LLM integration
+# ==============================================================================
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import io
+import json
+import logging
+import os
+import re
+    parser.add_argument("--region",   default=DEFAULT_REGION,
+                        help=f"Region code (default: {DEFAULT_REGION})")
+    parser.add_argument("--lang",     default=DEFAULT_LANG,
+                        help=f"Language code (default: {DEFAULT_LANG})")
+    parser.add_argument("--searx-url", default=DEFAULT_SEARX_URL, dest="searx_url",
+                        help=f"Searx instance URL (default: {DEFAULT_SEARX_URL})")
+    parser.add_argument("--max-crawl-size", type=int, default=DEFAULT_MAX_CRAWL_SIZE,
+                        dest="max_crawl_size",
+                        help=f"Max crawl page size bytes (default: {DEFAULT_MAX_CRAWL_SIZE})")
+
+    # Flags
+    parser.add_argument("--crawl",      action="store_true",
+                        help="Fetch and extract content from result URLs")
+    parser.add_argument("--download",   action="store_true",
+                        help="Download files from result URLs")
+    parser.add_argument("--verbose","-v", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("--no-robots",  action="store_true", dest="no_robots",
+                        help="Ignore robots.txt")
+    parser.add_argument("--json",       action="store_true", dest="json_output",
+                        help="Force JSON output mode")
+    parser.add_argument("--quiet",      action="store_true",
+                        help="Suppress status messages")
+    parser.add_argument("--no-verify",  action="store_true", dest="no_verify",
+                        help="Disable SSL certificate verification")
+    parser.add_argument("--dedupe",     action="store_true",
+                        help="Remove duplicate URLs from results")
+    parser.add_argument("--no-anti-bot", action="store_true", dest="no_anti_bot",
+                        help="Disable enhanced anti-bot detection features")
+    parser.add_argument("--proxy-rotation", action="store_true", dest="proxy_rotation",
+                        help="Enable proxy rotation for anti-bot evasion")
+
+    return parser
+
+
+def _search_brave(cfg: SearchConfig) -> List[SearchResult]:
+    """
+    Query Brave Search API (requires API key).
+    
+    This is a placeholder implementation - would need API key integration.
+    """
+    logger.warning("Brave search backend not yet implemented")
+    return []
+
+# ==============================================================================
+# SECTION 12: Entry point
+# ==============================================================================
+
+# ... (previous code) ...
+
+# ==============================================================================
+# SECTION 12: Entry point
+# ==============================================================================
+
+def run(
+    # ... (parameters for run function) ...
+) -> Dict[str, Any]:
+    # ... (function body) ...
+    pass # Placeholder for brevity, actual function body is complex
+
+# Ensure the script's entry point is the 'run' function
+if __name__ == "__main__":
+    import argparse
+
+    _parser = _build_parser()
+    _cli    = _parser.parse_args()
+
+    _result = run(
+        query          = _cli.query,
+        limit          = _cli.limit,
+        backend        = _cli.backend,
+        format         = _cli.format,
+        output         = _cli.output,
+        type           = _cli.type,
+        depth          = _cli.depth,
+        timeout        = _cli.timeout,
+        delay          = _cli.delay,
+        proxy          = _cli.proxy,
+        user_agent     = _cli.user_agent,
+        header         = _cli.header or [],
+        content_length = _cli.content_length,
+        threads        = _cli.threads,
+        safe           = _cli.safe,
+        region         = _cli.region,
+        lang           = _cli.lang,
+        searx_url      = _cli.searx_url,
+        max_crawl_size = _cli.max_crawl_size,
+        crawl          = _cli.crawl,
+        download       = _cli.download,
+        verbose        = _cli.verbose,
+        no_robots      = _cli.no_robots,
+        json_output    = _cli.json_output,
+        quiet          = _cli.quiet,
+        no_verify      = _cli.no_verify,
+        dedupe         = _cli.dedupe,
+        no_anti_bot    = _cli.no_anti_bot,
+        proxy_rotation = _cli.proxy_rotation,
+    )
+
+    sys.exit(0 if _result.get("success") else 1)

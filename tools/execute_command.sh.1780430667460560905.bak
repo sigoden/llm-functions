@@ -1,0 +1,449 @@
+#!/usr/bin/env bash
+set -uo pipefail
+# Note: We removed -e to allow graceful handling of expected failures (e.g., command not found)
+
+# @describe Execute arbitrary shell command and return full output.
+# @option --command! <STRING> Command to run
+# @option --timeout <DURATION> Duration for the command (e.g. 60s, 1m, 2h)
+# @option --connect-timeout <DURATION> Connection timeout for curl commands (e.g. 10s, default: 10s)
+# @option --max-time <DURATION> Max transfer time for curl commands (e.g. 30s, default: matches --timeout)
+# @env LLM_OUTPUT=/dev/stdout The output path
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CYBERPUNK HACKER COLOR PALETTE - Intense Neon Effects
+# ═══════════════════════════════════════════════════════════════════════════════
+CYBER_PINK=' [38;5;198m'
+CYBER_CYAN=' [38;5;51m'
+CYBER_GREEN=' [38;5;46m'
+CYBER_ORANGE=' [38;5;202m'
+CYBER_PURPLE=' [38;5;129m'
+CYBER_YELLOW=' [38;5;226m'
+CYBER_RED=' [38;5;196m'
+CYBER_BLUE=' [38;5;33m'
+CYBER_MAGENTA=' [38;5;201m'
+CYBER_LIME=' [38;5;82m'
+CYBER_AMBER=' [38;5;214m'
+
+# Glow variants (bold + color)
+GLOW_PINK="${CYBER_PINK} [1m"
+GLOW_CYAN="${CYBER_CYAN} [1m"
+GLOW_GREEN="${CYBER_GREEN} [1m"
+GLOW_RED="${CYBER_RED} [1m"
+GLOW_YELLOW="${CYBER_YELLOW} [1m"
+GLOW_PURPLE="${CYBER_PURPLE} [1m"
+GLOW_AMBER="${CYBER_AMBER} [1m"
+
+RESET=' [0m'
+BOLD=' [1m'
+
+# Cyberpunk block characters for borders
+
+BLOCK_V='▓▒░' BLOCK_H='─' BLOCK_LT='├' BLOCK_RT='┤'
+BLOCK_FULL='▓▒░'
+
+# Global variables to ensure reliable cleanup in exit traps (fixes dynamic scope shadowing)
+tmp_dir=""
+tmp_exit_file=""
+tmp_output_file=""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# 1. Signal-safe cleanup trap
+cleanup() {
+    trap - EXIT INT TERM HUP
+    [[ -f "${tmp_exit_file:-}" ]] && rm -f "$tmp_exit_file"
+    [[ -f "${tmp_output_file:-}" ]] && rm -f "$tmp_output_file"
+    [[ -d "${tmp_dir:-}" ]] && rm -rf "$tmp_dir"
+}
+trap cleanup EXIT INT TERM HUP
+
+# 2. Convert duration format to seconds with awk (handling floating points accurately without bc)
+duration_to_seconds() {
+    local raw="${1:-0}"
+    [[ "$raw" =~ ^([0-9.]+)([sSmMhHdD]?)$ ]] || { echo "0"; return 0; }
+    local n="${BASH_REMATCH[1]}" s="${BASH_REMATCH[2],,}"
+    
+    if command -v awk >/dev/null 2>&1; then
+        case "$s" in
+            m) awk "BEGIN { printf \"%.6f\n\", $n * 60 }" | sed -E 's/\.?0+$//' ;;
+            h) awk "BEGIN { printf \"%.6f\n\", $n * 3600 }" | sed -E 's/\.?0+$//' ;;
+            d) awk "BEGIN { printf \"%.6f\n\", $n * 86400 }" | sed -E 's/\.?0+$//' ;;
+            *) awk "BEGIN { printf \"%.6f\n\", $n }" | sed -E 's/\.?0+$//' ;;
+        esac
+    else
+        # Pure bash integer fallback
+        local int_n="${n%.*}"
+        [[ -z "$int_n" ]] && int_n=0
+        case "$s" in
+            m) echo $(( int_n * 60 )) ;;
+            h) echo $(( int_n * 3600 )) ;;
+            d) echo $(( int_n * 86400 )) ;;
+            *) echo "$int_n" ;;
+        esac
+    fi
+}
+
+# 3. Dynamic inject_curl_timeouts with support for inline paths and env variables
+inject_curl_timeouts() {
+    local cmd="$1" ct="$2" mt="$3"
+    
+    local flags=""
+    [[ "$cmd" != *"--connect-timeout"* ]] && flags+=" --connect-timeout $ct"
+    [[ "$cmd" != *"--max-time"* ]]        && flags+=" --max-time $mt"
+    [[ "$cmd" != *"--retry"* ]]           && flags+=" --retry 3 --retry-delay 2"
+    
+    if [[ "$cmd" != *"--silent"* ]] && [[ "$cmd" != *" -s "* ]] && [[ "$cmd" != *" -s"* ]]; then
+        flags+=" --silent"
+    fi
+    
+    # Inject into curl command(s) anywhere in a pipeline/sequence using POSIX sed
+    if [[ "$cmd" =~ curl ]]; then
+        cmd="$(echo "$cmd" | sed -E 's/(^|[[:space:];|&])(([^[:space:];|&]*\/)?curl)([[:space:]]|$)/\1\2'"$flags"'\4/g')"
+    fi
+    
+    # Inject into wget command(s)
+    if [[ "$cmd" =~ wget ]] && [[ "$cmd" != *"--timeout"* ]]; then
+        cmd="$(echo "$cmd" | sed -E 's/(^|[[:space:];|&])(([^[:space:];|&]*\/)?wget)([[:space:]]|$)/\1\2 --timeout='"$mt"' --no-verbose\4/g')"
+    fi
+    
+    echo "$cmd"
+}
+
+# 4. Accurate timestamp generator with microsecond precision fallback
+now_ms() {
+    # Bash 5.0+ built-in (highly efficient, zero-fork)
+    if [[ -n "${EPOCHREALTIME:-}" ]]; then
+        local sec="${EPOCHREALTIME%.*}"
+        local frac="${EPOCHREALTIME#*.}"
+        frac="${frac}000"
+        echo "${sec}${frac:0:3}"
+        return 0
+    fi
+
+    # GNU date fallback
+    local n
+    if n=$(date +%s%3N 2>/dev/null) && [[ "$n" =~ ^[0-9]{10,}$ ]]; then
+        echo "$n"
+        return 0
+    fi
+
+    # Python/Perl alternatives
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import time; print(int(time.time() * 1000))' 2>/dev/null && return 0
+    elif command -v perl >/dev/null 2>&1; then
+        perl -MTime::HiRes=time -e 'print int(time * 1000)' 2>/dev/null && return 0
+    fi
+
+    # Standard second-level fallback
+    echo $(( $(date +%s 2>/dev/null || echo 0) * 1000 ))
+}
+
+# 5. Extract terminal columns
+get_width() {
+    local cols
+    cols=$(tput cols 2>/dev/null)
+    if [[ -n "$cols" && "$cols" -gt 0 ]]; then
+        echo "$cols"
+    elif [[ -n "${COLUMNS:-}" && "$COLUMNS" -gt 0 ]]; then
+        echo "$COLUMNS"
+    else
+        echo 80
+    fi
+}
+
+# 6. Extract underlying executable name from command line (handles environments, paths, wrappers)
+get_executable_name() {
+    local cmd="$1"
+    while true; do
+        # Strip leading space
+        cmd="$(echo "$cmd" | sed -E 's/^[[:space:]]+//')"
+        # Strip env variables
+        if [[ "$cmd" =~ ^[a-zA-Z_][a-zA-Z0-9_]*= ]]; then
+            cmd="$(echo "$cmd" | sed -E 's/^[a-zA-Z_][a-zA-Z0-9_]*=([^[:space:]"'\'']+|"[^"]*"|'\''[^'\'']*'\'')[[:space:]]*//')"
+            continue
+        fi
+        # Strip common wrapper commands
+        if [[ "$cmd" =~ ^(sudo|env|nohup|time|exec)[[:space:]] ]]; then
+            cmd="$(echo "$cmd" | sed -E 's/^(sudo|env|nohup|time|exec)[[:space:]]+//')"
+            continue
+        fi
+        break
+    done
+    
+    local exe
+    exe="$(echo "$cmd" | awk '{print $1}')"
+    exe="${exe##*/}"
+    exe="$(echo "$exe" | sed -E 's/[^a-zA-Z0-9_-].*//')"
+    echo "$exe"
+}
+
+# 7. Get icon associated with command type
+get_cmd_icon() {
+    local exe; exe=$(get_executable_name "$1")
+    case "$exe" in
+        git|hg|svn) echo "📦" ;;
+        npm|yarn|pnpm|apt|apt-get|yum|dnf|pacman|brew|pip|pip3|cargo|gem|bundler) echo "📦" ;;
+        curl|wget|http|ping|traceroute|nslookup|dig) echo "🌐" ;;
+        python|python3|node|ruby|perl|php|go|rustc|java|javac|bash|sh|zsh) echo "🐍" ;;
+        docker|kubectl|helm|docker-compose) echo "🐳" ;;
+        ls|cd|pwd|mkdir|rm|cp|mv|touch|cat|grep|find|awk|sed|less|more|tail|head) echo "📁" ;;
+        ffmpeg|convert|ffprobe|imageMagick) echo "🎬" ;;
+        ffuf|gobuster|nmap|nikto|sqlmap|hydra) echo "🔍" ;;
+        ssh|scp|rsync|sftp|gpg|openssl) echo "🔐" ;;
+        systemctl|service|journalctl|init) echo "⚙️" ;;
+        *) echo "★" ;;
+    esac
+}
+
+# 8. Render command wrap nicely inside terminal layout
+format_command_box() {
+    local cmd="$1"
+    local icon="$2"
+    local width="$3"
+    local max_width=$((width - 12))
+    [[ $max_width -lt 20 ]] && max_width=40
+    
+    local wrapped
+    if command -v fold >/dev/null 2>&1; then
+        wrapped=$(echo "$cmd" | fold -s -w "$max_width")
+    else
+        wrapped="$cmd"
+    fi
+    
+    local first=true
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        if $first; then
+            printf "${CYBER_PINK}${BLOCK_V}${RESET} ${CYBER_CYAN}%s${RESET} ${CYBER_PINK}%s${RESET} ${CYBER_YELLOW}[EXEC]${RESET} ${CYBER_MAGENTA}›${RESET} ${BOLD}%s${RESET}\n" "$icon" "★" "$line"
+            first=false
+        else
+            printf "${CYBER_PINK}${BLOCK_V}${RESET}       ${CYBER_PURPLE}↳${RESET} ${BOLD}%s${RESET}\n" "$line"
+        fi
+    done <<< "$wrapped"
+}
+
+# 9. Format timestamp
+get_timestamp() {
+    date '+%H:%M:%S'
+}
+
+# 10. Native timeout implementation fallback for systems without GNU coreutils timeout
+run_with_timeout() {
+    local timeout_val="$1"
+    shift
+    local cmd="$@"
+    
+    if [[ -z "$timeout_val" ]]; then
+        bash -c "$cmd"
+        return $?
+    fi
+    
+    local timeout_sec
+    timeout_sec=$(duration_to_seconds "$timeout_val")
+    
+    local t_cmd=""
+    if command -v timeout >/dev/null 2>&1; then
+        t_cmd="timeout"
+    elif command -v gtimeout >/dev/null 2>&1; then
+        t_cmd="gtimeout"
+    fi
+    
+    if [[ -n "$t_cmd" ]]; then
+        if "$t_cmd" --version 2>/dev/null | grep -qi gnu; then
+            "$t_cmd" --preserve-status "$timeout_sec" bash -c "$cmd"
+            return $?
+        else
+            "$t_cmd" "$timeout_sec" bash -c "$cmd" 2>/dev/null
+            return $?
+        fi
+    fi
+    
+    # Pure Bash-based watcher fallback (no timeout or gtimeout found)
+    bash -c "$cmd" &
+    local cmd_pid=$!
+    
+    (
+        sleep "$timeout_sec" 2>/dev/null
+        kill -0 "$cmd_pid" 2>/dev/null && kill -15 "$cmd_pid" 2>/dev/null
+    ) &
+    local timer_pid=$!
+    
+    wait "$cmd_pid" 2>/dev/null
+    local exit_code=$?
+    
+    kill "$timer_pid" 2>/dev/null
+    wait "$timer_pid" 2>/dev/null
+    
+    return "$exit_code"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN FUNCTION
+# ═══════════════════════════════════════════════════════════════════════════════
+main() {
+    local start_ms; start_ms="$(now_ms)"
+    local cmd="${argc_command:-}"
+    if [[ -z "$cmd" ]]; then
+        echo "Error: Command input is empty" >&2
+        return 1
+    fi
+    
+    local out="${LLM_OUTPUT:-/dev/stdout}"
+    local width; width=$(get_width)
+    
+    # Initialize temporary files safely without local scope shadowing on exit trap
+    tmp_dir="$(mktemp -d)"
+    tmp_exit_file="${tmp_dir}/cmd_exit.$$"
+    tmp_output_file="${tmp_dir}/cmd_out.$$"
+
+    # Parse command timeouts
+    local ct_s; ct_s="$(duration_to_seconds "${argc_connect_timeout:-10s}")"
+    local mt_s; mt_s="$(duration_to_seconds "${argc_max_time:-${argc_timeout:-30s}}")"
+    cmd="$(inject_curl_timeouts "$cmd" "$ct_s" "$mt_s")"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # TTY-aware Header and UI - CYBERPUNK HACKER STYLE (Dynamic Width)
+    # ═══════════════════════════════════════════════════════════════════════════
+    if [[ -t 1 ]]; then
+        local icon; icon=$(get_cmd_icon "$cmd")
+        local timestamp; timestamp=$(get_timestamp)
+        
+        # Calculate precise border width for top label to avoid wrapping
+        local top_border_width=$((width - 26))
+        [[ $top_border_width -lt 10 ]] && top_border_width=10
+        local top_border
+        printf -v top_border '%*s' "$top_border_width" ''
+        top_border="${top_border// /─}"
+        
+        # Top border
+        printf "${CYBER_PINK}${BLOCK_TL}${BLOCK_FULL} ${CYBER_YELLOW}EXECUTION REPORT ${CYBER_PINK}${BLOCK_FULL}${top_border}${BLOCK_TR}${RESET}\n"
+        
+        # Spacer
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}\n"
+        
+        # Render Command Box beautifully with soft wrapping
+        format_command_box "$cmd" "$icon" "$width"
+        
+        # Spacer
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}\n"
+        
+        # Info bar
+        printf "${CYBER_PINK}${BLOCK_V}${RESET} ${CYBER_AMBER}⏱${RESET}  ${CYBER_CYAN}%s${RESET}  ${CYBER_PINK}│${RESET}  ${CYBER_ORANGE}⌛${RESET}  ${CYBER_CYAN}%s${RESET}  ${CYBER_PINK}│${RESET}  ${CYBER_GREEN}📡${RESET}  ${CYBER_CYAN}%s${RESET}\n" \
+            "$timestamp" "${argc_timeout:-30s}" "${argc_connect_timeout:-10s}"
+        
+        # Divider Line
+        local mid_border_width=$((width - 2))
+        [[ $mid_border_width -lt 10 ]] && mid_border_width=10
+        local mid_border
+        printf -v mid_border '%*s' "$mid_border_width" ''
+        mid_border="${mid_border// /─}"
+        printf "${CYBER_PINK}${BLOCK_LT}${mid_border}${BLOCK_RT}${RESET}\n"
+    fi
+
+    set +e
+    
+    # Run the user-supplied command
+    local exit_code=0
+    if [[ -n "${argc_timeout:-}" ]]; then
+        run_with_timeout "${argc_timeout}" "$cmd" >"$tmp_output_file" 2>&1
+        exit_code=$?
+    else
+        bash -c "$cmd" >"$tmp_output_file" 2>&1
+        exit_code=$?
+    fi
+    
+    # Verify and secure exit code capture
+    echo "$exit_code" >"$tmp_exit_file"
+    exit_code=$(cat "$tmp_exit_file" 2>/dev/null)
+    [[ -z "$exit_code" ]] && exit_code=1
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # FEEDBACK LOOP & STDOUT ROUTING
+    # ═══════════════════════════════════════════════════════════════════════════
+    if [[ -s "$tmp_output_file" ]]; then
+        if [[ -t 1 ]]; then
+            # Display beautifully framed, indented outputs to the interactive terminal
+            sed "s/^/${CYBER_PINK}${BLOCK_V}${RESET}  /" "$tmp_output_file"
+            
+            # File logger (excludes styling characters)
+            if [[ "$out" != "/dev/stdout" ]] && [[ "$out" != "/dev/stderr" ]] && [[ "$out" != "&1" ]] && [[ "$out" != "&2" ]]; then
+                cat "$tmp_output_file" >> "$out"
+            fi
+        else
+            # Non-TTY output handling to keep redirected data pure
+            if [[ "$out" == "/dev/stdout" ]] || [[ "$out" == "&1" ]]; then
+                cat "$tmp_output_file"
+            elif [[ "$out" == "/dev/stderr" ]] || [[ "$out" == "&2" ]]; then
+                cat "$tmp_output_file" >&2
+            else
+                cat "$tmp_output_file" | tee -a "$out"
+            fi
+        fi
+    else
+        local msg="⚠ SYSTEM WARNING: Command completed with exit code $exit_code and returned no output."
+        [[ "$exit_code" -eq 0 ]] && msg="✓ SYSTEM READY: Command completed with exit code 0."
+        
+        if [[ -t 1 ]]; then
+            printf "${CYBER_PINK}${BLOCK_V}${RESET}  ${CYBER_AMBER}%s${RESET}\n" "$msg"
+            if [[ "$out" != "/dev/stdout" ]] && [[ "$out" != "/dev/stderr" ]] && [[ "$out" != "&1" ]] && [[ "$out" != "&2" ]]; then
+                echo "$msg" >> "$out"
+            fi
+        else
+            if [[ "$out" == "/dev/stdout" ]] || [[ "$out" == "&1" ]]; then
+                echo "$msg"
+            elif [[ "$out" == "/dev/stderr" ]] || [[ "$out" == "&2" ]]; then
+                echo "$msg" >&2
+            else
+                echo "$msg" | tee -a "$out"
+            fi
+        fi
+    fi
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PERFORMANCE METRIC FOOTER
+    # ═══════════════════════════════════════════════════════════════════════════
+    local dur; dur=$(( $(now_ms) - start_ms ))
+    if [[ -t 1 ]]; then
+        local bottom_border_width=$((width - 2))
+        [[ $bottom_border_width -lt 10 ]] && bottom_border_width=10
+        local bottom_border
+        printf -v bottom_border '%*s' "$bottom_border_width" ''
+        bottom_border="${bottom_border// /─}"
+        
+        # Spacer
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}\n"
+        
+        # Top-bottom Divider
+        printf "${CYBER_PINK}${BLOCK_LT}${bottom_border}${BLOCK_RT}${RESET}\n"
+        
+        # Spacer
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}\n"
+        
+        # Status parsing
+        local status_color symbol status_text
+        if [[ "$exit_code" -eq 0 ]]; then
+            status_color="$CYBER_GREEN"
+            symbol="✓"
+            status_text="SYSTEM READY"
+        else
+            status_color="$CYBER_RED"
+            symbol="✗"
+            status_text="SYSTEM FAILURE"
+        fi
+        
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}  ${status_color}%s${RESET}  ${status_color}%s${RESET}\n" "$symbol" "$status_text"
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}  ${CYBER_AMBER}⏱${RESET}  ${CYBER_CYAN}%dms elapsed${RESET}  ${CYBER_PINK}│${RESET}  ${CYBER_YELLOW}⚑${RESET}  ${CYBER_CYAN}exit code: %d${RESET}\n" "$dur" "$exit_code"
+        
+        # Spacer
+        printf "${CYBER_PINK}${BLOCK_V}${RESET}\n"
+        
+        # Bottom Border
+        printf "${CYBER_PINK}${BLOCK_BL}${bottom_border}${BLOCK_BR}${RESET}\n"
+    fi
+
+    return "$exit_code"
+}
+
+eval "$(argc --argc-eval "$0" "$@")"

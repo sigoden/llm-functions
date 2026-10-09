@@ -1,0 +1,26 @@
+Jun 01 01:32:09.990 [notice] Tor 0.4.9.8 running on Linux with Libevent 2.1.12-stable, OpenSSL 3.6.2, Zlib 1.3.2, Liblzma 5.8.3, Libzstd N/A and Unknown N/A as libc.
+Jun 01 01:32:09.990 [notice] Tor can't help you if you use it wrong! Learn how to be safe at https://support.torproject.org/faq/staying-anonymous/
+Jun 01 01:32:09.996 [notice] Read configuration file "/data/data/com.termux/files/home/.config/aichat/llm-functions/torrc.bybit".
+Jun 01 01:32:09.997 [warn] ControlPort is open, but no authentication method has been configured.  This means that any program on your computer can reconfigure your Tor.  That's bad!  You should upgrade your Tor controller as soon as possible.
+Jun 01 01:32:09.999 [notice] Opening Socks listener on 127.0.0.1:9050
+Jun 01 01:32:10.000 [notice] Opened Socks listener connection (ready) on 127.0.0.1:9050
+Jun 01 01:32:10.000 [notice] Opening Control listener on 127.0.0.1:9051
+Jun 01 01:32:10.000 [notice] Opened Control listener connection (ready) on 127.0.0.1:9051
+Jun 01 01:32:10.000 [notice] Set list of supported TLS groups to: ?*X25519MLKEM768 / ?SecP256r1MLKEM768 / *P-256:?X25519:P-224
+Jun 01 01:32:10.000 [notice] Bootstrapped 0% (starting): Starting
+Jun 01 01:32:16.000 [notice] Starting with guard context "default"
+Jun 01 01:32:17.000 [notice] Bootstrapped 5% (conn): Connecting to a relay
+Jun 01 01:32:17.000 [notice] Bootstrapped 10% (conn_done): Connected to a relay
+Jun 01 01:32:17.000 [notice] Bootstrapped 14% (handshake): Handshaking with a relay
+Jun 01 01:32:18.000 [notice] Bootstrapped 15% (handshake_done): Handshake with a relay done
+Jun 01 01:32:18.000 [notice] Bootstrapped 75% (enough_dirinfo): Loaded enough directory info to build circuits
+Jun 01 01:32:18.000 [notice] Bootstrapped 90% (ap_handshake_done): Handshake finished with a relay to build circuits
+Jun 01 01:32:18.000 [notice] Bootstrapped 95% (circuit_create): Establishing a Tor circuit
+Jun 01 01:32:18.000 [notice] Guard lunchmoneylewis ($9D33A40719F076DBF552046E60D763F6D78C59EB) is failing more circuits than usual. Most likely this means the Tor network is overloaded. Success counts are 111/158. Use counts are 44/44. 152 circuits completed, 0 were unusable, 41 collapsed, and 6 timed out. For reference, your timeout cutoff is 60 seconds.
+Jun 01 01:32:18.000 [notice] Guard TorRelayPoland ($62F875123AD985B6EFE51AFF81228E5F4B46B633) is failing more circuits than usual. Most likely this means the Tor network is overloaded. Success counts are 145/248. Use counts are 33/33. 236 circuits completed, 0 were unusable, 91 collapsed, and 9 timed out. For reference, your timeout cutoff is 60 seconds.
+Jun 01 01:32:19.000 [notice] Bootstrapped 100% (done): Done
+Jun 01 01:58:23.000 [notice] Guard FTPhalifaxRWTH ($63F7DC3102C95E010F83B2041A5938909E4ABAF2) is failing more circuits than usual. Most likely this means the Tor network is overloaded. Success counts are 110/212. Use counts are 21/22. 200 circuits completed, 0 were unusable, 89 collapsed, and 13 timed out. For reference, your timeout cutoff is 60 seconds.
+Jun 01 04:18:38.000 [notice] Your system clock just jumped 112 seconds forward; assuming established circuits no longer work.
+Jun 01 07:40:37.000 [notice] Heartbeat: Tor's uptime is 6:06 hours, with 0 circuits open. I've sent 899 kB and received 1.11 MB. I've received 6 connections on IPv4 and 0 on IPv6. I've made 13 connections with IPv4 and 0 with IPv6.
+Jun 01 07:40:37.000 [notice] While not bootstrapping, fetched this many bytes: 46240 (consensus network-status fetch); 92807 (microdescriptor fetch)
+Jun 01 07:40:37.000 [notice] Average packaged cell fullness: 68.089%. TLS write overhead: 6%

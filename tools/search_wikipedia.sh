@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/env bash
 set -e
 
 # @describe Search Wikipedia for a query.
@@ -6,7 +6,7 @@ set -e
 
 # @option --query! The query to search for.
 
-# @env LLM_OUTPUT=/dev/stdout The output path
+# @env LLM_OUTPUT=/dev/fd/1 The output path
 
 main() {
     encoded_query="$(jq -nr --arg q "$argc_query" '$q|@uri')"
@@ -22,7 +22,7 @@ main() {
     fi
     title="$(echo "$title" | tr ' ' '_')"
     url="$base_url?action=query&prop=extracts&explaintext=&titles=$title&exintro=&format=json"
-    curl -fsSL "$url" | jq -r '.query.pages["'"$pageid"'"].extract' >> "$LLM_OUTPUT"
+    curl -fsSL "$url" | jq -r '.query.pages["'"$pageid"'"].extract' >&1
 }
 
 eval "$(argc --argc-eval "$0" "$@")"

@@ -1,0 +1,3399 @@
+[
+  {
+    "name": "webx",
+    "description": "Web search with multiple backends, optional crawl (News RSS, DDG, Bing, SearXNG)",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "ydc_search",
+    "description": "Web Search Tool using You.com (YDC) API with domain filtering",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of results (default: 10)"
+        },
+        "include_domains": {
+          "type": "string",
+          "description": "Comma-separated domains to include"
+        },
+        "exclude_domains": {
+          "type": "string",
+          "description": "Comma-separated domains to exclude"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose output"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "web_search",
+    "description": "Perform a web search",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query"
+        },
+        "limit": {
+          "type": "number",
+          "description": "Maximum results (default: 10)"
+        },
+        "include_domains": {
+          "type": "string",
+          "description": "Comma-separated domains to include"
+        },
+        "exclude_domains": {
+          "type": "string",
+          "description": "Comma-separated domains to exclude"
+        },
+        "no_cache": {
+          "type": "boolean",
+          "description": "Do not use cached results\n=============================================================================="
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "web_fetcher",
+    "description": "A web fetching utility that uses Python's built-in urllib.request.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "The only supported action is 'fetch'."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch. Required if action is 'fetch'."
+        },
+        "data": {
+          "type": "string",
+          "description": "Data to send in the request body (e.g., for POST/PUT)."
+        },
+        "headers": {
+          "type": "string",
+          "description": "Custom headers, comma-separated (e.g., \"Header1: Value1,Header2: Value2\")."
+        },
+        "follow_redirects": {
+          "type": "boolean",
+          "description": "Follow HTTP redirects (default: True). (Note: urllib follows redirects by default)."
+        },
+        "verify_ssl": {
+          "type": "boolean",
+          "description": "Verify SSL certificates (default: True). If False, uses an unverified context."
+        }
+      },
+      "required": [
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "net_ip_info",
+    "description": "Get network IP information including public IP and network interfaces",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "public_ip": {
+          "type": "boolean",
+          "description": "Include public IP address"
+        },
+        "interfaces": {
+          "type": "boolean",
+          "description": "Include network interface information"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "wget2x",
+    "description": "Download files or websites using GNU Wget2",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to download"
+        },
+        "output_file": {
+          "type": "string",
+          "description": "-O File to save the output"
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Custom User-Agent header"
+        },
+        "limit_rate": {
+          "type": "string",
+          "description": "Limit bandwidth usage (e.g., 100k, 1M)"
+        },
+        "tries": {
+          "type": "string",
+          "description": "-t Number of retries (default: 20)"
+        },
+        "waitretry": {
+          "type": "string",
+          "description": "Wait specified seconds between retries"
+        },
+        "quiet": {
+          "type": "boolean",
+          "description": "-q Quiet mode"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "-v Verbose mode"
+        },
+        "mirror": {
+          "type": "boolean",
+          "description": "-m Mirror a website (recursive)"
+        },
+        "no_check_certificate": {
+          "type": "boolean",
+          "description": "Don't validate the server's certificate"
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "fetch_url_via_curl",
+    "description": "Fetch content from a URL using curl with advanced options.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch."
+        },
+        "follow_redirects": {
+          "type": "boolean",
+          "description": "Follow HTTP redirects."
+        },
+        "verify_ssl": {
+          "type": "boolean",
+          "description": "Verify SSL certificates (default: true)."
+        },
+        "compressed": {
+          "type": "boolean",
+          "description": "Request compressed response."
+        },
+        "silent": {
+          "type": "boolean",
+          "description": "Silent mode (less curl stderr)."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Verbose curl output to stderr."
+        },
+        "include": {
+          "type": "boolean",
+          "description": "Include HTTP response headers in the body output."
+        },
+        "json_on_success": {
+          "type": "boolean",
+          "description": "If set, return JSON with body, http_code, and final_url on success."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "google_search",
+    "description": "Google Search Tool (Google Custom Search primary, with You.com/DuckDuckGo fallbacks)",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query"
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum results (default: 10)"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "pyrm_search",
+    "description": "Perform advanced web search using Google Custom Search API with",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query string."
+        },
+        "num_results": {
+          "type": "integer",
+          "description": "Number of results to return (1-100). [default: 10]"
+        },
+        "start_index": {
+          "type": "integer",
+          "description": "Pagination start index (1-91). [default: 1]"
+        },
+        "date_filter": {
+          "type": "string",
+          "description": "Restrict results by age: d[N], w[N], m[N], y[N]."
+        },
+        "site_filter": {
+          "type": "string",
+          "description": "Restrict results to a specific domain."
+        },
+        "site_exclude": {
+          "type": "string",
+          "description": "Exclude results from a specific domain."
+        },
+        "file_type": {
+          "type": "string",
+          "description": "Filter by file type: pdf, doc, docx, etc."
+        },
+        "lang": {
+          "type": "string",
+          "description": "Language for search results (ISO 639-1). [default: en]"
+        },
+        "ui_lang": {
+          "type": "string",
+          "description": "Language for UI (ISO 639-1). [default: en]"
+        },
+        "country": {
+          "type": "string",
+          "description": "Restrict results to country (ISO 3166-1 alpha-2)."
+        },
+        "sort_by": {
+          "type": "string",
+          "description": "Sort order: relevance or date."
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Output format: detailed, compact, json, parsed. [default: detailed]"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Request timeout in seconds (1-60). [default: 15]"
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "Maximum retry attempts (0-5). [default: 2]"
+        },
+        "cache_ttl": {
+          "type": "string",
+          "description": "Cache TTL in seconds (0=disabled, max=3600). [default: 300]"
+        },
+        "pages": {
+          "type": "integer",
+          "description": "Number of result pages to fetch (1-10). [default: 1]"
+        },
+        "rate_limit_delay": {
+          "type": "string",
+          "description": "Delay between API requests (0-10). [default: 1]"
+        },
+        "export_format": {
+          "type": "string",
+          "description": "Export format: json, csv, md, html."
+        },
+        "freshness_weight": {
+          "type": "integer",
+          "description": "Weight recent results (0-10). [default: 5]"
+        },
+        "queries": {
+          "type": "string",
+          "description": "Multiple queries separated by pipe."
+        },
+        "proxy": {
+          "type": "string",
+          "description": "Proxy URL (e.g., http://proxy:8080)."
+        },
+        "header": {
+          "type": "string",
+          "description": "Custom header (key:value)."
+        },
+        "download_limit": {
+          "type": "integer",
+          "description": "Download speed limit (KB/s). [default: 0]"
+        },
+        "exclude_terms": {
+          "type": "string",
+          "description": "Exclude terms from results."
+        },
+        "safe": {
+          "type": "string",
+          "description": "Parental protection: active, off."
+        },
+        "related_site": {
+          "type": "string",
+          "description": "Return pages related to a URL."
+        },
+        "link_site": {
+          "type": "string",
+          "description": "Return pages linking to a URL."
+        },
+        "json_keys": {
+          "type": "string",
+          "description": "Comma-separated keys to extract (e.g. title,link,snippet)."
+        },
+        "exact_terms": {
+          "type": "boolean",
+          "description": "Treat query as exact phrase match."
+        },
+        "no_duplicates": {
+          "type": "boolean",
+          "description": "Filter out duplicate domains."
+        },
+        "no_cache": {
+          "type": "boolean",
+          "description": "Bypass response cache."
+        },
+        "debug": {
+          "type": "boolean",
+          "description": "Enable verbose debug output."
+        },
+        "show_cache_stats": {
+          "type": "boolean",
+          "description": "Show cache statistics."
+        },
+        "show_progress": {
+          "type": "boolean",
+          "description": "Show download progress bars."
+        },
+        "pretty_print": {
+          "type": "boolean",
+          "description": "Format JSON response."
+        },
+        "search_type": {
+          "type": "string",
+          "description": "Search type: web or image. [default: web]"
+        },
+        "image_size": {
+          "type": "string",
+          "description": "Filter images by size."
+        },
+        "image_type": {
+          "type": "string",
+          "description": "Filter by image type."
+        },
+        "image_color_type": {
+          "type": "string",
+          "description": "Filter by color type."
+        },
+        "image_dominant_color": {
+          "type": "string",
+          "description": "Filter by dominant color."
+        },
+        "image_rights": {
+          "type": "string",
+          "description": "Filter by usage rights."
+        },
+        "image_format": {
+          "type": "string",
+          "description": "Preferred download format filter."
+        },
+        "download_dir": {
+          "type": "string",
+          "description": "Directory to save downloaded images. [default: ./search_images]"
+        },
+        "download_max": {
+          "type": "integer",
+          "description": "Maximum images to download (1-100). [default: 5]"
+        },
+        "download_timeout": {
+          "type": "string",
+          "description": "Per-image download timeout (5-120). [default: 30]"
+        },
+        "download_workers": {
+          "type": "integer",
+          "description": "Concurrent download workers (1-10). [default: 3]"
+        },
+        "image_min_width": {
+          "type": "string",
+          "description": "Minimum image width in pixels. [default: 0]"
+        },
+        "image_min_height": {
+          "type": "string",
+          "description": "Minimum image height in pixels. [default: 0]"
+        },
+        "download_images": {
+          "type": "boolean",
+          "description": "Download found images."
+        },
+        "encode_base64": {
+          "type": "boolean",
+          "description": "Base64 encode images for vision models."
+        },
+        "generate_manifest": {
+          "type": "boolean",
+          "description": "Generate JSON manifest of downloads."
+        },
+        "skip_existing": {
+          "type": "boolean",
+          "description": "Skip existing images."
+        },
+        "verify_images": {
+          "type": "boolean",
+          "description": "Verify downloaded files."
+        },
+        "create_thumbnails": {
+          "type": "boolean",
+          "description": "Create 200x200 thumbnails."
+        },
+        "show_image_metadata": {
+          "type": "boolean",
+          "description": "Show detailed image metadata."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "url_metadata",
+    "description": "Extract URL title.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "web_crawler",
+    "description": "Web crawler that parses HTML, extracts links, and recursively follows them to search for keywords or download images/thumbnails.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "start_url": {
+          "type": "string",
+          "description": "Starting URL to crawl"
+        },
+        "max_depth": {
+          "type": "integer",
+          "description": "Maximum crawl depth (0 = start page only, default: 1)"
+        },
+        "max_pages": {
+          "type": "integer",
+          "description": "Maximum total pages to crawl (default: 10)"
+        },
+        "keyword": {
+          "type": "string",
+          "description": "Search for a specific keyword in the page text"
+        },
+        "domain_restrict": {
+          "type": "boolean",
+          "description": "Restrict crawl to links on the same domain as start-url (default: True)"
+        },
+        "download_images": {
+          "type": "boolean",
+          "description": "Enable automatic downloading of images found in crawled pages"
+        },
+        "media_dir": {
+          "type": "string",
+          "description": "Directory to save downloaded images (default: cache/crawled_media/)"
+        },
+        "generate_thumbnails": {
+          "type": "boolean",
+          "description": "Generate thumbnails for downloaded images (requires PIL/Pillow)"
+        },
+        "thumb_dir": {
+          "type": "string",
+          "description": "Directory to save thumbnails (default: cache/crawled_thumbs/)"
+        },
+        "thumb_width": {
+          "type": "integer",
+          "description": "Thumbnail width (default: 150)"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose log messages"
+        }
+      },
+      "required": [
+        "start_url"
+      ]
+    }
+  },
+  {
+    "name": "bybit_realm",
+    "description": "Unified Entry Point — Bybit Realm v5.0",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "health_check, get_wallet_balance, get_account_info, get_positions, get_position_risk, get_fee_rate, set_leverage, set_trading_stop, set_position_mode, get_executions, get_pnl_history, panic_close, bulk_update_tp_sl, get_account_summary, get_pnl_summary, update_trailing_stop, set_tp_sl, check_risk_limit, check_balance, close_position, get_open_positions_summary, send_telegram_alert, export_trade_history, calculate_rsi, calculate_sma, calculate_ema, calculate_macd, calculate_bollinger_bands, calculate_vwap, calculate_atr, calculate_stoch, scan_scalping_opportunities, place_order, amend_order, cancel_order, cancel_all_orders, get_open_orders, get_order_history, batch_place_orders, place_smart_trade, get_ticker, get_orderbook, get_klines, get_recent_trades, get_instruments_info, get_funding_rate, get_open_interest, get_volatility_index, get_orderbook_analysis, get_volume_at_price, get_market_regime, scan_symbols, get_journal, market_summary, analyze_symbol, calculate_orderflow_delta, calculate_orderbook_imbalance, calculate_liquidity_heatmap, calculate_market_depth_profile, calculate_sr_levels, calculate_target_pnl, calculate_limit_micro_profit, calculate_support_resistance_levels, calculate_fibonacci_levels, generate_market_depth_report, detect_high_confluence_levels, get_market_liquidations"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Trading pair (e.g. BTCUSDT)."
+        },
+        "side": {
+          "type": "string",
+          "description": "Buy, Sell."
+        },
+        "qty": {
+          "type": "integer",
+          "description": "quantity."
+        },
+        "price": {
+          "type": "integer",
+          "description": "price."
+        },
+        "category": {
+          "type": "string",
+          "description": "linear, spot, inverse."
+        },
+        "stop_loss": {
+          "type": "integer",
+          "description": "Stop loss price."
+        },
+        "take_profit": {
+          "type": "integer",
+          "description": "Take profit price."
+        },
+        "leverage": {
+          "type": "integer",
+          "description": "Leverage value."
+        },
+        "interval": {
+          "type": "string",
+          "description": "1, 5, 15, 60, 240, D."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Result limit."
+        },
+        "json": {
+          "type": "boolean",
+          "description": "Output raw JSON instead of pretty print."
+        }
+      },
+      "required": [
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "bybit_wbta",
+    "description": "Market Trend Observatory v3.0 — L2 Orderbook Intelligence, Bybit",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "use_tor": {
+          "type": "boolean",
+          "description": "Enable Tor SOCKS5 proxy routing"
+        },
+        "json_out": {
+          "type": "boolean",
+          "description": "Output raw JSON instead of coloured terminal display"
+        },
+        "once": {
+          "type": "boolean",
+          "description": "Run a single analysis cycle and exit (default behaviour)"
+        }
+      }
+    }
+  },
+  {
+    "name": "bybit-realm",
+    "description": "BYBIT REALM v4.0 – Comprehensive Bybit V5 trading tool with all endpoints, indicators, breakeven logic, L2 analysis, and profitable macros.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "description": ""
+        },
+        "qty": {
+          "type": "string",
+          "description": ""
+        },
+        "price": {
+          "type": "string",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "order_id": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "string",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "string",
+          "description": ""
+        },
+        "trailing_stop": {
+          "type": "string",
+          "description": ""
+        },
+        "reduce_only": {
+          "type": "string",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": ""
+        },
+        "position_idx": {
+          "type": "string",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "buy_leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "sell_leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "account_type": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "interval_time": {
+          "type": "string",
+          "description": ""
+        },
+        "strong_threshold": {
+          "type": "string",
+          "description": ""
+        },
+        "mild_threshold": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_price": {
+          "type": "string",
+          "description": ""
+        },
+        "fee_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "funding_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "holding_hours": {
+          "type": "string",
+          "description": ""
+        },
+        "holding_periods": {
+          "type": "string",
+          "description": ""
+        },
+        "orders": {
+          "type": "string",
+          "description": ""
+        },
+        "slices": {
+          "type": "string",
+          "description": ""
+        },
+        "delay": {
+          "type": "string",
+          "description": ""
+        },
+        "start_time": {
+          "type": "string",
+          "description": ""
+        },
+        "end_time": {
+          "type": "string",
+          "description": ""
+        },
+        "scale_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "reduce": {
+          "type": "string",
+          "description": ""
+        },
+        "scale": {
+          "type": "string",
+          "description": ""
+        },
+        "use_atr": {
+          "type": "string",
+          "description": ""
+        },
+        "offset_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "entry_price": {
+          "type": "string",
+          "description": ""
+        },
+        "exit_price": {
+          "type": "string",
+          "description": ""
+        },
+        "strategy": {
+          "type": "string",
+          "description": ""
+        },
+        "tags": {
+          "type": "string",
+          "description": ""
+        },
+        "trade_notes": {
+          "type": "string",
+          "description": ""
+        },
+        "trade_id": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_status": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_data": {
+          "type": "string",
+          "description": ""
+        },
+        "total_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "num_orders": {
+          "type": "string",
+          "description": ""
+        },
+        "num_grids": {
+          "type": "string",
+          "description": ""
+        },
+        "upper_price": {
+          "type": "string",
+          "description": ""
+        },
+        "lower_price": {
+          "type": "string",
+          "description": ""
+        },
+        "rr_ratio": {
+          "type": "string",
+          "description": ""
+        },
+        "atr_mult": {
+          "type": "string",
+          "description": ""
+        },
+        "duration_minutes": {
+          "type": "string",
+          "description": ""
+        },
+        "num_slices": {
+          "type": "string",
+          "description": ""
+        },
+        "min_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "top_n": {
+          "type": "string",
+          "description": ""
+        },
+        "price_range_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "coin": {
+          "type": "string",
+          "description": ""
+        },
+        "amount": {
+          "type": "string",
+          "description": ""
+        },
+        "from_account": {
+          "type": "string",
+          "description": ""
+        },
+        "to_account": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_id": {
+          "type": "string",
+          "description": ""
+        },
+        "currency": {
+          "type": "string",
+          "description": ""
+        },
+        "trigger_price": {
+          "type": "string",
+          "description": ""
+        },
+        "trigger_by": {
+          "type": "string",
+          "description": ""
+        },
+        "depth": {
+          "type": "string",
+          "description": ""
+        },
+        "period": {
+          "type": "string",
+          "description": ""
+        },
+        "num_bins": {
+          "type": "string",
+          "description": ""
+        },
+        "num_levels": {
+          "type": "string",
+          "description": ""
+        },
+        "num_entries": {
+          "type": "string",
+          "description": ""
+        },
+        "num_exits": {
+          "type": "string",
+          "description": ""
+        },
+        "spacing_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_spacing_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "hedge_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "dip_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "symbols": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_fraction": {
+          "type": "string",
+          "description": ""
+        },
+        "consecutive_wins": {
+          "type": "string",
+          "description": ""
+        },
+        "consecutive_losses": {
+          "type": "string",
+          "description": ""
+        },
+        "daily_return_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "days": {
+          "type": "string",
+          "description": ""
+        },
+        "win_rate_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "trades_per_day": {
+          "type": "string",
+          "description": ""
+        },
+        "starting_capital": {
+          "type": "string",
+          "description": ""
+        },
+        "maint_margin_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "account_balance": {
+          "type": "string",
+          "description": ""
+        },
+        "margin": {
+          "type": "string",
+          "description": ""
+        },
+        "auto_add_margin": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_sl_mode": {
+          "type": "string",
+          "description": ""
+        },
+        "collateral_switch": {
+          "type": "string",
+          "description": ""
+        },
+        "brick_size": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "category",
+        "order_id",
+        "stop_loss",
+        "take_profit",
+        "trailing_stop",
+        "reduce_only",
+        "time_in_force",
+        "position_idx",
+        "client_oid",
+        "leverage",
+        "buy_leverage",
+        "sell_leverage",
+        "account_type",
+        "limit",
+        "interval",
+        "interval_time",
+        "strong_threshold",
+        "mild_threshold",
+        "sl_pct",
+        "tp_pct",
+        "risk_usdt",
+        "sl_price",
+        "fee_rate",
+        "funding_rate",
+        "holding_hours",
+        "holding_periods",
+        "orders",
+        "slices",
+        "delay",
+        "start_time",
+        "end_time",
+        "scale_pct",
+        "reduce",
+        "scale",
+        "use_atr",
+        "offset_pct",
+        "entry_price",
+        "exit_price",
+        "strategy",
+        "tags",
+        "trade_notes",
+        "trade_id",
+        "journal_status",
+        "journal_data",
+        "total_usdt",
+        "num_orders",
+        "num_grids",
+        "upper_price",
+        "lower_price",
+        "rr_ratio",
+        "atr_mult",
+        "duration_minutes",
+        "num_slices",
+        "min_rate",
+        "top_n",
+        "price_range_pct",
+        "coin",
+        "amount",
+        "from_account",
+        "to_account",
+        "risk_id",
+        "currency",
+        "trigger_price",
+        "trigger_by",
+        "depth",
+        "period",
+        "num_bins",
+        "num_levels",
+        "num_entries",
+        "num_exits",
+        "spacing_pct",
+        "tp_spacing_pct",
+        "hedge_pct",
+        "dip_pct",
+        "symbols",
+        "risk_fraction",
+        "consecutive_wins",
+        "consecutive_losses",
+        "daily_return_pct",
+        "days",
+        "win_rate_pct",
+        "trades_per_day",
+        "starting_capital",
+        "maint_margin_rate",
+        "account_balance",
+        "margin",
+        "auto_add_margin",
+        "tp_sl_mode",
+        "collateral_switch",
+        "brick_size"
+      ]
+    }
+  },
+  {
+    "name": "bybit_pro_suite",
+    "description": "Bybit Pro Suite - Unified Trading Toolset with smart order, position management, and technical analysis",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Trading symbol (e.g., BTCUSDT)"
+        },
+        "side": {
+          "type": "string",
+          "description": "[Buy|Sell] Order side"
+        },
+        "order_type": {
+          "type": "string",
+          "description": "[Market|Limit] Order type"
+        },
+        "qty": {
+          "type": "string",
+          "description": "Order quantity"
+        },
+        "price": {
+          "type": "string",
+          "description": "Limit price (for Limit orders)"
+        },
+        "risk_pct": {
+          "type": "integer",
+          "description": "Risk percentage (default: 1.0)"
+        },
+        "sl_dist": {
+          "type": "integer",
+          "description": "Stop loss distance"
+        },
+        "sl_price": {
+          "type": "integer",
+          "description": "Absolute stop loss price"
+        },
+        "tp_price": {
+          "type": "integer",
+          "description": "Absolute take profit price"
+        },
+        "interval": {
+          "type": "string",
+          "description": "Time interval (1,5,15,60,120,240,D,W,M)"
+        },
+        "limit": {
+          "type": "string",
+          "description": "Number of results (default: 25)"
+        },
+        "leverage": {
+          "type": "string",
+          "description": "Leverage value"
+        },
+        "mode": {
+          "type": "string",
+          "description": "Position mode (0=One-Way, 3=Hedge)"
+        },
+        "action": {
+          "type": "string",
+          "description": "[be|close] Position manager action"
+        },
+        "profit_usdt": {
+          "type": "string",
+          "description": "Profit threshold in USDT"
+        },
+        "tp_usdt": {
+          "type": "string",
+          "description": "Take profit in USDT"
+        },
+        "sl_usdt": {
+          "type": "string",
+          "description": "Stop loss in USDT"
+        },
+        "order_id": {
+          "type": "string",
+          "description": "Order ID"
+        },
+        "order_link_id": {
+          "type": "string",
+          "description": "Custom order ID"
+        },
+        "testnet": {
+          "type": "string",
+          "description": "[true|false] Use testnet (default: from env)"
+        },
+        "account_type": {
+          "type": "string",
+          "description": "[UNIFIED|CONTRACT|SPOT] Account type"
+        },
+        "coin": {
+          "type": "string",
+          "description": "Coin symbol (default: USDT)"
+        },
+        "category": {
+          "type": "string",
+          "description": "[linear|inverse|option|spot] Product type"
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": "[GTC|IOC|FOK|PostOnly] Time in force"
+        },
+        "reduce_only": {
+          "type": "string",
+          "description": "Flag to reduce only position"
+        },
+        "verbose": {
+          "type": "string",
+          "description": "Enable verbose logging"
+        }
+      },
+      "required": [
+        "symbol",
+        "side",
+        "order_type",
+        "qty",
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "bbt",
+    "description": "Unified Entry Point — Bybit Realm v5.0",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "health_check, get_wallet_balance, get_account_info, get_positions, get_position_risk, get_fee_rate, set_leverage, set_trading_stop, set_position_mode, get_executions, get_pnl_history, panic_close, bulk_update_tp_sl, get_account_summary, get_pnl_summary, update_trailing_stop, set_tp_sl, check_risk_limit, check_balance, close_position, get_open_positions_summary, send_telegram_alert, export_trade_history, calculate_rsi, calculate_sma, calculate_ema, calculate_macd, calculate_bollinger_bands, calculate_vwap, calculate_atr, calculate_stoch, scan_scalping_opportunities, place_order, amend_order, cancel_order, cancel_all_orders, get_open_orders, get_order_history, batch_place_orders, place_smart_trade, get_ticker, get_orderbook, get_klines, get_recent_trades, get_instruments_info, get_funding_rate, get_open_interest, get_volatility_index, get_orderbook_analysis, get_volume_at_price, get_market_regime, scan_symbols, get_journal"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Trading pair (e.g. BTCUSDT)."
+        },
+        "side": {
+          "type": "string",
+          "description": "Buy, Sell."
+        },
+        "qty": {
+          "type": "integer",
+          "description": "quantity."
+        },
+        "price": {
+          "type": "integer",
+          "description": "price."
+        },
+        "category": {
+          "type": "string",
+          "description": "linear, spot, inverse."
+        },
+        "stop_loss": {
+          "type": "integer",
+          "description": "Stop loss price."
+        },
+        "take_profit": {
+          "type": "integer",
+          "description": "Take profit price."
+        },
+        "leverage": {
+          "type": "integer",
+          "description": "Leverage value."
+        },
+        "interval": {
+          "type": "string",
+          "description": "1, 5, 15, 60, 240, D."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Result limit."
+        },
+        "json": {
+          "type": "boolean",
+          "description": "Output raw JSON instead of pretty print."
+        }
+      },
+      "required": [
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "bybit_micro_scalper",
+    "description": "Compatibility shim for the argc runner – simply forwards to main().",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "args"
+      ]
+    }
+  },
+  {
+    "name": "monitor_scalp",
+    "description": "Continuously monitors open positions for a symbol and triggers",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Required: Trading pair (e.g., BTCUSDT)"
+        },
+        "qty": {
+          "type": "string",
+          "description": "Required: Quantity (base asset)"
+        },
+        "leverage": {
+          "type": "string",
+          "description": "Required: Leverage value"
+        },
+        "interval": {
+          "type": "string",
+          "description": "Optional: Check interval (default: 30)"
+        },
+        "trailing_stop": {
+          "type": "string",
+          "description": "Optional: Trailing stop price distance (e.g., 50)"
+        },
+        "target_profit": {
+          "type": "string",
+          "description": "Optional: Target profit in USDT (e.g., 0.10)"
+        },
+        "max_iterations": {
+          "type": "string",
+          "description": "Optional: Exit after N poll loops (tool-friendly)"
+        },
+        "max_spread_bps": {
+          "type": "string",
+          "description": "Optional: Skip scalp if spread exceeds bps (e.g., 10)"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Simulate without executing trades"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose logging"
+        },
+        "use_ws": {
+          "type": "boolean",
+          "description": "Use WebSocket for real-time updates (experimental)"
+        },
+        "sell_scalp": {
+          "type": "boolean",
+          "description": "Enable sell scalps (default: buy)"
+        }
+      },
+      "required": [
+        "symbol",
+        "qty",
+        "leverage"
+      ]
+    }
+  },
+  {
+    "name": "micro_profit",
+    "description": "Estimate micro‑profit opportunities from order‑book data.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Required trading pair (e.g., BTCUSDT)."
+        },
+        "side": {
+          "type": "string",
+          "description": "Required side: Buy or Sell."
+        },
+        "qty": {
+          "type": "string",
+          "description": "Required quantity (base asset)."
+        },
+        "use_vwap_entry": {
+          "type": "boolean",
+          "description": "Use VWAP entry price instead of best bid/ask."
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose debug logging."
+        }
+      },
+      "required": [
+        "symbol",
+        "side",
+        "qty"
+      ]
+    }
+  },
+  {
+    "name": "bybit_tool",
+    "description": "Bybit Realm Unified Tool execution.\nMaintains 100% parameter compatibility with legacy toolsets.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "description": ""
+        },
+        "qty": {
+          "type": "string",
+          "description": ""
+        },
+        "price": {
+          "type": "string",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "string",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "string",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "profit_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "fee_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "target": {
+          "type": "string",
+          "description": ""
+        },
+        "maker_fee": {
+          "type": "string",
+          "description": ""
+        },
+        "taker_fee": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_reward": {
+          "type": "string",
+          "description": ""
+        },
+        "kelly_win": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "iceberg_slices": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "category",
+        "stop_loss",
+        "take_profit",
+        "time_in_force",
+        "client_oid",
+        "leverage",
+        "profit_usdt",
+        "fee_rate",
+        "target",
+        "maker_fee",
+        "taker_fee",
+        "risk_reward",
+        "kelly_win",
+        "limit",
+        "interval",
+        "iceberg_slices"
+      ]
+    }
+  },
+  {
+    "name": "bybit_x",
+    "description": "Bybit Realm Unified Tool execution.\nMaintains 100% parameter compatibility with legacy toolsets.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "description": ""
+        },
+        "qty": {
+          "type": "string",
+          "description": ""
+        },
+        "price": {
+          "type": "string",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "string",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "string",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "profit_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "fee_rate": {
+          "type": "string",
+          "description": ""
+        },
+        "target": {
+          "type": "string",
+          "description": ""
+        },
+        "maker_fee": {
+          "type": "string",
+          "description": ""
+        },
+        "taker_fee": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_reward": {
+          "type": "string",
+          "description": ""
+        },
+        "kelly_win": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "iceberg_slices": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "category",
+        "stop_loss",
+        "take_profit",
+        "time_in_force",
+        "client_oid",
+        "leverage",
+        "profit_usdt",
+        "fee_rate",
+        "target",
+        "maker_fee",
+        "taker_fee",
+        "risk_reward",
+        "kelly_win",
+        "limit",
+        "interval",
+        "iceberg_slices"
+      ]
+    }
+  },
+  {
+    "name": "bybit_smart_order",
+    "description": "Place a smart order with automatic position sizing and risk management.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "BTCUSDT Trading pair (e.g. BTCUSDT)."
+        },
+        "side": {
+          "type": "string",
+          "description": "Buy Buy or Sell."
+        },
+        "order_type": {
+          "type": "string",
+          "description": "Market Market or Limit (default: Market)."
+        },
+        "entry_price": {
+          "type": "integer",
+          "description": "Entry price (required if order-type is Limit)."
+        },
+        "leverage": {
+          "type": "integer",
+          "description": "Set account leverage before placing order."
+        },
+        "risk_pct": {
+          "type": "integer",
+          "description": "% of balance to risk (default: 1.0)."
+        },
+        "sl_dist": {
+          "type": "integer",
+          "description": "Stop loss distance in price."
+        },
+        "sl_price": {
+          "type": "integer",
+          "description": "Absolute Stop Loss price."
+        },
+        "tp_price": {
+          "type": "integer",
+          "description": "Absolute Take Profit price."
+        },
+        "rr_ratio": {
+          "type": "integer",
+          "description": "Risk to Reward ratio for Take Profit calculation (default: 2.0)."
+        },
+        "tp_usdt": {
+          "type": "integer",
+          "description": "Target Take Profit in absolute USDT value (calculates exact exit price)."
+        },
+        "sl_usdt": {
+          "type": "integer",
+          "description": "Maximum Risk in absolute USDT value (overrides --risk-pct)."
+        },
+        "trailing_stop": {
+          "type": "integer",
+          "description": "Trailing Stop activation distance in price."
+        },
+        "trailing_activation": {
+          "type": "integer",
+          "description": "Trailing Stop activation price (requires --trailing-stop)."
+        },
+        "reduce_only": {
+          "type": "string",
+          "description": "Submit order as reduce-only (close position only)."
+        },
+        "margin_mode": {
+          "type": "string",
+          "description": "Margin mode: isolated or cross (sets before leverage if provided)."
+        },
+        "position_idx": {
+          "type": "integer",
+          "description": "Position index: 0=One-Way, 1=Buy hedge, 2=Sell hedge (default: 0)."
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": "Time in force: GTC, IOC, FOK, PostOnly (default: GTC)."
+        },
+        "sl_trigger_by": {
+          "type": "string",
+          "description": "SL trigger price type: Mark, Index, Last (default: Mark)."
+        },
+        "tp_trigger_by": {
+          "type": "string",
+          "description": "TP trigger price type: Mark, Index, Last (default: Mark)."
+        },
+        "order_link_id": {
+          "type": "string",
+          "description": "Custom order link ID (max 36 chars) for idempotency."
+        },
+        "dry_run": {
+          "type": "string",
+          "description": "Calculate everything and return the order payload without submitting."
+        },
+        "max_position_usdt": {
+          "type": "integer",
+          "description": "Safety cap: refuse if notional > this USDT value."
+        }
+      }
+    }
+  },
+  {
+    "name": "realm_methods",
+    "description": "╔══════════════════════════════════════════════════════════════════╗\n║  Unified Entry Point — Bybit Realm v5.0                        ║\n║                                                                  ║\n║  Actions:                                                        ║\n║  health_check          get_wallet_balance    get_account_info   ║\n║  get_positions         get_position_risk     get_fee_rate       ║\n║  set_leverage          set_trading_stop      set_position_mode  ║\n║  get_executions        get_pnl_history       panic_close        ║\n║  bulk_update_tp_sl     get_account_summary   get_pnl_summary    ║\n║  update_trailing_stop  set_tp_sl             check_risk_limit   ║\n║  check_balance         close_position                           ║\n║  get_open_positions_summary  send_telegram_alert                ║\n║  export_trade_history                                           ║\n║  calculate_rsi         calculate_sma          calculate_ema      ║\n║  calculate_macd        calculate_bollinger_bands               ║\n║  calculate_vwap        calculate_atr          calculate_stoch  ║\n║  scan_scalping_opportunities                                   ║\n║  place_order           amend_order           cancel_order       ║\n║  cancel_all_orders     get_open_orders       get_order_history  ║\n║  batch_place_orders    place_smart_trade                        ║\n║  get_ticker            get_orderbook         get_klines         ║\n║  get_recent_trades     get_instruments_info  get_funding_rate   ║\n║  get_open_interest     get_volatility_index                     ║\n║  get_orderbook_analysis  get_volume_at_price  get_market_regime ║\n║  scan_symbols          get_journal                              ║\n╚══════════════════════════════════════════════════════════════════╝",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "description": ""
+        },
+        "qty": {
+          "type": "string",
+          "description": ""
+        },
+        "price": {
+          "type": "string",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "order_id": {
+          "type": "string",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": ""
+        },
+        "reduce_only": {
+          "type": "string",
+          "description": ""
+        },
+        "trigger_price": {
+          "type": "string",
+          "description": ""
+        },
+        "trigger_by": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "string",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "string",
+          "description": ""
+        },
+        "trailing_stop": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "trailing_stop_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "depth": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "lookback": {
+          "type": "string",
+          "description": ""
+        },
+        "wall_multiplier": {
+          "type": "string",
+          "description": ""
+        },
+        "symbols": {
+          "type": "string",
+          "description": ""
+        },
+        "include_regime": {
+          "type": "string",
+          "description": ""
+        },
+        "settle_coin": {
+          "type": "string",
+          "description": ""
+        },
+        "account_type": {
+          "type": "string",
+          "description": ""
+        },
+        "orders": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "journal_limit": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "order_id",
+        "client_oid",
+        "time_in_force",
+        "reduce_only",
+        "trigger_price",
+        "trigger_by",
+        "tp_order_type",
+        "sl_order_type",
+        "stop_loss",
+        "take_profit",
+        "trailing_stop",
+        "tp_pct",
+        "sl_pct",
+        "trailing_stop_pct",
+        "leverage",
+        "category",
+        "depth",
+        "limit",
+        "interval",
+        "lookback",
+        "wall_multiplier",
+        "symbols",
+        "include_regime",
+        "settle_coin",
+        "account_type",
+        "orders",
+        "journal_symbol",
+        "journal_limit"
+      ]
+    }
+  },
+  {
+    "name": "pyrm_term",
+    "description": "Bybit Trading Tool – Execute any supported trading operation.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "symbol": {
+          "type": "string",
+          "description": ""
+        },
+        "side": {
+          "type": "string",
+          "description": ""
+        },
+        "qty": {
+          "type": "string",
+          "description": ""
+        },
+        "price": {
+          "type": "string",
+          "description": ""
+        },
+        "order_type": {
+          "type": "string",
+          "description": ""
+        },
+        "category": {
+          "type": "string",
+          "description": ""
+        },
+        "order_id": {
+          "type": "string",
+          "description": ""
+        },
+        "stop_loss": {
+          "type": "string",
+          "description": ""
+        },
+        "take_profit": {
+          "type": "string",
+          "description": ""
+        },
+        "trailing_stop": {
+          "type": "string",
+          "description": ""
+        },
+        "reduce_only": {
+          "type": "string",
+          "description": ""
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": ""
+        },
+        "position_idx": {
+          "type": "string",
+          "description": ""
+        },
+        "client_oid": {
+          "type": "string",
+          "description": ""
+        },
+        "leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "buy_leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "sell_leverage": {
+          "type": "string",
+          "description": ""
+        },
+        "account_type": {
+          "type": "string",
+          "description": ""
+        },
+        "limit": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "interval_time": {
+          "type": "string",
+          "description": ""
+        },
+        "strong_threshold": {
+          "type": "string",
+          "description": ""
+        },
+        "mild_threshold": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "tp_pct": {
+          "type": "string",
+          "description": ""
+        },
+        "risk_usdt": {
+          "type": "string",
+          "description": ""
+        },
+        "sl_price": {
+          "type": "string",
+          "description": ""
+        },
+        "orders": {
+          "type": "string",
+          "description": ""
+        },
+        "slices": {
+          "type": "string",
+          "description": ""
+        },
+        "delay": {
+          "type": "string",
+          "description": ""
+        },
+        "start_time": {
+          "type": "string",
+          "description": ""
+        },
+        "end_time": {
+          "type": "string",
+          "description": ""
+        },
+        "output": {
+          "type": "string",
+          "description": ""
+        },
+        "orders_file": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "action",
+        "symbol",
+        "side",
+        "qty",
+        "price",
+        "order_type",
+        "category",
+        "order_id",
+        "stop_loss",
+        "take_profit",
+        "trailing_stop",
+        "reduce_only",
+        "time_in_force",
+        "position_idx",
+        "client_oid",
+        "leverage",
+        "buy_leverage",
+        "sell_leverage",
+        "account_type",
+        "limit",
+        "interval",
+        "interval_time",
+        "strong_threshold",
+        "mild_threshold",
+        "sl_pct",
+        "tp_pct",
+        "risk_usdt",
+        "sl_price",
+        "orders",
+        "slices",
+        "delay",
+        "start_time",
+        "end_time",
+        "output",
+        "orders_file"
+      ]
+    }
+  },
+  {
+    "name": "execute_command",
+    "description": "Execute arbitrary shell command and return full output.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Command to run (required)"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Duration for the command (e.g. 60s, 1m, 2h)"
+        },
+        "connect_timeout": {
+          "type": "string",
+          "description": "Connection timeout for curl commands (default: 10s)"
+        },
+        "max_time": {
+          "type": "string",
+          "description": "Max transfer time for curl commands (default: matches --timeout)"
+        },
+        "working_dir": {
+          "type": "string",
+          "description": "Working directory for the command (default: current dir)"
+        },
+        "env": {
+          "type": "string",
+          "description": "<KEY=VALUE>              Extra environment variable (repeatable)"
+        },
+        "shell": {
+          "type": "string",
+          "description": "Shell to use: bash/sh/zsh (default: bash)"
+        },
+        "no_color": {
+          "type": "boolean",
+          "description": "Disable ANSI colour output"
+        },
+        "strip_ansi": {
+          "type": "boolean",
+          "description": "Strip ANSI codes from command output before returning"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show extra debug info (PATH, shell, env vars)"
+        }
+      },
+      "required": [
+        "command"
+      ]
+    }
+  },
+  {
+    "name": "json_tool",
+    "description": "Format, minify, or validate JSON from a file path or inline string.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "string",
+          "description": ""
+        },
+        "action": {
+          "type": "string",
+          "description": ""
+        },
+        "indent": {
+          "type": "string",
+          "description": ""
+        },
+        "sort_keys": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "input",
+        "action",
+        "indent",
+        "sort_keys"
+      ]
+    }
+  },
+  {
+    "name": "lux_download",
+    "description": "A video/audio downloader tool utilizing the lux CLI.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The video/playlist URL to download."
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Destination directory."
+        },
+        "info": {
+          "type": "string",
+          "description": "If true, outputs video metadata and formats without downloading."
+        },
+        "audio_only": {
+          "type": "string",
+          "description": "If true, downloads only the best quality audio."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "fprobe_media",
+    "description": "Summarize a video or audio file (local path or URL) using ffprobe.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "input"
+      ]
+    }
+  },
+  {
+    "name": "gen_thumbs",
+    "description": "Generate thumbnails from video files or URLs using ffmpeg.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "string",
+          "description": ""
+        },
+        "output_dir": {
+          "type": "string",
+          "description": ""
+        },
+        "interval": {
+          "type": "string",
+          "description": ""
+        },
+        "width": {
+          "type": "string",
+          "description": ""
+        },
+        "image_format": {
+          "type": "string",
+          "description": ""
+        },
+        "start": {
+          "type": "string",
+          "description": ""
+        },
+        "end": {
+          "type": "string",
+          "description": ""
+        },
+        "max_frames": {
+          "type": "string",
+          "description": ""
+        },
+        "montage": {
+          "type": "string",
+          "description": ""
+        },
+        "add_timestamps": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "input",
+        "output_dir",
+        "interval",
+        "width",
+        "image_format",
+        "start",
+        "end",
+        "max_frames",
+        "montage",
+        "add_timestamps"
+      ]
+    }
+  },
+  {
+    "name": "photo_tool",
+    "description": "Take a photo using the device camera and save it to a central",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string",
+          "description": "Output filename (default: photo_YYYYMMDD_HHMMSS.jpg)"
+        },
+        "camera_id": {
+          "type": "string",
+          "description": "Camera: 0=rear 1=front (default: 0)"
+        },
+        "save_dir": {
+          "type": "string",
+          "description": "Central save directory (default: ~/Pictures/CameraSnaps)"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Max seconds to wait for capture (default: 20)"
+        },
+        "quality": {
+          "type": "integer",
+          "description": "JPEG quality 1-100 (default: 90)"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Filename prefix (default: photo)"
+        },
+        "log_file": {
+          "type": "string",
+          "description": "Persistent photo log path"
+        },
+        "format": {
+          "type": "string",
+          "description": "Output format: jpg, png, webp (default: jpg)"
+        },
+        "resize": {
+          "type": "string",
+          "description": "Resize image e.g. 1280x720 (requires ImageMagick)"
+        },
+        "rotate": {
+          "type": "string",
+          "description": "Rotate image: 90, 180, 270 (requires ImageMagick)"
+        },
+        "annotate": {
+          "type": "string",
+          "description": "Burn text annotation onto image"
+        },
+        "annotate_pos": {
+          "type": "string",
+          "description": "Annotation position: tl, tr, bl, br, center (default: br)"
+        },
+        "annotate_color": {
+          "type": "string",
+          "description": "Annotation text color (default: white)"
+        },
+        "annotate_size": {
+          "type": "integer",
+          "description": "Annotation font size (default: 24)"
+        },
+        "burst": {
+          "type": "integer",
+          "description": "Burst mode: take N photos rapidly (default: 1)"
+        },
+        "burst_delay": {
+          "type": "string",
+          "description": "Delay between burst shots ms (default: 500)"
+        },
+        "filter": {
+          "type": "string",
+          "description": "Apply filter: grayscale, sepia, blur, sharpen, edge"
+        },
+        "watermark": {
+          "type": "string",
+          "description": "Overlay watermark image (requires ImageMagick)"
+        },
+        "upload_url": {
+          "type": "string",
+          "description": "HTTP POST endpoint to upload photo after capture"
+        },
+        "upload_field": {
+          "type": "string",
+          "description": "Form field name for upload (default: file)"
+        },
+        "convert_to": {
+          "type": "string",
+          "description": "Convert after capture: webp, png, jpg, heic"
+        },
+        "tag": {
+          "type": "string",
+          "description": "<KEY=VALUE>           Custom metadata tag (repeatable)"
+        },
+        "album": {
+          "type": "string",
+          "description": "Organise into named sub-album inside save-dir"
+        },
+        "compare_with": {
+          "type": "string",
+          "description": "Diff-compare new photo with existing file"
+        },
+        "max_log_entries": {
+          "type": "integer",
+          "description": "Maximum log entries to keep (default: 500)"
+        },
+        "thumbnail_size": {
+          "type": "string",
+          "description": "Thumbnail dimensions (default: 200x200)"
+        },
+        "search_log": {
+          "type": "string",
+          "description": "Search photo log and exit"
+        },
+        "export_log": {
+          "type": "string",
+          "description": "Export log: json, csv, md (default: json)"
+        },
+        "front": {
+          "type": "boolean",
+          "description": "Use front camera (shortcut for --camera-id 1)"
+        },
+        "encode_base64": {
+          "type": "boolean",
+          "description": "Base64-encode image for vision model input"
+        },
+        "show_info": {
+          "type": "boolean",
+          "description": "Print detailed file metadata after capture"
+        },
+        "open": {
+          "type": "boolean",
+          "description": "Open photo after capture using termux-open"
+        },
+        "list_cameras": {
+          "type": "boolean",
+          "description": "List available cameras and exit"
+        },
+        "show_log": {
+          "type": "boolean",
+          "description": "Print the persistent photo log and exit"
+        },
+        "gps_tag": {
+          "type": "boolean",
+          "description": "Embed GPS coordinates via termux-location"
+        },
+        "scan_qr": {
+          "type": "boolean",
+          "description": "Scan QR/barcode in captured image (requires zbarimg)"
+        },
+        "analyze_brightness": {
+          "type": "boolean",
+          "description": "Report average brightness level (requires ImageMagick)"
+        },
+        "analyze_colors": {
+          "type": "boolean",
+          "description": "Report dominant colors (requires ImageMagick/convert)"
+        },
+        "histogram": {
+          "type": "boolean",
+          "description": "Save histogram PNG alongside photo"
+        },
+        "share": {
+          "type": "boolean",
+          "description": "Share photo via termux-share after capture"
+        },
+        "notify": {
+          "type": "boolean",
+          "description": "Send Termux notification when capture completes"
+        },
+        "dedupe_check": {
+          "type": "boolean",
+          "description": "Warn if a visually similar photo already exists"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Simulate capture without writing files"
+        },
+        "no_thumbnail": {
+          "type": "boolean",
+          "description": "Skip thumbnail generation"
+        },
+        "no_log": {
+          "type": "boolean",
+          "description": "Skip writing to photo log"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose debug output"
+        }
+      }
+    }
+  },
+  {
+    "name": "edit",
+    "description": "File editing and manipulation tool with security restrictions.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "description": "Operation to perform (required)"
+        },
+        "file_path": {
+          "type": "string",
+          "description": "Primary file or directory path"
+        },
+        "target_path": {
+          "type": "string",
+          "description": "Secondary path (copy/move/diff target)"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content to write/append/insert"
+        },
+        "search_text": {
+          "type": "string",
+          "description": "Text to search for (replace/search ops)"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Replacement text"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Search pattern (search/grep_dir)"
+        },
+        "line_number": {
+          "type": "integer",
+          "description": "Line number for insert/delete"
+        },
+        "start_line": {
+          "type": "integer",
+          "description": "Start line for range operations"
+        },
+        "end_line": {
+          "type": "integer",
+          "description": "End line for range operations"
+        },
+        "encoding": {
+          "type": "string",
+          "description": "File encoding (default: utf-8)"
+        },
+        "max_size": {
+          "type": "integer",
+          "description": "Max read size in bytes"
+        },
+        "max_write_size": {
+          "type": "integer",
+          "description": "Max write size in bytes"
+        },
+        "line_context": {
+          "type": "integer",
+          "description": "Context lines for search results"
+        },
+        "sort_by": {
+          "type": "string",
+          "description": "Sort field for list_dir (name/size/modified)"
+        },
+        "context_lines": {
+          "type": "integer",
+          "description": "Context lines for diff"
+        },
+        "truncate_size": {
+          "type": "integer",
+          "description": "Size for truncate operation"
+        },
+        "max_backups": {
+          "type": "integer",
+          "description": "Maximum backup count"
+        },
+        "max_matches": {
+          "type": "integer",
+          "description": "Maximum search matches"
+        },
+        "mode": {
+          "type": "string",
+          "description": "Permission mode (octal) or compare mode"
+        },
+        "to_type": {
+          "type": "string",
+          "description": "Line ending type: lf or crlf"
+        },
+        "backup_timestamp": {
+          "type": "string",
+          "description": "Backup timestamp for revert"
+        },
+        "algorithm": {
+          "type": "string",
+          "description": "Hash algorithm (sha256/sha1/sha512/md5/blake2b)"
+        },
+        "n_lines": {
+          "type": "integer",
+          "description": "Lines for head/tail operations"
+        },
+        "compare_mode": {
+          "type": "string",
+          "description": "Compare mode: bytes or text"
+        },
+        "compression": {
+          "type": "string",
+          "description": "Archive compression type"
+        },
+        "password": {
+          "type": "string",
+          "description": "Archive password"
+        },
+        "undefined_var": {
+          "type": "string",
+          "description": "Template undefined var: error/keep/empty"
+        },
+        "file_pattern": {
+          "type": "string",
+          "description": "File pattern for find/grep"
+        },
+        "min_size": {
+          "type": "integer",
+          "description": "Minimum file size filter"
+        },
+        "max_size_filter": {
+          "type": "integer",
+          "description": "Maximum file size filter"
+        },
+        "modified_after": {
+          "type": "string",
+          "description": "Modified after (unix timestamp)"
+        },
+        "modified_before": {
+          "type": "string",
+          "description": "Modified before (unix timestamp)"
+        },
+        "file_type": {
+          "type": "string",
+          "description": "File type filter: any/file/dir"
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Maximum find results"
+        },
+        "var": {
+          "type": "string",
+          "description": "<KEY=VALUE>               Template variable (repeatable)"
+        },
+        "ops": {
+          "type": "string",
+          "description": "JSON array of operations for batch mode"
+        },
+        "edits": {
+          "type": "string",
+          "description": "JSON array of edits for batch_edit mode"
+        },
+        "use_regex": {
+          "type": "boolean",
+          "description": "Use regex for pattern matching"
+        },
+        "no_global": {
+          "type": "boolean",
+          "description": "Only replace first occurrence"
+        },
+        "case_insensitive": {
+          "type": "boolean",
+          "description": "Case-insensitive matching"
+        },
+        "show_lines": {
+          "type": "boolean",
+          "description": "Show line numbers in output"
+        },
+        "add_newline": {
+          "type": "boolean",
+          "description": "Append newline to written content"
+        },
+        "create_parents": {
+          "type": "boolean",
+          "description": "Create parent directories"
+        },
+        "preserve_metadata": {
+          "type": "boolean",
+          "description": "Preserve file metadata on copy"
+        },
+        "include_hidden": {
+          "type": "boolean",
+          "description": "Include hidden files"
+        },
+        "descending": {
+          "type": "boolean",
+          "description": "Sort in descending order"
+        },
+        "parents": {
+          "type": "boolean",
+          "description": "Create parent dirs for create_dir"
+        },
+        "recursive": {
+          "type": "boolean",
+          "description": "Recursive operation"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose/debug logging"
+        },
+        "continue_on_error": {
+          "type": "boolean",
+          "description": "Continue batch on error instead of stopping"
+        }
+      },
+      "required": [
+        "operation"
+      ]
+    }
+  },
+  {
+    "name": "edit2",
+    "description": "File editing and manipulation tool with security restrictions.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "description": "Operation to perform (required)"
+        },
+        "file_path": {
+          "type": "string",
+          "description": "Primary file or directory path"
+        },
+        "target_path": {
+          "type": "string",
+          "description": "Secondary path (copy/move/diff target)"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content to write/append/insert"
+        },
+        "search_text": {
+          "type": "string",
+          "description": "Text to search for (replace/search ops)"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Replacement text"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Search pattern (search/grep_dir)"
+        },
+        "line_number": {
+          "type": "integer",
+          "description": "Line number for insert/delete"
+        },
+        "start_line": {
+          "type": "integer",
+          "description": "Start line for range operations"
+        },
+        "end_line": {
+          "type": "integer",
+          "description": "End line for range operations"
+        },
+        "encoding": {
+          "type": "string",
+          "description": "File encoding (default: utf-8)"
+        },
+        "max_size": {
+          "type": "integer",
+          "description": "Max read size in bytes"
+        },
+        "max_write_size": {
+          "type": "integer",
+          "description": "Max write size in bytes"
+        },
+        "line_context": {
+          "type": "integer",
+          "description": "Context lines for search results"
+        },
+        "sort_by": {
+          "type": "string",
+          "description": "Sort field for list_dir (name/size/modified)"
+        },
+        "context_lines": {
+          "type": "integer",
+          "description": "Context lines for diff"
+        },
+        "truncate_size": {
+          "type": "integer",
+          "description": "Size for truncate operation"
+        },
+        "max_backups": {
+          "type": "integer",
+          "description": "Maximum backup count"
+        },
+        "max_matches": {
+          "type": "integer",
+          "description": "Maximum search matches"
+        },
+        "mode": {
+          "type": "string",
+          "description": "Permission mode (octal) or compare mode"
+        },
+        "to_type": {
+          "type": "string",
+          "description": "Line ending type: lf or crlf"
+        },
+        "backup_timestamp": {
+          "type": "string",
+          "description": "Backup timestamp for revert"
+        },
+        "algorithm": {
+          "type": "string",
+          "description": "Hash algorithm (sha256/sha1/sha512/md5/blake2b)"
+        },
+        "n_lines": {
+          "type": "integer",
+          "description": "Lines for head/tail operations"
+        },
+        "compare_mode": {
+          "type": "string",
+          "description": "Compare mode: bytes or text"
+        },
+        "compression": {
+          "type": "string",
+          "description": "Archive compression type"
+        },
+        "password": {
+          "type": "string",
+          "description": "Archive password"
+        },
+        "undefined_var": {
+          "type": "string",
+          "description": "Template undefined var: error/keep/empty"
+        },
+        "file_pattern": {
+          "type": "string",
+          "description": "File pattern for find/grep"
+        },
+        "min_size": {
+          "type": "integer",
+          "description": "Minimum file size filter"
+        },
+        "max_size_filter": {
+          "type": "integer",
+          "description": "Maximum file size filter"
+        },
+        "modified_after": {
+          "type": "string",
+          "description": "Modified after (unix timestamp)"
+        },
+        "modified_before": {
+          "type": "string",
+          "description": "Modified before (unix timestamp)"
+        },
+        "file_type": {
+          "type": "string",
+          "description": "File type filter: any/file/dir"
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Maximum find results"
+        },
+        "var": {
+          "type": "string",
+          "description": "<KEY=VALUE>               Template variable (repeatable)"
+        },
+        "ops": {
+          "type": "string",
+          "description": "JSON array of operations for batch mode"
+        },
+        "edits": {
+          "type": "string",
+          "description": "JSON array of edits for batch_edit mode"
+        },
+        "use_regex": {
+          "type": "boolean",
+          "description": "Use regex for pattern matching"
+        },
+        "no_global": {
+          "type": "boolean",
+          "description": "Only replace first occurrence"
+        },
+        "case_insensitive": {
+          "type": "boolean",
+          "description": "Case-insensitive matching"
+        },
+        "show_lines": {
+          "type": "boolean",
+          "description": "Show line numbers in output"
+        },
+        "add_newline": {
+          "type": "boolean",
+          "description": "Append newline to written content"
+        },
+        "create_parents": {
+          "type": "boolean",
+          "description": "Create parent directories"
+        },
+        "preserve_metadata": {
+          "type": "boolean",
+          "description": "Preserve file metadata on copy"
+        },
+        "include_hidden": {
+          "type": "boolean",
+          "description": "Include hidden files"
+        },
+        "descending": {
+          "type": "boolean",
+          "description": "Sort in descending order"
+        },
+        "parents": {
+          "type": "boolean",
+          "description": "Create parent dirs for create_dir"
+        },
+        "recursive": {
+          "type": "boolean",
+          "description": "Recursive operation"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Enable verbose/debug logging"
+        },
+        "continue_on_error": {
+          "type": "boolean",
+          "description": "Continue batch on error instead of stopping"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Preview changes without modifying filesystem"
+        }
+      },
+      "required": [
+        "operation"
+      ]
+    }
+  },
+  {
+    "name": "maps_tool",
+    "description": "Dispatcher entry point.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "operation"
+      ]
+    }
+  },
+  {
+    "name": "pin_location",
+    "description": "Pins the current location using termux-location and saves it to a file.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "label"
+      ]
+    }
+  },
+  {
+    "name": "navigate_between",
+    "description": "Navigate between two pinned locations.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "label_a": {
+          "type": "string",
+          "description": ""
+        },
+        "label_b": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "label_a",
+        "label_b"
+      ]
+    }
+  },
+  {
+    "name": "review_pins",
+    "description": "List pinned locations and visualize on a text map.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "dummy_arg": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "dummy_arg"
+      ]
+    }
+  },
+  {
+    "name": "execute_py_code",
+    "description": "Execute the python code.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Python code to execute."
+        }
+      },
+      "required": [
+        "code"
+      ]
+    }
+  },
+  {
+    "name": "crypto_price",
+    "description": "Get current price of a cryptocurrency (e.g., bitcoin, ethereum).",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "memory_manager",
+    "description": "Manage persistent memory for AIChat conversations and context",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Action (store|retrieve|search|clear|export|import|cleanup)"
+        },
+        "key": {
+          "type": "string",
+          "description": "Memory key or identifier (required for store/retrieve/search/clear)"
+        },
+        "value": {
+          "type": "string",
+          "description": "Value to store (required for store)"
+        },
+        "type": {
+          "type": "string",
+          "description": "Memory type (conversation|preference|context|knowledge) (default: context)"
+        },
+        "session": {
+          "type": "string",
+          "description": "Session identifier (default: default)"
+        },
+        "tags": {
+          "type": "string",
+          "description": "Comma-separated tags for categorisation (optional)"
+        },
+        "days": {
+          "type": "string",
+          "description": "Retention period in days for cleanup (default: 30)"
+        }
+      },
+      "required": [
+        "action",
+        "key",
+        "value",
+        "type",
+        "session",
+        "tags",
+        "days"
+      ]
+    }
+  },
+  {
+    "name": "memory_analytics",
+    "description": "Generate memory analytics and insights.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "analytics_type": {
+          "type": "string",
+          "description": ""
+        },
+        "days": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "analytics_type",
+        "days"
+      ]
+    }
+  },
+  {
+    "name": "mapper_extractor",
+    "description": "Extract coordinates from the given URL and output them as a GIS table.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": ""
+        },
+        "precision": {
+          "type": "string",
+          "description": ""
+        },
+        "output": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "url",
+        "precision",
+        "output"
+      ]
+    }
+  },
+  {
+    "name": "file_summarizer",
+    "description": "Summarize a file.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "description": ""
+        },
+        "length": {
+          "type": "integer",
+          "description": "Max length of summary."
+        }
+      },
+      "required": [
+        "file_path"
+      ]
+    }
+  },
+  {
+    "name": "clipboard",
+    "description": "Get or set system clipboard.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "get": {
+          "type": "string",
+          "description": "Get clipboard"
+        },
+        "set": {
+          "type": "string",
+          "description": "Set clipboard"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "system_info",
+    "description": "Get basic system info.",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "url_metadata",
+    "description": "Extract URL title.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "find_port",
+    "description": "Find process on port.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "port"
+      ]
+    }
+  },
+  {
+    "name": "git_summary",
+    "description": "Git status summary.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_my_location",
+    "description": "Get location, address, map link, weather, and altitude.",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "http_headers",
+    "description": "Fetch and analyze HTTP headers for a URL.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The target URL."
+        },
+        "method": {
+          "type": "string",
+          "description": "HTTP method to use: HEAD or GET (default: HEAD)."
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Custom User-Agent string."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Request timeout in seconds (default: 10)."
+        },
+        "ignore_ssl": {
+          "type": "string",
+          "description": "If true, bypass SSL certificate verification."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "dns_query",
+    "description": "DNS query.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "host"
+      ]
+    }
+  },
+  {
+    "name": "local_ip",
+    "description": "Get local IP address.",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "connectivity_check",
+    "description": "Check host connectivity.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "host"
+      ]
+    }
+  },
+  {
+    "name": "tcp_ping",
+    "description": "Measure TCP latency.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": ""
+        },
+        "port": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "host",
+        "port"
+      ]
+    }
+  },
+  {
+    "name": "nsfw_search",
+    "description": "Performs advanced NSFW-focused searches and optionally downloads",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query or target identifier"
+        },
+        "platform": {
+          "type": "string",
+          "description": "Specific platform to target (e.g., twitter, reddit, onlyfans)"
+        },
+        "deep": {
+          "type": "boolean",
+          "description": "Enable deep search (more queries, more results)"
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Number of results to return"
+        },
+        "save": {
+          "type": "string",
+          "description": "Path to save results JSON"
+        },
+        "download": {
+          "type": "boolean",
+          "description": "Enable automatic downloading of images found in results"
+        },
+        "media_dir": {
+          "type": "string",
+          "description": "Directory to save downloaded images (default: \\~/nsfw_media/)"
+        }
+      },
+      "required": [
+        "query",
+        "limit"
+      ]
+    }
+  },
+  {
+    "name": "grep_text",
+    "description": "Find lines in a text file that contain a string or regex pattern.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "string",
+          "description": ""
+        },
+        "pattern": {
+          "type": "string",
+          "description": ""
+        },
+        "ignore_case": {
+          "type": "string",
+          "description": ""
+        },
+        "max_matches": {
+          "type": "string",
+          "description": ""
+        },
+        "context_lines": {
+          "type": "string",
+          "description": ""
+        },
+        "use_regex": {
+          "type": "string",
+          "description": ""
+        },
+        "encoding": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "required": [
+        "input",
+        "pattern",
+        "ignore_case",
+        "max_matches",
+        "context_lines",
+        "use_regex",
+        "encoding"
+      ]
+    }
+  }
+]

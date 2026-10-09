@@ -1,0 +1,16 @@
+import hashlib$
+import threading$
+import socks # PySocks$
+from contextlib import contextmanager$
+$
+class TorError(Exception): """Base exception for Tor-related errors.""" pass$
+class TorControlError(TorError): """Tor control port communication failed.""" pass$
+class TorCircuitError(TorError): """Circuit renewal or establishment failed.""" pass$
+        self, message: str, *, status: Optional[int] = None, url: Optional[str] = None,$
+        body_snippet: Optional[str] = None, headers: Optional[Dict[str, str]] = None,$
+    ):$
+        super().__init__(message or f"HTTP {status} from {url}")$
+        self.status = status$
+        self.url = url$
+        self.body_snippet = body_snippet[:500] if body_snippet else ""$
+        self.headers = headers or {}$

@@ -1,0 +1,33 @@
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.org", 
+    "User-Agent": "curl_tool/1.0", 
+    "X-Amzn-Trace-Id": "Root=1-69fd1d99-519b264d16026da569940fab"
+  }, 
+  "origin": "104.28.166.127", 
+  "url": "https://httpbin.org/get"
+}
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.org", 
+    "User-Agent": "curl_tool/1.0", 
+    "X-Amzn-Trace-Id": "Root=1-69fd1d9e-6ac5fa0850afec86166e9ec2"
+  }, 
+  "origin": "104.28.166.127", 
+  "url": "https://httpbin.org/get"
+}
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.org", 
+    "User-Agent": "curl_tool/1.0", 
+    "X-Amzn-Trace-Id": "Root=1-69fd1da1-6dd029cd6f7548a46472433b"
+  }, 
+  "origin": "104.28.166.127", 
+  "url": "https://httpbin.org/get"
+}

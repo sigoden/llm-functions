@@ -1,0 +1,2325 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# bybit_micro_scalper_v2.py — Bybit Micro‑Profit Scalper (v3.0)
+#
+# @describe Bybit Micro‑Profit Scalper – automated micro‑profit scalping using order‑book imbalance and momentum.
+# @meta title Bybit Micro‑Profit Scalper (v2)
+# @meta description High‑frequency scalping tool optimized for tiny $0.02‑$0.20 net profit targets using order‑book and momentum conditions.
+# @option --api-key!               Bybit API key.
+# @option --api-secret!            Bybit API secret.
+# @option --symbol! <SYMBOL>         Target crypto derivative trading pair.
+# @option --qty! <QUANTITY>               Order size/quantity (base asset).
+# @option --target-profit! <TARGET_PROFIT>      Desired micro‑profit target in USDT (0.02‑0.20 recommended).
+# @option --maker-fee=0.0002       Maker fee tier (default 0.02% = 0.0002).
+# @option --trailing-stop=0.001    <Optional> Stop distance as decimal fraction of entry (0.001 = 0.1%). Native stopLoss.
+# @flag --balance-check                Pre‑order USDT balance check (flag).
+# @option --max-spread-bps=50      <Optional> Skip if bid‑ask spread exceeds basis points.
+# @flag --dry-run                <Optional> No order placement (flag).
+# @option --mode=rest              Market data: rest | ws (persistent WS when --loop + ws).
+# @option --ws-timeout=8           One‑shot WS wait (non‑loop or first connect).
+# @flag --testnet                Testnet hosts (flag).
+# @flag --loop                   Continuous daemon until SIGINT/SIGTERM (flag).
+# @option --loop-interval=2.0       Seconds between evaluation cycles.
+# @option --cooldown=30            Seconds after successful order before another entry.
+# @option --max-iterations=0       Stop after N iterations (0 = unlimited).
+# @option --private-ws             Private order/execution WS logs (flag, use with --loop).
+# @option --position-guard          Skip new entry if open position exists on symbol (flag).
+# @flag --use-trading-stop-tp                Use native TP via trading stop (flag).
+# @option --ws-fallback-rest        On WS failure, use REST for that cycle (flag).
+# ==============================================================================
+
+import sys
+import math
+from statistics import stdev
+from collections import deque
+import time
+import signal
+import hmac
+import hashlib
+import json
+import threading
+import requests
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Tuple
+import logging
+import os
+from pathlib import Path
+
+# Safe WebSocket Import
+try:
+    import websocket
+except ImportError:
+    websocket = None
+
+# Load environment variables from .env if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    env_path = Path(__file__).with_name('.env')
+    if env_path.is_file():
+        load_dotenv(dotenv_path=env_path)
+except Exception:
+    # dotenv not installed or .env missing – continue without error
+    pass
+
+# ---------------------------------------------------------------------------
+# Global Strategy Constraints & Configurations
+# ---------------------------------------------------------------------------
+MOMENTUM_LONG = 0.0001
+IMBALANCE_LONG = 0.15
+MOMENTUM_SHORT = -0.0001
+IMBALANCE_SHORT = -0.15
+MAX_TP_DISTANCE_PCT = 0.05
+DEFAULT_TAKER_FEE = 0.00055
+
+MICRO_PROFIT_TIERS = [0.02, 0.04, 0.06, 0.08, 0.10, 0.15, 0.20]
+
+# ---------------------------------------------------------------------------
+# Helper utilities
+# ---------------------------------------------------------------------------
+def get_proxies() -> Optional[Dict[str, str]]:
+    proxy = os.getenv("BYBIT_TOR_PROXY")
+    if not proxy and os.getenv("TOR_ENABLED") == "true":
+        proxy = f"socks5://127.0.0.1:{os.getenv('TOR_SOCKS_PORT', '9050')}"
+    if proxy:
+        return {"http": proxy, "https": proxy}
+    return None
+
+def get_ws_run_options() -> Dict[str, Any]:
+    from urllib.parse import urlparse
+    proxy = os.getenv("BYBIT_TOR_PROXY")
+    if not proxy and os.getenv("TOR_ENABLED") == "true":
+        proxy = f"socks5://127.0.0.1:{os.getenv('TOR_SOCKS_PORT', '9050')}"
+    if not proxy:
+        return {}
+    try:
+        parsed = urlparse(proxy)
+        opts = {
+            "http_proxy_host": parsed.hostname,
+            "http_proxy_port": parsed.port,
+        }
+        if parsed.scheme.startswith("socks"):
+            opts["proxy_type"] = "socks5"
+        else:
+            opts["proxy_type"] = "http"
+        return opts
+    except Exception as e:
+        logger.warning(f"Failed to parse proxy URL {proxy}: {e}")
+        return {}
+
+def emit(data: Dict[str, Any]) -> None:
+    """Output structured JSON directly to stdout for downstream processes."""
+    print(json.dumps(data, separators=(",", ":")), flush=True)
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", handlers=[logging.StreamHandler(sys.stderr)])
+logger.setLevel(logging.INFO)
+
+REQUEST_TIMEOUT = 10
+MARKET_RETRIES = 3
+RECV_WINDOW = 30000
+
+# ---------------------------------------------------------------------------
+# Signal handling
+# ---------------------------------------------------------------------------
+_SHUTDOWN = threading.Event()
+
+def _handle_signal(_signum, _frame):
+    _SHUTDOWN.set()
+
+# ---------------------------------------------------------------------------
+# URL helpers
+# ---------------------------------------------------------------------------
+def base_urls(testnet: bool) -> Dict[str, str]:
+    if testnet:
+        return {
+            "rest": "https://api-testnet.bybit.com",
+            "ws_public_linear": "wss://stream-testnet.bybit.com/v5/public/linear",
+            "ws_private": "wss://stream-testnet.bybit.com/v5/private",
+        }
+    return {
+        "rest": "https://api.bybit.com",
+        "ws_public_linear": "wss://stream.bybit.com/v5/public/linear",
+        "ws_private": "wss://stream.bybit.com/v5/private",
+    }
+
+DEFAULT_LEVERAGE = 1.0
+
+# ---------------------------------------------------------------------------
+# Argument parsing – Argcfile‑compatible
+# ---------------------------------------------------------------------------
+def parse_argv(argv: List[str]) -> Dict[str, Any]:
+    """
+    Parse command‑line arguments according to the Argcfile convention.
+    Required options end with ``!``; the trailing ``!`` is stripped from the
+    internal key name so the rest of the code can use ``args["qty"]`` etc.
+    """
+    args: Dict[str, Any] = {}
+    i = 0
+    while i < len(argv):
+        raw = argv[i]
+        if not raw.startswith("--"):
+            i += 1
+            continue
+
+        # Handle options that have an explicit value (e.g. --symbol=BTCUSDT)
+        if "=" in raw:
+            k, v = raw.split("=", 1)
+            key = k[2:].replace("-", "_")
+            # Strip a trailing ``!`` if the option is required
+            if key.endswith("!"):
+                key = key[:-1]
+            args[key] = v
+            i += 1
+            continue
+
+        # Flag or option without ``=value`` (e.g. --dry-run)
+        key = raw[2:].replace("-", "_")
+        if key.endswith("!"):
+            key = key[:-1]
+        nxt = argv[i + 1] if i + 1 < len(argv) else None
+        if nxt and not nxt.startswith("--"):
+            args[key] = nxt
+            i += 2
+        else:
+            args[key] = True
+            i += 1
+    return args
+
+# ---------------------------------------------------------------------------
+# Server‑time synchronisation
+# ---------------------------------------------------------------------------
+_SERVER_TIME_OFFSET_MS: Optional[int] = None
+_SERVER_TIME_LOCK = threading.Lock()
+
+def server_time_ms(base_url: str) -> int:
+    """Local clock adjusted by last known Bybit server offset."""
+    global _SERVER_TIME_OFFSET_MS
+    if _SERVER_TIME_OFFSET_MS is None:
+        sync_server_time(base_url)
+    with _SERVER_TIME_LOCK:
+        offset = _SERVER_TIME_OFFSET_MS or 0
+    return int(time.time() * 1000) + offset
+
+def sync_server_time(base_url: str) -> None:
+    """Update the local offset based on the Bybit server time endpoint."""
+    global _SERVER_TIME_OFFSET_MS
+    try:
+        r = requests.get(
+            f"{base_url}/v5/market/time",
+            timeout=REQUEST_TIMEOUT,
+            proxies=get_proxies(),
+        )
+        r.raise_for_status()
+        data = r.json().get("result", {})
+        if "timeNano" in data:
+            server_ms = int(int(data["timeNano"]) / 1_000_000)
+        else:
+            server_ms = int(data["timeSecond"]) * 1000
+        local_ms = int(time.time() * 1000)
+        with _SERVER_TIME_LOCK:
+            _SERVER_TIME_OFFSET_MS = server_ms - local_ms
+        logger.info("Bybit time sync offset_ms=%s", _SERVER_TIME_OFFSET_MS)
+    except Exception as e:
+        logger.warning("Bybit time sync failed, using local clock: %s", e)
+        with _SERVER_TIME_LOCK:
+            if _SERVER_TIME_OFFSET_MS is None:
+                _SERVER_TIME_OFFSET_MS = 0
+
+def parse_trailing_stop(val: Any) -> Optional[float]:
+    """
+    Parse the --trailing-stop argument.
+
+    - None or falsy -> None
+    - True -> 0.001 (default)
+    - Otherwise parse as float
+    """
+    if not val:
+        return None
+    if isinstance(val, bool):
+        return 0.001 if val else None
+    s = str(val).strip()
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+# ---------------------------------------------------------------------------
+# Signed request helpers
+# ---------------------------------------------------------------------------
+def generate_signature(
+    api_secret: str,
+    timestamp: int,
+    api_key: str,
+    recv_window: int,
+    payload: str,
+) -> str:
+    """Generate the HMAC SHA256 signature required for Bybit API V5."""
+    param_str = str(timestamp) + api_key + str(recv_window) + payload
+    return hmac.new(
+        api_secret.encode("utf-8"),
+        param_str.encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()
+
+def send_signed_post(
+    base_url: str,
+    endpoint: str,
+    payload_dict: Dict[str, Any],
+    api_key: str,
+    api_secret: str,
+    use_server_time: bool = True,
+) -> Dict[str, Any]:
+    timestamp = server_time_ms(base_url) if use_server_time else int(time.time() * 1000)
+    payload_json = json.dumps(payload_dict, separators=(",", ":"))
+    signature = generate_signature(api_secret, timestamp, api_key, RECV_WINDOW, payload_json)
+    headers = {
+        "X-BAPI-API-KEY": api_key,
+        "X-BAPI-SIGN": signature,
+        "X-BAPI-TIMESTAMP": str(timestamp),
+        "X-BAPI-RECV-WINDOW": str(RECV_WINDOW),
+        "Content-Type": "application/json",
+    }
+    r = requests.post(
+        base_url + endpoint,
+        headers=headers,
+        data=payload_json,
+        timeout=REQUEST_TIMEOUT,
+        proxies=get_proxies(),
+    )
+    r.raise_for_status()
+    return r.json()
+
+def send_signed_get(
+    base_url: str,
+    endpoint: str,
+    query: Dict[str, Any],
+    api_key: str,
+    api_secret: str,
+    use_server_time: bool = True,
+) -> Dict[str, Any]:
+    timestamp = server_time_ms(base_url) if use_server_time else int(time.time() * 1000)
+    qs = "&".join(f"{k}={query[k]}" for k in sorted(query.keys()))
+    signature = generate_signature(api_secret, timestamp, api_key, RECV_WINDOW, qs)
+    headers = {
+        "X-BAPI-API-KEY": api_key,
+        "X-BAPI-SIGN": signature,
+        "X-BAPI-TIMESTAMP": str(timestamp),
+        "X-BAPI-RECV-WINDOW": str(RECV_WINDOW),
+    }
+    url = f"{base_url}{endpoint}?{qs}" if qs else f"{base_url}{endpoint}"
+    r = requests.get(
+        url,
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
+        proxies=get_proxies(),
+    )
+    r.raise_for_status()
+    return r.json()
+
+def ws_auth_message(api_key: str, api_secret: str) -> str:
+    expires = int((time.time() + 10) * 1000)
+    sign = hmac.new(
+        api_secret.encode(),
+        f"GET/realtime{expires}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return json.dumps({"op": "auth", "args": [api_key, expires, sign]})
+
+# ---------------------------------------------------------------------------
+# Market‑data helpers
+# ---------------------------------------------------------------------------
+def http_get_json(url: str, session: requests.Session) -> Dict[str, Any]:
+    last_err: Optional[Exception] = None
+    for attempt in range(MARKET_RETRIES):
+        try:
+            resp = session.get(url, timeout=REQUEST_TIMEOUT, proxies=get_proxies())
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("retCode", 0) != 0:
+                raise RuntimeError(data.get("retMsg", "retCode != 0"))
+            return data
+        except Exception as exc:
+            last_err = exc
+            time.sleep(0.25 * (attempt + 1))
+    raise RuntimeError(f"GET failed: {last_err}")
+
+def parse_orderbook_side(side: List[List[str]]) -> Tuple[float, float]:
+    if not side:
+        return 0.0, 0.0
+    return float(side[0][0]), sum(float(level[1]) for level in side)
+
+def kline_close(row: Any) -> float:
+    if isinstance(row, (list, tuple)):
+        return float(row[4])
+    if isinstance(row, dict):
+        return float(row["close"])
+    raise TypeError(f"Unexpected kline row: {type(row)}")
+
+def fetch_tick_size(base_url: str, symbol: str, tick_cache: Dict[str, float]) -> float:
+    if symbol in tick_cache:
+        return tick_cache[symbol]
+    api_key = os.getenv('BYBIT_API_KEY')
+    api_secret = os.getenv('BYBIT_API_SECRET')
+    if not api_key or not api_secret:
+        raise RuntimeError('API credentials missing for signed market data request')
+    try:
+        resp = send_signed_get(
+            base_url,
+            "/v5/market/instruments-info",
+            {"category": "linear", "symbol": symbol},
+            api_key,
+            api_secret,
+        )
+        inst_list = resp.get("result", {}).get("list", [])
+        if inst_list:
+            tick_cache[symbol] = float(inst_list[0]["priceFilter"]["tickSize"])
+            return tick_cache[symbol]
+    except Exception as e:
+        logging.warning(f"Failed to fetch instrument info for {symbol}: {e}")
+
+    logging.warning(f"Using default tick size 0.01 for {symbol}")
+    tick_cache[symbol] = 0.01
+    return 0.01
+
+def build_market_snapshot(
+    best_bid: float,
+    best_ask: float,
+    bid_vol: float,
+    ask_vol: float,
+    closes: List[float],
+    tick_size: float,
+    source: str,
+) -> Dict[str, Any]:
+    if best_bid <= 0 or best_ask <= 0:
+        raise RuntimeError("Invalid top of book")
+    denominator = bid_vol + ask_vol
+    imbalance = (bid_vol - ask_vol) / denominator if denominator > 0 else 0.0
+    mid = (best_bid + best_ask) / 2.0
+    spread_bps = ((best_ask - best_bid) / mid) * 10000.0 if mid > 0 else 0.0
+    momentum = 0.0
+    if len(closes) >= 2 and closes[-2] > 0:
+        momentum = (closes[-1] - closes[-2]) / closes[-2]
+    return {
+        "best_bid": best_bid,
+        "best_ask": best_ask,
+        "bid_vol": bid_vol,
+        "ask_vol": ask_vol,
+        "imbalance": imbalance,
+        "momentum": momentum,
+        "tick_size": tick_size,
+        "spread_bps": spread_bps,
+        "source": source,
+        "closes": list(closes),
+    }
+
+def get_market_data_rest(base_url: str, symbol: str, tick_cache: Dict[str, float]) -> Dict[str, Any]:
+    """Fetch orderbook and kline details via Bybit V5 REST API."""
+    session = requests.Session()
+    ob_url = f"{base_url}/v5/market/orderbook?category=linear&symbol={symbol}&limit=25"
+    ob_data = http_get_json(ob_url, session)
+    result = ob_data.get("result", {})
+    bids = result.get("b", [])
+    asks = result.get("a", [])
+    
+    if not bids or not asks:
+        raise RuntimeError("Empty orderbook returned from REST")
+        
+    best_bid, bid_vol = parse_orderbook_side(bids)
+    best_ask, ask_vol = parse_orderbook_side(asks)
+    
+    kl_url = f"{base_url}/v5/market/kline?category=linear&symbol={symbol}&interval=1&limit=30"
+    kl_data = http_get_json(kl_url, session)
+    kl_list = kl_data.get("result", {}).get("list", [])
+    closes = [kline_close(k) for k in reversed(kl_list)]
+    
+    tick_size = fetch_tick_size(base_url, symbol, tick_cache)
+    return build_market_snapshot(best_bid, best_ask, bid_vol, ask_vol, closes, tick_size, "rest")
+
+def get_market_data_ws_oneshot(
+    ws_url: str,
+    base_url: str,
+    symbol: str,
+    timeout: float,
+    tick_cache: Dict[str, float],
+) -> Dict[str, Any]:
+    """Fetch top of book and recent closes via WebSockets with a short timeout, falling back to REST on failure."""
+    if websocket is None:
+        logger.debug("websocket-client not installed, falling back to REST")
+        return get_market_data_rest(base_url, symbol, tick_cache)
+        
+    snapshot_data = {"best_bid": 0.0, "best_ask": 0.0, "bid_vol": 0.0, "ask_vol": 0.0}
+    event = threading.Event()
+    
+    def on_message(ws, message):
+        try:
+            data = json.loads(message)
+            topic = data.get("topic", "")
+            if "orderbook" in topic:
+                bids = data.get("data", {}).get("b", [])
+                asks = data.get("data", {}).get("a", [])
+                if bids and asks:
+                    snapshot_data["best_bid"] = float(bids[0][0])
+                    snapshot_data["bid_vol"] = sum(float(x[1]) for x in bids)
+                    snapshot_data["best_ask"] = float(asks[0][0])
+                    snapshot_data["ask_vol"] = sum(float(x[1]) for x in asks)
+                    event.set()
+        except Exception:
+            pass
+
+    def on_error(ws, error):
+        pass
+
+    def on_close(ws, close_status_code, close_msg):
+        pass
+
+    ws_client = websocket.WebSocketApp(
+        ws_url,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close,
+    )
+    ws_client.on_open = lambda ws: ws.send(
+        json.dumps({"op": "subscribe", "args": [f"orderbook.1.{symbol}"]})
+    )
+    
+    ws_thread = threading.Thread(target=ws_client.run_forever, kwargs=get_ws_run_options())
+    ws_thread.daemon = True
+    ws_thread.start()
+    
+    completed = event.wait(timeout=timeout)
+    ws_client.close()
+    
+    if completed and snapshot_data["best_bid"] > 0:
+        try:
+            rest_data = get_market_data_rest(base_url, symbol, tick_cache)
+            closes = rest_data["closes"]
+        except Exception:
+            closes = [snapshot_data["best_bid"]]
+        tick_size = fetch_tick_size(base_url, symbol, tick_cache)
+        return build_market_snapshot(
+            snapshot_data["best_bid"],
+            snapshot_data["best_ask"],
+            snapshot_data["bid_vol"],
+            snapshot_data["ask_vol"],
+            closes,
+            tick_size,
+            "ws_oneshot",
+        )
+    else:
+        logger.debug("WS oneshot timed out or failed, falling back to REST")
+        return get_market_data_rest(base_url, symbol, tick_cache)
+
+# ---------------------------------------------------------------------------
+# Data Structures
+# ---------------------------------------------------------------------------
+@dataclass
+class FillProbabilityEstimate:
+    probability: float
+    confidence: float
+    factors: Dict[str, float]
+    suggested_reprice_ticks: int
+
+# ---------------------------------------------------------------------------
+# Analyzers
+# ---------------------------------------------------------------------------
+class MultiTimeframeAnalyzer:
+    def __init__(self, max_frames: int = 3):
+        self.timeframes = {
+            "1m": deque(maxlen=60),
+            "5m": deque(maxlen=12),
+            "15m": deque(maxlen=4),
+        }
+
+    def update(self, close_price: float, timestamp: float):
+        current_minute = int(timestamp / 60)
+        for tf_name, bucket_minutes, dq in (
+            ("1m", 1, self.timeframes["1m"]),
+            ("5m", 5, self.timeframes["5m"]),
+            ("15m", 15, self.timeframes["15m"]),
+        ):
+            bucket = current_minute // bucket_minutes
+            if dq and dq[-1][0] == bucket:
+                dq[-1] = (bucket, close_price)
+            else:
+                dq.append((bucket, close_price))
+
+    def get_trend_signal(self) -> Tuple[float, str]:
+        scores = []
+        for tf_name, data in self.timeframes.items():
+            if len(data) < 2:
+                continue
+            prices = [p[1] for p in data]
+            if len(prices) >= 2:
+                sma = sum(prices) / len(prices)
+                cur = prices[-1]
+                tf_score = (cur - sma) / sma
+                scores.append(tf_score)
+
+        if not scores:
+            return 0.0, "neutral"
+        avg_score = sum(scores) / len(scores)
+        if avg_score > 0.005:
+            return min(1.0, avg_score * 100), "bullish"
+        if avg_score < -0.005:
+            return min(1.0, abs(avg_score) * 100), "bearish"
+        return 0.0, "neutral"
+
+class MicroPatternAnalyzer:
+    def __init__(self, window_size: int = 10):
+        self.bid_asks = deque(maxlen=window_size)
+        self.price_movements = deque(maxlen=window_size)
+
+    def update(self, best_bid: float, best_ask: float):
+        self.bid_asks.append(
+            {
+                "bid": best_bid,
+                "ask": best_ask,
+                "spread": best_ask - best_bid,
+                "mid": (best_bid + best_ask) / 2,
+                "timestamp": time.time(),
+            }
+        )
+        if len(self.bid_asks) >= 2:
+            movement = self.bid_asks[-1]["mid"] - self.bid_asks[-2]["mid"]
+            self.price_movements.append(movement)
+
+    def detect_acceleration(self) -> float:
+        if len(self.price_movements) < 3:
+            return 0.0
+        movements = list(self.price_movements)
+        recent_avg = sum(movements[-3:]) / 3
+        older_avg = sum(movements[:-3]) / max(1, len(movements) - 3)
+        return recent_avg - older_avg
+
+    def detect_spread_compression(self) -> bool:
+        if len(self.bid_asks) < 5:
+            return False
+        spreads = [ba["spread"] for ba in list(self.bid_asks)[-5:]]
+        recent_avg = sum(spreads[-2:]) / 2
+        older_avg = sum(spreads[:-2]) / 3 if len(spreads) > 2 else recent_avg
+        return recent_avg < older_avg * 0.9
+
+    def get_entry_signal(self) -> Dict[str, Any]:
+        acceleration = self.detect_acceleration()
+        spread_compression = self.detect_spread_compression()
+        signal_strength = 0.0
+        if abs(acceleration) > 0.0001:
+            signal_strength += min(0.5, abs(acceleration) * 100)
+        if spread_compression:
+            signal_strength += 0.3
+        return {
+            "acceleration": acceleration,
+            "spread_compression": spread_compression,
+            "signal_strength": signal_strength,
+            "direction": "buy"
+            if acceleration > 0
+            else "sell"
+            if acceleration < 0
+            else "neutral",
+        }
+
+# ---------------------------------------------------------------------------
+# Persistent Public WS Linear Feed
+# ---------------------------------------------------------------------------
+class PersistentPublicLinearFeed:
+    """A thread-safe persistent WebSocket feed for public market data."""
+    def __init__(self, ws_url: str, symbol: str, seed_closes: Optional[List[float]] = None):
+        self.ws_url = ws_url
+        self.symbol = symbol
+        self.closes = deque(seed_closes or [], maxlen=30)
+        self.best_bid = 0.0
+        self.best_ask = 0.0
+        self.bid_vol = 0.0
+        self.ask_vol = 0.0
+        self.ws = None
+        self.thread = None
+        self.active = False
+        self.ready_event = threading.Event()
+        self.lock = threading.Lock()
+
+    def start(self):
+        if websocket is None:
+            logger.warning("websocket-client not installed; PersistentPublicLinearFeed cannot start")
+            return
+        self.active = True
+        self.thread = threading.Thread(target=self._run_loop, daemon=True)
+        self.thread.start()
+
+    def _run_loop(self):
+        while self.active:
+            try:
+                self.ws = websocket.WebSocketApp(
+                    self.ws_url,
+                    on_message=self._on_message,
+                    on_error=self._on_error,
+                    on_close=self._on_close,
+                )
+                self.ws.on_open = self._on_open
+                self.ws.run_forever(**get_ws_run_options())
+            except Exception as e:
+                logger.error(f"Error in PersistentPublicLinearFeed loop: {e}")
+            time.sleep(2)
+
+    def _on_open(self, ws):
+        logger.info("PersistentPublicLinearFeed connected")
+        ws.send(json.dumps({"op": "subscribe", "args": [f"orderbook.1.{self.symbol}", f"kline.1.{self.symbol}"]}))
+
+    def _on_message(self, ws, message):
+        try:
+            data = json.loads(message)
+            topic = data.get("topic", "")
+            if "orderbook" in topic:
+                d = data.get("data", {})
+                bids = d.get("b", [])
+                asks = d.get("a", [])
+                with self.lock:
+                    if bids:
+                        self.best_bid = float(bids[0][0])
+                        self.bid_vol = sum(float(x[1]) for x in bids)
+                    if asks:
+                        self.best_ask = float(asks[0][0])
+                        self.ask_vol = sum(float(x[1]) for x in asks)
+                if self.best_bid > 0 and self.best_ask > 0:
+                    self.ready_event.set()
+            elif "kline" in topic:
+                d_list = data.get("data", [])
+                if d_list:
+                    k = d_list[0]
+                    close_price = float(k.get("close", k[4] if isinstance(k, list) else 0.0))
+                    with self.lock:
+                        if not self.closes or self.closes[-1] != close_price:
+                            self.closes.append(close_price)
+        except Exception as e:
+            logger.error(f"Error parsing WS message: {e}")
+
+    def _on_error(self, ws, error):
+        logger.error(f"PersistentPublicLinearFeed error: {error}")
+
+    def _on_close(self, ws, close_status_code, close_msg):
+        logger.info("PersistentPublicLinearFeed disconnected")
+
+    def wait_ready(self, timeout: float) -> bool:
+        if websocket is None:
+            return False
+        return self.ready_event.wait(timeout=timeout)
+
+    def snapshot(self) -> Dict[str, Any]:
+        with self.lock:
+            return {
+                "best_bid": self.best_bid,
+                "best_ask": self.best_ask,
+                "bid_vol": self.bid_vol,
+                "ask_vol": self.ask_vol,
+                "closes": list(self.closes),
+            }
+
+    def stop(self):
+        self.active = False
+        if self.ws:
+            try:
+                self.ws.close()
+            except Exception:
+                pass
+
+# ---------------------------------------------------------------------------
+# Private WS Logger
+# ---------------------------------------------------------------------------
+class PrivateWsLogger:
+    """A thread-safe WebSocket subscriber for Bybit private execution / position updates."""
+    def __init__(self, ws_url: str, api_key: str, api_secret: str, symbol: str):
+        self.ws_url = ws_url
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.symbol = symbol
+        self.ws = None
+        self.thread = None
+        self.active = False
+
+    def start(self):
+        if websocket is None:
+            logger.warning("websocket-client not installed; PrivateWsLogger cannot start")
+            return
+        self.active = True
+        self.thread = threading.Thread(target=self._run_loop, daemon=True)
+        self.thread.start()
+
+    def _run_loop(self):
+        while self.active:
+            try:
+                self.ws = websocket.WebSocketApp(
+                    self.ws_url,
+                    on_message=self._on_message,
+                    on_error=self._on_error,
+                    on_close=self._on_close,
+                )
+                self.ws.on_open = self._on_open
+                self.ws.run_forever(**get_ws_run_options())
+            except Exception as e:
+                logger.error(f"Error in PrivateWsLogger loop: {e}")
+            time.sleep(2)
+
+    def _on_open(self, ws):
+        logger.info("PrivateWsLogger connected, authenticating...")
+        auth_msg = ws_auth_message(self.api_key, self.api_secret)
+        ws.send(auth_msg)
+        ws.send(json.dumps({"op": "subscribe", "args": ["order", "execution", "position"]}))
+
+    def _on_message(self, ws, message):
+        try:
+            data = json.loads(message)
+            op = data.get("op", "")
+            if op == "auth" and data.get("success") is True:
+                logger.info("Private WS Authentication successful")
+            topic = data.get("topic", "")
+            if topic in ("order", "execution", "position"):
+                logger.info(f"Private WS Log [{topic}]: {json.dumps(data.get('data', {}))}")
+        except Exception as e:
+            logger.error(f"PrivateWsLogger error parsing message: {e}")
+
+    def _on_error(self, ws, error):
+        logger.error(f"PrivateWsLogger error: {error}")
+
+    def _on_close(self, ws, close_status_code, close_msg):
+        logger.info("PrivateWsLogger disconnected")
+
+    def stop(self):
+        self.active = False
+        if self.ws:
+            try:
+                self.ws.close()
+            except Exception:
+                pass
+
+# ---------------------------------------------------------------------------
+# Volatility & Risk Helpers
+# ---------------------------------------------------------------------------
+def _realized_volatility(returns: List[float]) -> float:
+    if len(returns) >= 2:
+        return stdev(returns)
+    if len(returns) == 1:
+        return abs(returns[0])
+    return 0.001
+
+def calculate_optimal_qty(
+    market: Dict[str, Any],
+    base_qty: float,
+    target_profit: float,
+    volatility_window: int = 20,
+    max_position_risk: float = 0.02,
+    account_balance: float = 1000.0,
+) -> float:
+    if len(market.get("closes", [])) < volatility_window:
+        return base_qty
+    closes = market["closes"][-volatility_window:]
+    returns = [
+        (closes[i] - closes[i - 1]) / closes[i - 1]
+        for i in range(1, len(closes))
+        if closes[i - 1] != 0
+    ]
+    vol = _realized_volatility(returns)
+    if vol < 0.0005:
+        vol_multiplier = 1.5
+    elif vol < 0.001:
+        vol_multiplier = 1.2
+    elif vol < 0.002:
+        vol_multiplier = 1.0
+    else:
+        vol_multiplier = 0.7
+
+    profit_multiplier = 1.0
+    if target_profit <= 0.03:
+        profit_multiplier = 1.5
+    elif target_profit <= 0.05:
+        profit_multiplier = 1.3
+    elif target_profit <= 0.10:
+        profit_multiplier = 1.0
+    else:
+        profit_multiplier = 0.8
+
+    estimated_win_rate = 0.55
+    avg_win_loss_ratio = 1.2
+    kelly_fraction = (estimated_win_rate * avg_win_loss_ratio - (1 - estimated_win_rate)) / avg_win_loss_ratio
+    kelly_fraction = max(0.1, min(0.25, kelly_fraction))
+
+    optimal_qty = base_qty * vol_multiplier * profit_multiplier * (1 + kelly_fraction)
+    entry_price = (market["best_bid"] + market["best_ask"]) / 2
+    position_value = optimal_qty * entry_price
+    max_allowed_value = account_balance * max_position_risk
+    if position_value > max_allowed_value:
+        optimal_qty = max_allowed_value / entry_price
+    optimal_qty = max(optimal_qty, base_qty)
+    return round(optimal_qty, 8)
+
+def calculate_adaptive_momentum_thresholds(closes: List[float], lookback: int = 20) -> Tuple[float, float]:
+    if len(closes) < lookback:
+        return 0.00005, -0.00005
+    changes = []
+    for i in range(1, len(closes[-lookback:])):
+        if closes[-lookback:][i - 1] != 0:
+            pct_change = abs((closes[-lookback:][i] - closes[-lookback:][i - 1]) / closes[-lookback:][i - 1])
+            changes.append(pct_change)
+    if not changes:
+        return 0.00005, -0.00005
+    avg_change = sum(changes) / len(changes)
+    volatility_multiplier = max(0.2, min(2.0, avg_change / 0.001))
+    long_threshold = 0.00005 * volatility_multiplier
+    short_threshold = -0.00005 * volatility_multiplier
+    return long_threshold, short_threshold
+
+def calculate_adaptive_stop_loss(
+    entry_price: float,
+    side: str,
+    volatility: float,
+    tick_size: float,
+    trailing_distance: float,
+) -> Tuple[float, float]:
+    """Calculate adaptive stop loss distance dynamically scaled by volatility indices."""
+    vol_adj = max(0.001, volatility)
+    stop_distance_pct = trailing_distance * (1.0 + vol_adj * 10.0)
+    stop_distance = entry_price * stop_distance_pct
+    if side == "Buy":
+        sl_price = entry_price - stop_distance
+    else:
+        sl_price = entry_price + stop_distance
+    sl_price = round_to_tick(sl_price, tick_size)
+    return sl_price, stop_distance
+
+# ---------------------------------------------------------------------------
+# TP / SL helpers
+# ---------------------------------------------------------------------------
+def net_profit_to_tp(entry_price: float, side: str, net_target: float, qty: float, maker_fee: float) -> float:
+    if side == "Buy":
+        denom = qty * (1.0 - maker_fee)
+        return (net_target + entry_price * qty * (1.0 + maker_fee)) / denom
+    else:
+        denom = qty * (1.0 + maker_fee)
+        return (entry_price * qty * (1.0 - maker_fee) - net_target) / denom
+
+def net_profit_to_tp_advanced(
+    entry_price: float,
+    side: str,
+    net_target: float,
+    qty: float,
+    maker_fee: float,
+    market_conditions: Optional[Dict[str, Any]] = None,
+) -> float:
+    base_tp = net_profit_to_tp(entry_price, side, net_target, qty, maker_fee)
+    if not market_conditions:
+        return base_tp
+    imbalance = market_conditions.get("imbalance", 0)
+    spread_bps = market_conditions.get("spread_bps", 10)
+    adjustment_factor = 1.0
+    if side == "Buy" and imbalance > 0.1:
+        adjustment_factor = 1.1
+    elif side == "Sell" and imbalance < -0.1:
+        adjustment_factor = 1.1
+    if spread_bps < 5:
+        adjustment_factor *= 1.05
+    min_distance = entry_price * 0.0002
+    adjusted_tp = entry_price + (base_tp - entry_price) * adjustment_factor
+    if side == "Buy":
+        adjusted_tp = max(adjusted_tp, entry_price + min_distance)
+    else:
+        adjusted_tp = min(adjusted_tp, entry_price - min_distance)
+    return adjusted_tp
+
+# ---------------------------------------------------------------------------
+# Order‑book snapshot builders
+# ---------------------------------------------------------------------------
+def round_to_tick(price: float, tick_size: float) -> float:
+    if tick_size <= 0:
+        return price
+    return round(round(price / tick_size) * tick_size, 8)
+
+def round_trip_fees(
+    entry: float,
+    exit_p: float,
+    qty: float,
+    entry_fee_rate: float,
+    exit_fee_rate: float,
+) -> float:
+    return entry * qty * entry_fee_rate + exit_p * qty * exit_fee_rate
+
+def estimate_net_profit_v2(
+    side: str,
+    entry: float,
+    exit_p: float,
+    qty: float,
+    maker_fee: float,
+    exit_is_taker: bool = False,
+    taker_fee: float = 0.00055,
+) -> float:
+    exit_fee = taker_fee if exit_is_taker else maker_fee
+    fees = round_trip_fees(entry, exit_p, qty, maker_fee, exit_fee)
+    if side == "Buy":
+        return (exit_p - entry) * qty - fees
+    return (entry - exit_p) * qty - fees
+
+def expected_market_close_pnl(
+    position_side: str,
+    avg_entry: float,
+    close_qty: float,
+    best_bid: float,
+    best_ask: float,
+    maker_fee: float,
+    taker_fee: float,
+) -> float:
+    if position_side == "Buy":
+        exit_px = best_bid
+        side = "Buy"
+    else:
+        exit_px = best_ask
+        side = "Sell"
+    return estimate_net_profit_v2(
+        side, avg_entry, exit_px, close_qty, maker_fee, exit_is_taker=True, taker_fee=taker_fee
+    )
+
+def expected_net_profit(side: str, entry: float, exit_p: float, qty: float, maker_fee: float) -> float:
+    return estimate_net_profit_v2(side, entry, exit_p, qty, maker_fee, exit_is_taker=False)
+
+# ---------------------------------------------------------------------------
+# Fill‑probability helpers
+# ---------------------------------------------------------------------------
+def classify_limit_placement(
+    side: str,
+    limit_price: float,
+    best_bid: float,
+    best_ask: float,
+    tick_size: float,
+) -> str:
+    if tick_size <= 0:
+        tick_size = 1e-8
+    if side == "Buy":
+        if limit_price >= best_ask - tick_size * 0.5:
+            return "cross"
+        if abs(limit_price - best_bid) <= tick_size * 0.5:
+            return "join"
+        return "passive"
+    else:
+        if limit_price <= best_bid + tick_size * 0.5:
+            return "cross"
+        if abs(limit_price - best_ask) <= tick_size * 0.5:
+            return "join"
+        return "passive"
+
+def estimate_limit_fill_probability(
+    *,
+    order_side: str,
+    limit_price: float,
+    best_bid: float,
+    best_ask: float,
+    bid_vol: float,
+    ask_vol: float,
+    momentum: float,
+    spread_bps: float,
+    tick_size: float,
+    role: str = "entry",
+    horizon_sec: float = 30.0,
+    loop_interval: float = 2.0,
+) -> FillProbabilityEstimate:
+    if best_bid <= 0 or best_ask <= 0 or best_ask < best_bid:
+        return FillProbabilityEstimate(0.0, 0.0, {"invalid_book": 0.0}, 0)
+    mid = (best_bid + best_ask) / 2.0
+    denom = bid_vol + ask_vol
+    imbalance = (bid_vol - ask_vol) / denom if denom > 0 else 0.0
+    placement = classify_limit_placement(order_side, limit_price, best_bid, best_ask, tick_size)
+    placement_score = {"cross": 0.95, "join": 0.55, "passive": 0.25}[placement]
+    factors: Dict[str, float] = {"placement": placement_score}
+    if order_side == "Sell":
+        flow_score = _sigmoid(imbalance * 4.0)
+        mom_align = _sigmoid(-momentum * 800.0)
+    else:
+        flow_score = _sigmoid(-imbalance * 4.0)
+        mom_align = _sigmoid(momentum * 800.0)
+    factors["flow_imbalance"] = flow_score
+    factors["momentum_align"] = mom_align
+    if spread_bps <= 5:
+        spread_score = 0.85
+    elif spread_bps <= 15:
+        spread_score = 0.65
+    elif spread_bps <= 30:
+        spread_score = 0.45
+    else:
+        spread_score = 0.25
+    factors["spread_activity"] = spread_score
+    cycles = max(1.0, horizon_sec / max(loop_interval, 0.2))
+    time_boost = 1.0 - math.exp(-cycles / 8.0)
+    factors["time_horizon"] = time_boost
+    role_mult = 1.0
+    if role == "exit_reduce" and placement == "passive":
+        role_mult = 0.7
+    elif role == "entry" and placement == "passive":
+        role_mult = 0.85
+    raw = (
+        0.35 * placement_score
+        + 0.25 * flow_score
+        + 0.20 * mom_align
+        + 0.15 * spread_score
+        + 0.05 * time_boost
+    ) * role_mult
+    probability = _clamp(raw)
+    confidence = 0.55 if denom > 0 else 0.25
+    if spread_bps > 50:
+        confidence *= 0.7
+    suggested = 0
+    if placement == "passive":
+        suggested = 2
+    elif placement == "join" and probability < 0.45:
+        suggested = 1
+    return FillProbabilityEstimate(
+        probability=probability,
+        confidence=confidence,
+        factors=factors,
+        suggested_reprice_ticks=suggested,
+    )
+
+def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return max(lo, min(hi, x))
+
+def _sigmoid(x: float) -> float:
+    try:
+        return 1.0 / (1.0 + math.exp(-x))
+    except OverflowError:
+        return 0.0 if x < 0 else 1.0
+
+# ---------------------------------------------------------------------------
+# Reduce‑exit payload builder
+# ---------------------------------------------------------------------------
+def build_reduce_exit_payload(
+    symbol: str,
+    position_side: str,
+    close_qty: float,
+    market: Dict[str, Any],
+    tick_size: float,
+    exit_order_type: str,
+    exit_tif: str,
+    reprice_ticks: int = 0,
+) -> Dict[str, Any]:
+    close_side = "Sell" if position_side == "Buy" else "Buy"
+    payload: Dict[str, Any] = {
+        "category": "linear",
+        "symbol": symbol,
+        "side": close_side,
+        "qty": str(close_qty),
+        "positionIdx": 0,
+        "reduceOnly": True,
+    }
+    if exit_order_type == "market":
+        payload["orderType"] = "Market"
+        payload["timeInForce"] = "IOC"
+        return payload
+    px = reduce_limit_price(
+        position_side,
+        market["best_bid"],
+        market["best_ask"],
+        tick_size,
+        reprice_ticks=reprice_ticks,
+    )
+    payload["orderType"] = "Limit"
+    payload["price"] = str(px)
+    payload["timeInForce"] = exit_tif if exit_tif in ("PostOnly", "GTC", "IOC") else "PostOnly"
+    return payload
+
+def expected_close_pnl(
+    position_side: str,
+    avg_entry: float,
+    close_qty: float,
+    market: Dict[str, Any],
+    tick_size: float,
+    maker_fee: float,
+    taker_fee: float,
+    exit_order_type: str = "limit",
+    reprice_ticks: int = 0,
+) -> Tuple[float, float]:
+    if exit_order_type == "market":
+        exit_px = market["best_bid"] if position_side == "Buy" else market["best_ask"]
+        exit_is_taker = True
+        exit_fee = taker_fee
+    else:
+        px = reduce_limit_price(
+            position_side,
+            market["best_bid"],
+            market["best_ask"],
+            tick_size,
+            reprice_ticks=reprice_ticks,
+        )
+        exit_px = px
+        exit_is_taker = False
+        exit_fee = maker_fee
+    side = "Buy" if position_side == "Buy" else "Sell"
+    fees = avg_entry * close_qty * maker_fee + exit_px * close_qty * exit_fee
+    if position_side == "Buy":
+        net = (exit_px - avg_entry) * close_qty - fees
+    else:
+        net = (avg_entry - exit_px) * close_qty - fees
+    return net, exit_px
+
+def place_reduce_exit_with_retry(
+    base_url: str,
+    symbol: str,
+    position_side: str,
+    close_qty: float,
+    market: Dict[str, Any],
+    tick_size: float,
+    api_key: str,
+    api_secret: str,
+    exit_order_type: str,
+    exit_tif: str,
+    exit_reprice_ticks: int,
+    exit_max_retries: int,
+) -> Dict[str, Any]:
+    import copy
+    last_error: Any = None
+    for attempt in range(exit_max_retries + 1):
+        payload = copy.deepcopy(
+            build_reduce_exit_payload(
+                symbol,
+                position_side,
+                close_qty,
+                market,
+                tick_size,
+                exit_order_type,
+                exit_tif,
+                reprice_ticks=attempt * exit_reprice_ticks,
+            )
+        )
+        try:
+            if attempt > 0 and "price" in payload:
+                px = float(payload["price"])
+                if payload.get("timeInForce") == "PostOnly":
+                    if payload["side"] == "Buy":
+                        payload["price"] = str(round(px + tick_size * attempt, 8))
+                    else:
+                        payload["price"] = str(round(px - tick_size * attempt, 8))
+                else:
+                    payload["timeInForce"] = "IOC"
+            response = send_signed_post(
+                base_url, "/v5/order/create", payload, api_key, api_secret
+            )
+            if response.get("retCode") == 0:
+                return response
+            last_error = response
+            time.sleep(0.1 * (attempt + 1))
+        except Exception as e:
+            last_error = str(e)
+            time.sleep(0.1 * (attempt + 1))
+    return {"retCode": -1, "retMsg": f"All retries failed: {last_error}"}
+
+def set_position_take_profit(
+    base_url: str,
+    symbol: str,
+    position_side: str,
+    position_size: float,
+    avg_entry: float,
+    tp_price: float,
+    api_key: str,
+    api_secret: str,
+    full: bool = True,
+    tp_size: Optional[float] = None,
+) -> Dict[str, Any]:
+    body: Dict[str, Any] = {
+        "category": "linear",
+        "symbol": symbol,
+        "positionIdx": 0,
+        "takeProfit": str(round(tp_price, 8)),
+        "tpTriggerBy": "LastPrice",
+        "tpOrderType": "Limit",
+        "tpLimitPrice": str(round(tp_price, 8)),
+        "tpslMode": "Full" if full else "Partial",
+    }
+    if not full and tp_size is not None:
+        body["tpSize"] = str(tp_size)
+    return send_signed_post(base_url, "/v5/position/trading-stop", body, api_key, api_secret)
+
+def verify_tp_net(
+    side: str,
+    entry: float,
+    tp: float,
+    qty: float,
+    maker_fee: float,
+    min_net: float,
+    tick_size: float,
+) -> bool:
+    tp = round_to_tick(tp, tick_size)
+    if side == "Buy" and tp <= entry:
+        return False
+    if side == "Sell" and tp >= entry:
+        return False
+    net = estimate_net_profit_v2(side, entry, tp, qty, maker_fee, exit_is_taker=False)
+    return net >= min_net - 1e-9
+
+def solve_tp_with_floor(
+    entry: float,
+    side: str,
+    qty: float,
+    maker_fee: float,
+    min_net: float,
+    market: Optional[Dict[str, Any]] = None,
+    tick_size: float = 0.01,
+) -> Optional[float]:
+    tiers = sorted(t for t in MICRO_PROFIT_TIERS if t >= min_net)
+    if not tiers:
+        tiers = [min_net]
+    for net_tgt in tiers:
+        try:
+            tp = net_profit_to_tp_advanced(entry, side, net_tgt, qty, maker_fee, market)
+        except Exception:
+            continue
+        if verify_tp_net(side, entry, tp, qty, maker_fee, net_tgt, tick_size):
+            return round_to_tick(tp, tick_size)
+    return None
+
+# ---------------------------------------------------------------------------
+# Signal evaluation
+# ---------------------------------------------------------------------------
+def evaluate_signal(
+    market: Dict[str, Any], qty: float, target_profit: float, maker_fee: float
+) -> Optional[Dict[str, Any]]:
+    best_bid = market["best_bid"]
+    best_ask = market["best_ask"]
+    imbalance = market["imbalance"]
+    momentum = market["momentum"]
+    tick_size = market["tick_size"]
+    side: Optional[str] = None
+    entry_price = 0.0
+    exit_price = 0.0
+
+    if momentum > MOMENTUM_LONG and imbalance > IMBALANCE_LONG:
+        side = "Buy"
+        entry_price = best_bid
+        entry_fee = entry_price * qty * maker_fee
+        raw_exit = (target_profit + entry_fee + entry_price * qty) / (qty * (1 - maker_fee))
+        exit_price = round_to_tick(raw_exit, tick_size)
+    elif momentum < MOMENTUM_SHORT and imbalance < IMBALANCE_SHORT:
+        side = "Sell"
+        entry_price = best_ask
+        entry_fee = entry_price * qty * maker_fee
+        raw_exit = ((entry_price * qty) - entry_fee - target_profit) / (qty * (1 + maker_fee))
+        exit_price = round_to_tick(raw_exit, tick_size)
+
+    if not side:
+        return None
+
+    # Calculate default starting confidence based on book volume metrics
+    confidence = 0.5
+    denom = market.get("bid_vol", 0.0) + market.get("ask_vol", 0.0)
+    if denom > 0:
+        confidence = max(0.2, min(0.9, abs(market.get("imbalance", 0.0)) * 1.5))
+
+    return {
+        "side": side,
+        "entry_price": entry_price,
+        "exit_price": exit_price,
+        "momentum": momentum,
+        "imbalance": imbalance,
+        "tick_size": tick_size,
+        "confidence": confidence,
+    }
+
+# ---------------------------------------------------------------------------
+# Balance & position helpers
+# ---------------------------------------------------------------------------
+def check_account_balance(base_url: str, api_key: str, api_secret: str, required_margin: float) -> bool:
+    try:
+        resp = send_signed_get(
+            base_url, "/v5/account/wallet-balance", {"accountType": "UNIFIED"}, api_key, api_secret
+        )
+    except Exception as exc:
+        emit({"status": "error", "message": f"Balance check request failed: {exc}"})
+        return False
+    if resp.get("retCode") != 0:
+        emit({"status": "error", "message": f"Balance check failed: {resp}"})
+        return False
+    free_usdt = 0.0
+    for acct in resp.get("result", {}).get("list", []):
+        tot_avail = acct.get("totalAvailableBalance")
+        if tot_avail and str(tot_avail).strip():
+            free_usdt = max(free_usdt, float(tot_avail))
+            continue
+        for coin in acct.get("coin", []):
+            if coin.get("coin") == "USDT":
+                avail = coin.get("availableToWithdraw") or coin.get("availableBalance")
+                if avail and str(avail).strip():
+                    free_usdt = max(free_usdt, float(avail))
+                else:
+                    wb = float(coin.get("walletBalance") or 0)
+                    locked = float(coin.get("locked") or 0)
+                    free_usdt = max(free_usdt, wb - locked)
+    if free_usdt < required_margin:
+        emit(
+            {
+                "status": "rejected",
+                "message": (
+                    f"Insufficient free balance (USDT {free_usdt:.4f}) "
+                    f"to cover required margin ({required_margin:.4f})"
+                ),
+            }
+        )
+        return False
+    return True
+
+def has_open_position(base_url: str, api_key: str, api_secret: str, symbol: str) -> bool:
+    try:
+        resp = send_signed_get(
+            base_url,
+            "/v5/position/list",
+            {"category": "linear", "symbol": symbol},
+            api_key,
+            api_secret,
+        )
+    except Exception:
+        return True  # fail‑safe: block entry if check fails
+    if resp.get("retCode") != 0:
+        return True
+    for pos in resp.get("result", {}).get("list", []):
+        if float(pos.get("size") or 0) > 0:
+            return True
+    return False
+
+# ---------------------------------------------------------------------------
+# Reduce‑exit probability & order helpers
+# ---------------------------------------------------------------------------
+def reduce_limit_price(
+    position_side: str,
+    best_bid: float,
+    best_ask: float,
+    tick_size: float,
+    reprice_ticks: int = 0,
+) -> float:
+    if position_side == "Buy":
+        px = best_bid - reprice_ticks * tick_size
+    else:
+        px = best_ask + reprice_ticks * tick_size
+    return round_to_tick(max(px, tick_size), tick_size)
+
+def choose_reduce_limit_with_fill_target(
+    position_side: str,
+    market: Dict[str, Any],
+    tick_size: float,
+    *,
+    min_fill_probability: float = 0.35,
+    max_aggressive_ticks: int = 3,
+    role: str = "exit_reduce",
+    loop_interval: float = 2.0,
+) -> Tuple[Optional[float], FillProbabilityEstimate]:
+    best_bid = market["best_bid"]
+    best_ask = market["best_ask"]
+    close_side = "Sell" if position_side == "Buy" else "Buy"
+    for reprice in range(0, max_aggressive_ticks + 1):
+        px = reduce_limit_price(
+            position_side, best_bid, best_ask, tick_size, reprice_ticks=reprice
+        )
+        est = estimate_limit_fill_probability(
+            order_side=close_side,
+            limit_price=px,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            bid_vol=market.get("bid_vol", 0.0),
+            ask_vol=market.get("ask_vol", 0.0),
+            momentum=market.get("momentum", 0.0),
+            spread_bps=market.get("spread_bps", 99.0),
+            tick_size=tick_size,
+            role=role,
+            loop_interval=loop_interval,
+        )
+        if est.probability >= min_fill_probability:
+            return px, est
+    px = reduce_limit_price(position_side, best_bid, best_ask, tick_size, reprice_ticks=max_aggressive_ticks)
+    est = estimate_limit_fill_probability(
+        order_side=close_side,
+        limit_price=px,
+        best_bid=best_bid,
+        best_ask=best_ask,
+        bid_vol=market.get("bid_vol", 0.0),
+        ask_vol=market.get("ask_vol", 0.0),
+        momentum=market.get("momentum", 0.0),
+        spread_bps=market.get("spread_bps", 99.0),
+        tick_size=tick_size,
+        role=role,
+        loop_interval=loop_interval,
+    )
+    if est.probability < min_fill_probability * 0.75:
+        return None, est
+    return px, est
+
+def entry_postonly_viable(
+    side: str,
+    entry_price: float,
+    market: Dict[str, Any],
+    tick_size: float,
+    min_fill_probability: float,
+    loop_interval: float,
+) -> Tuple[bool, FillProbabilityEstimate]:
+    est = estimate_limit_fill_probability(
+        order_side=side,
+        limit_price=entry_price,
+        best_bid=market["best_bid"],
+        best_ask=market["best_ask"],
+        bid_vol=market.get("bid_vol", 0.0),
+        ask_vol=market.get("ask_vol", 0.0),
+        momentum=market.get("momentum", 0.0),
+        spread_bps=market.get("spread_bps", 99.0),
+        tick_size=tick_size,
+        role="entry",
+        horizon_sec=60.0,
+        loop_interval=loop_interval,
+    )
+    return est.probability >= min_fill_probability, est
+
+# ---------------------------------------------------------------------------
+# Position‑guard handler
+# ---------------------------------------------------------------------------
+def enhanced_position_guard_check(
+    args: Dict[str, Any],
+    base_url: str,
+    api_key: str,
+    api_secret: str,
+    symbol: str,
+    sig: Dict[str, Any],
+    position_guard: bool,
+    iteration: int,
+    emit_result: Callable[[Dict[str, Any]], None],
+    position_info: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """Check if an open position exists and matches the new signal. Returns True to skip the entry."""
+    if not position_guard:
+        return False
+    pos = position_info or {}
+    pos_size = pos.get("size", 0.0)
+    if pos_size <= 0.0:
+        return False
+    pos_side = pos.get("side")
+    new_side = sig.get("side")
+    if pos_side == new_side:
+        aggressive = args.get("position_guard_aggressive", False)
+        if not aggressive:
+            emit_result(
+                {
+                    "status": "skipped",
+                    "iteration": iteration,
+                    "reason": "position_guard_active",
+                    "message": f"Existing {pos_side} position of size {pos_size} exists on {symbol}. Skipping same-side entry.",
+                }
+            )
+            return True
+    return False
+
+# ---------------------------------------------------------------------------
+# Main Evaluation Cycle
+# ---------------------------------------------------------------------------
+def fetch_market(
+    args: Dict[str, Any],
+    urls: Dict[str, str],
+    tick_cache: Dict[str, float],
+    public_feed: Optional[PersistentPublicLinearFeed],
+) -> Dict[str, Any]:
+    symbol = args["symbol"]
+    mode = args["mode"]
+    base_url = urls["rest"]
+    if public_feed is not None:
+        snap = public_feed.snapshot()
+        tick_size = fetch_tick_size(base_url, symbol, tick_cache)
+        return build_market_snapshot(
+            snap["best_bid"],
+            snap["best_ask"],
+            snap["bid_vol"],
+            snap["ask_vol"],
+            snap["closes"],
+            tick_size,
+            "ws_persistent",
+        )
+    if mode == "ws":
+        return get_market_data_ws_oneshot(
+            urls["ws_public_linear"], base_url, symbol, args["ws_timeout"], tick_cache
+        )
+    return get_market_data_rest(base_url, symbol, tick_cache)
+
+def run_one_cycle(
+    args: Dict[str, Any],
+    urls: Dict[str, str],
+    tick_cache: Dict[str, float],
+    loop_state: Dict[str, Any],
+    public_feed: Optional[PersistentPublicLinearFeed],
+    emit_result: Callable[[Dict[str, Any]], None],
+) -> None:
+    api_key = args["api_key"]
+    api_secret = args["api_secret"]
+    symbol = args["symbol"]
+    base_qty = args["qty"]
+    target_profit = args["target_profit"]
+    maker_fee = args["maker_fee"]
+    trailing_stop = args.get("trailing_stop")
+    balance_check = args.get("balance_check", False)
+    dry_run = args.get("dry_run", False)
+    max_spread_bps = float(args.get("max_spread_bps", 50))
+    mode = args["mode"]
+    ws_timeout = float(args.get("ws_timeout", 8))
+    testnet = args.get("testnet", False)
+    loop_interval = float(args.get("loop_interval", 2.0))
+    cooldown = float(args.get("cooldown", 30))
+    position_guard = args.get("position_guard", False)
+    ws_fallback_rest = args.get("ws_fallback_rest", False)
+    base_url = urls["rest"]
+
+    iteration = loop_state.get("iteration", 0) + 1
+    loop_state["iteration"] = iteration
+    if iteration == 1 or iteration % 300 == 0:
+        sync_server_time(base_url)
+
+    now = time.time()
+    last_order_ts = loop_state.get("last_order_ts", 0.0)
+    if last_order_ts and (now - last_order_ts) < cooldown:
+        emit_result(
+            {
+                "status": "cooldown",
+                "iteration": iteration,
+                "seconds_remaining": round(cooldown - (now - last_order_ts), 2),
+                "message": "Waiting after last order before new entry.",
+            }
+        )
+        return
+
+    try:
+        market = fetch_market(args, urls, tick_cache, public_feed)
+    except Exception as exc:
+        if args["mode"] == "ws" and ws_fallback_rest and public_feed is None:
+            rest_success = False
+            for retry in range(3):
+                try:
+                    market = get_market_data_rest(base_url, symbol, tick_cache)
+                    market["source"] = "rest_fallback"
+                    rest_success = True
+                    break
+                except Exception as exc2:
+                    if retry == 2:
+                        emit_result(
+                            {
+                                "status": "error",
+                                "iteration": iteration,
+                                "message": f"Market data fetch failed (ws+rest): {exc}; {exc2}",
+                            }
+                        )
+                        return
+                    time.sleep(0.5 * (retry + 1))
+            if not rest_success:
+                return
+        else:
+            emit_result(
+                {"status": "error", "iteration": iteration, "message": f"Market data fetch failed: {exc}"}
+            )
+            return
+
+    # Balance handling (once every 20 iterations or on first iteration)
+    if "account_balance" not in loop_state or iteration % 20 == 0 or iteration == 1:
+        try:
+            resp = send_signed_get(
+                base_url, "/v5/account/wallet-balance", {"accountType": "UNIFIED"}, api_key, api_secret
+            )
+            if resp.get("retCode") == 0:
+                tot_avail = resp["result"]["list"][0].get("totalAvailableBalance")
+                if tot_avail:
+                    loop_state["account_balance"] = float(tot_avail)
+        except Exception:
+            pass
+    account_balance = loop_state.get("account_balance", 1000.0)
+    qty = calculate_optimal_qty(market, base_qty, target_profit, account_balance=account_balance)
+    spread_bps = market["spread_bps"]
+    if spread_bps > max_spread_bps:
+        emit_result(
+            {
+                "status": "skipped",
+                "iteration": iteration,
+                "spread_bps": round(spread_bps, 2),
+                "data_source": market.get("source"),
+                "message": "Spread too wide for micro scalping.",
+            }
+        )
+        return
+
+    # Rolling momentum & pattern analysis
+    mid_prices = loop_state.setdefault("mid_prices", deque(maxlen=10))
+    denom = market["bid_vol"] + market["ask_vol"]
+    current_mid = (
+        (market["best_bid"] * market["ask_vol"] + market["best_ask"] * market["bid_vol"])
+        / denom
+        if denom > 0
+        else (market["best_bid"] + market["best_ask"]) / 2.0
+    )
+    mid_prices.append(current_mid)
+    if len(mid_prices) >= 2:
+        price_momentum = (mid_prices[-1] - mid_prices[0]) / mid_prices[0]
+    else:
+        price_momentum = 0.0
+    obi_hist = loop_state.setdefault("obi_hist", deque(maxlen=5))
+    obi_hist.append(market["imbalance"])
+    obi_delta = (obi_hist[-1] - obi_hist[0]) / 10.0 if len(obi_hist) >= 2 else 0.0
+    if abs(price_momentum) > 0.000005:
+        market["momentum"] = price_momentum
+    else:
+        market["momentum"] = obi_delta
+
+    if "multi_tf_analyzer" not in loop_state:
+        loop_state["multi_tf_analyzer"] = MultiTimeframeAnalyzer()
+    if "micro_pattern_analyzer" not in loop_state:
+        loop_state["micro_pattern_analyzer"] = MicroPatternAnalyzer()
+    if market.get("closes"):
+        loop_state["multi_tf_analyzer"].update(market["closes"][-1], time.time())
+    loop_state["micro_pattern_analyzer"].update(market["best_bid"], market["best_ask"])
+    trend_score, trend_direction = loop_state["multi_tf_analyzer"].get_trend_signal()
+    vol_hist = loop_state.setdefault("vol_hist", deque(maxlen=60))
+    cur_vol = float(market.get("bid_vol", 0.0) + market.get("ask_vol", 0.0))
+    vol_hist.append(cur_vol)
+    avg_vol = sum(vol_hist) / len(vol_hist) if vol_hist else cur_vol
+    volume_profile = {"avg_volume": avg_vol, "current_volume": cur_vol}
+
+    # Position info for TP & guard checks
+    position_info = {}
+    try:
+        resp = send_signed_get(
+            base_url,
+            "/v5/position/list",
+            {"category": "linear", "symbol": symbol},
+            api_key,
+            api_secret,
+        )
+        if resp.get("retCode") == 0:
+            for pos in resp.get("result", {}).get("list", []):
+                size = float(pos.get("size") or 0)
+                if size > 0:
+                    position_info = {
+                        "size": size,
+                        "side": pos.get("side"),
+                        "entry_price": float(pos.get("avgPrice") or 0),
+                        "unrealized_pnl": float(pos.get("unrealisedPnl") or 0),
+                        "unrealized_pnl_pct": float(pos.get("unrealisedPnlPct") or 0),
+                        "mark_price": float(pos.get("markPrice") or 0),
+                    }
+    except Exception:
+        pass
+
+    # Refresh trading-stop TPs if applicable
+    if (
+        args.get("use_trading_stop_tp")
+        and position_info.get("size", 0) > 0
+        and not dry_run
+    ):
+        pos_side = position_info["side"]
+        pos_size = position_info["size"]
+        pos_entry = position_info["entry_price"]
+        tp = solve_tp_with_floor(
+            pos_entry,
+            pos_side,
+            min(qty, pos_size),
+            maker_fee,
+            min_net=max(0.02, target_profit * 0.95),
+            market=market,
+            tick_size=market["tick_size"],
+        )
+        if tp is not None:
+            try:
+                ts_res = set_position_take_profit(
+                    base_url,
+                    symbol,
+                    pos_side,
+                    pos_size,
+                    pos_entry,
+                    tp,
+                    api_key,
+                    api_secret,
+                    full=(min(qty, pos_size) >= pos_size),
+                    tp_size=None if min(qty, pos_size) >= pos_size else min(qty, pos_size),
+                )
+                if ts_res.get("retCode") == 0:
+                    emit_result(
+                        {
+                            "status": "info",
+                            "iteration": iteration,
+                            "message": "Position TP refreshed (limit, trading-stop)",
+                            "take_profit_price": tp,
+                        }
+                    )
+            except Exception as e:
+                emit_result(
+                    {
+                        "status": "info",
+                        "iteration": iteration,
+                        "message": f"Failed to refresh position TP due to network/proxy error: {e}",
+                    }
+                )
+
+    # Signal Generation & Verification
+    sig = evaluate_signal(market, qty, target_profit, maker_fee)
+    if sig:
+        pattern_signal = loop_state["micro_pattern_analyzer"].get_entry_signal()
+        if pattern_signal["signal_strength"] > 0.3 and pattern_signal["direction"] != "neutral":
+            sig["confidence"] = min(
+                1.0, sig["confidence"] * (1.0 + pattern_signal["signal_strength"])
+            )
+        early_cycle = loop_state.get("iteration", 0) < 30
+        if trend_direction == "bullish" and sig["side"] == "Buy":
+            sig["confidence"] = min(1.0, sig["confidence"] * (1.0 + trend_score))
+        elif trend_direction == "bearish" and sig["side"] == "Sell":
+            sig["confidence"] = min(1.0, sig["confidence"] * (1.0 + trend_score))
+        elif trend_direction == "neutral" or early_cycle:
+            pass
+        else:
+            sig = None
+
+    if not sig:
+        emit_result(
+            {
+                "status": "skipped",
+                "iteration": iteration,
+                "momentum": f"{market['momentum']:.8f}",
+                "imbalance": round(market["imbalance"], 2),
+                "data_source": market.get("source"),
+                "message": "Market velocity is stable; waiting for clear micro‑imbalance structural shifts.",
+            }
+        )
+        return
+
+    side = sig["side"]
+    entry_price = sig["entry_price"]
+    exit_price = sig["exit_price"]
+    tick_size = sig["tick_size"]
+    if abs(exit_price - entry_price) <= tick_size:
+        emit_result(
+            {
+                "status": "skipped",
+                "iteration": iteration,
+                "message": (
+                    "Target profit within one tick. Increase qty or target_profit."
+                ),
+            }
+        )
+        return
+
+    tp_distance_pct = abs(exit_price - entry_price) / entry_price
+    if tp_distance_pct > MAX_TP_DISTANCE_PCT:
+        min_net = min(MICRO_PROFIT_TIERS)
+        min_move = entry_price * 0.0001
+        min_qty = max(qty, round(min_net / max(min_move, tick_size), 8))
+        emit_result(
+            {
+                "status": "skipped",
+                "iteration": iteration,
+                "message": (
+                    f"No micro‑profit tier ($0.02–$0.20) reachable within 5% from entry at qty={qty}. "
+                    f"Increase --qty to at least {min_qty} (≈ position value {min_qty * entry_price:.2f} USDT)."
+                ),
+            }
+        )
+        return
+
+    net_est = estimate_net_profit_v2(side, entry_price, exit_price, qty, maker_fee, exit_is_taker=False)
+    if net_est < 0.02:
+        emit_result(
+            {
+                "status": "skipped",
+                "iteration": iteration,
+                "message": f"TP net {net_est:.6f} < floor 0.02 USDT; qty/target too small for fees.",
+                "entry": entry_price,
+                "tp": exit_price,
+            }
+        )
+        return
+
+    min_fill_p = float(args.get("min_fill_probability", 0.30))
+    is_reduce_check = (
+        position_info
+        and position_info.get("size", 0) > 0
+        and side != position_info["side"]
+    )
+    if not is_reduce_check:
+        ok, fill_est = entry_postonly_viable(
+            side,
+            entry_price,
+            market,
+            tick_size,
+            min_fill_p,
+            args["loop_interval"],
+        )
+        if not ok:
+            emit_result(
+                {
+                    "status": "skipped",
+                    "iteration": iteration,
+                    "reason": "low_entry_fill_probability",
+                    "fill_probability": round(fill_est.probability, 4),
+                    "min_fill_probability": min_fill_p,
+                    "factors": fill_est.factors,
+                    "message": "PostOnly entry unlikely to fill; skip cycle.",
+                }
+            )
+            return
+
+    trailing_distance = parse_trailing_stop(args.get("trailing_stop"))
+    stop_loss_price: Optional[float] = None
+    if trailing_distance is not None:
+        if len(market.get("closes", [])) >= 5:
+            recent_prices = market["closes"][-5:]
+            price_changes = [
+                abs(recent_prices[i] - recent_prices[i - 1])
+                / recent_prices[i - 1]
+                for i in range(1, len(recent_prices))
+            ]
+            market_volatility = sum(price_changes) / len(price_changes) if price_changes else 0.002
+        else:
+            market_volatility = 0.002
+        stop_loss_price, _ = calculate_adaptive_stop_loss(
+            entry_price, side, market_volatility, tick_size, trailing_distance
+        )
+
+    # Position-guard Handling
+    if position_guard and not dry_run:
+        if enhanced_position_guard_check(
+            args,
+            base_url,
+            api_key,
+            api_secret,
+            symbol,
+            sig,
+            position_guard,
+            iteration,
+            emit_result,
+            position_info=position_info,
+        ):
+            return
+
+    is_reduce = False
+    if position_info and position_info.get("size", 0) > 0:
+        if side != position_info["side"]:
+            is_reduce = True
+
+    if is_reduce and position_info.get("size", 0) > 0:
+        close_qty = min(qty, position_info["size"])
+        exit_order_type = args.get("exit_order_type", "limit")
+        min_fill_p = float(args.get("min_fill_probability", 0.30))
+        exit_px, fill_est = choose_reduce_limit_with_fill_target(
+            position_info["side"],
+            market,
+            tick_size,
+            min_fill_probability=min_fill_p,
+            max_aggressive_ticks=int(args.get("exit_max_aggressive_ticks", 3)),
+            loop_interval=args["loop_interval"],
+        )
+        if exit_px is None:
+            emit_result(
+                {
+                    "status": "skipped",
+                    "iteration": iteration,
+                    "reason": "low_exit_fill_probability",
+                    "fill_probability": round(fill_est.probability, 4),
+                    "factors": fill_est.factors,
+                    "message": "Limit reduce unlikely to fill; keep position / wait for TP.",
+                }
+            )
+            return
+        exp_pnl, _ = expected_close_pnl(
+            position_info["side"],
+            position_info["entry_price"],
+            close_qty,
+            market,
+            tick_size,
+            maker_fee,
+            float(args.get("taker_fee", DEFAULT_TAKER_FEE)),
+            exit_order_type=exit_order_type,
+        )
+        max_loss = float(args.get("max_loss_close_usdt", 0.0))
+        if exp_pnl < -max_loss:
+            emit_result(
+                {
+                    "status": "skipped",
+                    "iteration": iteration,
+                    "reason": "market_close_would_realize_loss",
+                    "expected_close_pnl_usdt": round(exp_pnl, 6),
+                    "unrealized_pnl": position_info.get("unrealized_pnl"),
+                    "message": "Refusing limit reduce: wait for native SL/TP or profitable hedge.",
+                }
+            )
+            return
+        if dry_run:
+            emit_result(
+                {
+                    "status": "dry_run",
+                    "iteration": iteration,
+                    "reduce_only": True,
+                    "exit_order_type": exit_order_type,
+                    "expected_close_pnl_usdt": round(exp_pnl, 6),
+                    "exit_limit_price": exit_px,
+                    "fill_probability": round(fill_est.probability, 4),
+                    "fill_factors": fill_est.factors,
+                }
+            )
+            return
+        entry_res = place_reduce_exit_with_retry(
+            base_url,
+            symbol,
+            position_info["side"],
+            close_qty,
+            market,
+            tick_size,
+            api_key,
+            api_secret,
+            exit_order_type,
+            args.get("exit_tif", "PostOnly"),
+            int(args.get("exit_reprice_ticks", 1)),
+            int(args.get("exit_max_retries", 2)),
+        )
+        if entry_res.get("retCode") != 0:
+            emit_result(
+                {
+                    "status": "failed",
+                    "iteration": iteration,
+                    "stage": "reduce_execution",
+                    "response": entry_res,
+                    "message": "Reduce order rejected",
+                }
+            )
+        else:
+            loop_state["last_order_ts"] = time.time()
+            emit_result(
+                {
+                    "status": "success",
+                    "iteration": iteration,
+                    "reduce_only": True,
+                    "exit_order_type": exit_order_type,
+                    "expected_close_pnl_usdt": round(exp_pnl, 6),
+                    "exit_limit_price": exit_px,
+                    "fill_probability": round(fill_est.probability, 4),
+                    "fill_factors": fill_est.factors,
+                    "response": entry_res,
+                }
+            )
+        return
+
+    # Entry-order Preparation
+    required_margin = (entry_price * qty * (1 + maker_fee) / args.get("leverage", 1.0))
+    if balance_check:
+        if not check_account_balance(base_url, api_key, api_secret, required_margin):
+            return
+
+    entry_payload: Dict[str, Any] = {
+        "category": "linear",
+        "symbol": symbol,
+        "side": side,
+        "qty": str(qty),
+        "positionIdx": 0,
+        "orderType": "Limit",
+        "price": str(entry_price),
+        "timeInForce": "PostOnly",
+        "takeProfit": str(exit_price),
+        "tpOrderType": "Limit",
+        "tpLimitPrice": str(exit_price),
+    }
+    if position_info and position_info.get("size", 0) > 0:
+        entry_payload["tpslMode"] = "Partial"
+        entry_payload["tpSize"] = str(qty)
+    else:
+        entry_payload["tpslMode"] = "Full"
+    if stop_loss_price is not None:
+        entry_payload["stopLoss"] = str(stop_loss_price)
+        entry_payload["slTriggerBy"] = "LastPrice"
+
+    if dry_run:
+        emit_result(
+            {
+                "status": "dry_run",
+                "iteration": iteration,
+                "direction": "LONG" if side == "Buy" else "SHORT",
+                "metrics": {
+                    "momentum": f"{sig['momentum']:.8f}",
+                    "imbalance": round(sig["imbalance"], 2),
+                    "spread_bps": round(spread_bps, 2),
+                    "data_source": market.get("source"),
+                },
+                "execution": {
+                    "entry_limit_price": entry_price,
+                    "take_profit_price": exit_price,
+                    "estimated_net_profit_usdt": round(net_est, 6),
+                    "tick_spread_required": round(abs(exit_price - entry_price) / tick_size, 1),
+                    "payload": entry_payload,
+                    "architecture": "Chained Native TP Order (Automated Risk Lifecycle)",
+                },
+            }
+        )
+        return
+
+    # Submit the entry order
+    entry_res = place_micro_order_with_retry(
+        base_url, entry_payload, api_key, api_secret, tick_size=tick_size
+    )
+    if entry_res.get("retCode") != 0:
+        hint = ""
+        if entry_res.get("retCode") == 10004:
+            hint = " (check system clock / API signature)"
+        emit_result(
+            {
+                "status": "failed",
+                "iteration": iteration,
+                "stage": "execution",
+                "response": entry_res,
+                "message": f"Order rejected{hint}",
+            }
+        )
+        return
+
+    loop_state["last_order_ts"] = time.time()
+    result: Dict[str, Any] = {
+        "status": "success",
+        "iteration": iteration,
+        "direction": "LONG" if side == "Buy" else "SHORT",
+        "metrics": {
+            "momentum": f"{sig['momentum']:.8f}",
+            "imbalance": round(sig["imbalance"], 2),
+            "spread_bps": round(spread_bps, 2),
+            "data_source": market.get("source"),
+        },
+        "execution": {
+            "entry_limit_price": entry_price,
+            "take_profit_price": exit_price,
+            "estimated_net_profit_usdt": round(net_est, 6),
+            "tick_spread_required": round(abs(exit_price - entry_price) / tick_size, 1),
+            "order_id": entry_res.get("result", {}).get("orderId"),
+            "architecture": "Chained Native TP Order (Automated Risk Lifecycle)",
+        },
+    }
+    if trailing_distance is not None and stop_loss_price is not None:
+        result["execution"]["trailing_stop"] = {
+            "distance": trailing_distance,
+            "stop_loss_price": stop_loss_price,
+        }
+    emit_result(result)
+
+def place_micro_order_with_retry(
+    base_url: str,
+    entry_payload: Dict[str, Any],
+    api_key: str,
+    api_secret: str,
+    tick_size: float = 0.01,
+    max_retries: int = 2,
+) -> Dict[str, Any]:
+    import copy
+    last_error: Any = None
+    for attempt in range(max_retries + 1):
+        payload = copy.deepcopy(entry_payload)
+        try:
+            if attempt > 0 and "price" in payload:
+                px = float(payload["price"])
+                if payload.get("timeInForce") == "PostOnly":
+                    if payload["side"] == "Buy":
+                        payload["price"] = str(round(px + tick_size * attempt, 8))
+                    else:
+                        payload["price"] = str(round(px - tick_size * attempt, 8))
+                else:
+                    payload["timeInForce"] = "IOC"
+            response = send_signed_post(
+                base_url, "/v5/order/create", payload, api_key, api_secret
+            )
+            if response.get("retCode") == 0:
+                return response
+            last_error = response
+            time.sleep(0.1 * (attempt + 1))
+        except Exception as e:
+            last_error = str(e)
+            time.sleep(0.1 * (attempt + 1))
+    return {"retCode": -1, "retMsg": f"All retries failed: {last_error}"}
+
+# ---------------------------------------------------------------------------
+# Daemon entry point
+# ---------------------------------------------------------------------------
+def run_daemon(args: Dict[str, Any]) -> None:
+    urls = base_urls(args["testnet"])
+    tick_cache: Dict[str, float] = {}
+    loop_state: Dict[str, Any] = {"iteration": 0, "last_order_ts": 0.0}
+    public_feed: Optional[PersistentPublicLinearFeed] = None
+    if args["mode"] == "ws":
+        seed_closes: List[float] = []
+        try:
+            klines_boot = send_signed_get(
+                urls["rest"],
+                "/v5/market/kline",
+                {"category": "linear", "symbol": args["symbol"], "interval": "1", "limit": 30},
+                args["api_key"],
+                args["api_secret"],
+            )["result"]["list"]
+            seed_closes = [kline_close(k) for k in reversed(klines_boot)]
+            logger.info(f"Seeded {len(seed_closes)} kline closes from REST")
+        except Exception as e:
+            logger.warning(f"Could not bootstrap klines from REST: {e}")
+        public_feed = PersistentPublicLinearFeed(urls["ws_public_linear"], args["symbol"], seed_closes=seed_closes)
+        public_feed.start()
+        if not public_feed.wait_ready(args["ws_timeout"]):
+            emit({"status": "error", "message": "Persistent public WS failed to become ready"})
+            public_feed.stop()
+            if not args.get("ws_fallback_rest"):
+                return
+            public_feed = None
+            emit({"status": "warning", "message": "Continuing daemon with REST fallback only"})
+    private_logger: Optional[PrivateWsLogger] = None
+    if args.get("private_ws"):
+        private_logger = PrivateWsLogger(
+            urls["ws_private"], args["api_key"], args["api_secret"], args["symbol"]
+        )
+        private_logger.start()
+    emit(
+        {
+            "status": "daemon_started",
+            "symbol": args["symbol"],
+            "mode": args["mode"],
+            "ws_persistent": public_feed is not None,
+            "loop_interval": args["loop_interval"],
+            "cooldown": args["cooldown"],
+            "dry_run": args["dry_run"],
+            "position_guard": args["position_guard"],
+            "private_ws": bool(args.get("private_ws")),
+            "message": "Daemon loop running; SIGINT/SIGTERM to stop.",
+        }
+    )
+    max_iter = int(args.get("max_iterations", 0))
+    try:
+        while not _SHUTDOWN.is_set():
+            if max_iter > 0 and loop_state["iteration"] >= max_iter:
+                emit(
+                    {
+                        "status": "daemon_stopped",
+                        "reason": "max_iterations_reached",
+                        "iteration": loop_state["iteration"],
+                    }
+                )
+                break
+            run_one_cycle(
+                args,
+                urls,
+                tick_cache,
+                loop_state,
+                public_feed,
+                emit,
+            )
+            if _SHUTDOWN.wait(timeout=args["loop_interval"]):
+                break
+    finally:
+        if public_feed:
+            public_feed.stop()
+        if private_logger:
+            private_logger.stop()
+        emit({"status": "daemon_stopped", "reason": "shutdown", "iteration": loop_state.get("iteration", 0)})
+
+def main(args: Dict[str, Any]) -> None:
+    api_key = args.get("api_key") or os.getenv("BYBIT_API_KEY")
+    api_secret = args.get("api_secret") or os.getenv("BYBIT_API_SECRET")
+    symbol = args.get("symbol", "BTCUSDT")
+    qty = float(args.get("qty", 0.01))
+    target_profit = float(args.get("target_profit", 0.05))
+    maker_fee = float(args.get("maker_fee", 0.0002))
+    trailing_stop = parse_trailing_stop(args.get("trailing_stop"))
+    balance_check = bool(args.get("balance_check", False))
+    dry_run = bool(args.get("dry_run", False))
+    max_spread_bps = float(args.get("max_spread_bps", 50))
+    mode = str(args.get("mode", "rest")).lower()
+    ws_timeout = float(args.get("ws_timeout", 8))
+    testnet = bool(args.get("testnet", False))
+    loop_interval = float(args.get("loop_interval", 2.0))
+    cooldown = float(args.get("cooldown", 30))
+    max_iterations = int(args.get("max_iterations", 0))
+    private_ws = bool(args.get("private_ws", False))
+    position_guard = bool(args.get("position_guard", False))
+    position_guard_profit_override = float(args.get("position_guard_profit_override", 0.02))
+    position_guard_aggressive = args.get("position_guard_aggressive", False)
+    position_guard_aggressive = (
+        position_guard_aggressive
+        if isinstance(position_guard_aggressive, bool)
+        else str(position_guard_aggressive).lower() in ("true", "1", "yes")
+    )
+    ws_fallback_rest = bool(args.get("ws_fallback_rest", False))
+    leverage = float(args.get("leverage", 1.0))
+    verbose = bool(args.get("verbose", False))
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+    exit_order_type = str(args.get("exit_order_type", "limit")).lower()
+    if exit_order_type not in ("limit", "market"):
+        emit({"status": "error", "message": "exit-order-type must be limit or market"})
+        return
+    exit_tif = str(args.get("exit_tif", "PostOnly"))
+    exit_reprice_ticks = int(args.get("exit_reprice_ticks", 1))
+    exit_max_retries = int(args.get("exit_max_retries", 2))
+    use_trading_stop_tp = bool(args.get("use_trading_stop_tp"))
+    if isinstance(use_trading_stop_tp, str):
+        use_trading_stop_tp = use_trading_stop_tp.lower() in ("true", "1", "yes")
+    min_fill_probability = float(args.get("min_fill_probability", 0.30))
+    exit_max_aggressive_ticks = int(args.get("exit_max_aggressive_ticks", 3))
+    fill_horizon_sec = float(args.get("fill_horizon_sec", 30.0))
+
+    if not api_key or not api_secret:
+        emit({"status": "error", "message": "api-key and api-secret are required"})
+        return
+    if not (0.02 <= target_profit <= 0.20):
+        emit({"status": "error", "message": "target_profit must be 0.02–0.20 USDT for micro mode"})
+        return
+    if qty <= 0:
+        emit({"status": "error", "message": "qty must be positive"})
+        return
+    if mode not in ("rest", "ws"):
+        emit({"status": "error", "message": "mode must be rest or ws"})
+        return
+    if loop_interval < 0.2:
+        emit({"status": "error", "message": "loop-interval must be >= 0.2 seconds"})
+        return
+
+    # Normalized argument map
+    normalized: Dict[str, Any] = {
+        "api_key": api_key,
+        "api_secret": api_secret,
+        "symbol": symbol,
+        "qty": qty,
+        "target_profit": target_profit,
+        "maker_fee": maker_fee,
+        "trailing_stop": trailing_stop,
+        "balance_check": balance_check,
+        "dry_run": dry_run,
+        "max_spread_bps": max_spread_bps,
+        "mode": mode,
+        "ws_timeout": ws_timeout,
+        "testnet": testnet,
+        "loop_interval": loop_interval,
+        "cooldown": cooldown,
+        "max_iterations": max_iterations,
+        "private_ws": private_ws,
+        "position_guard": position_guard,
+        "position_guard_profit_override": position_guard_profit_override,
+        "position_guard_aggressive": position_guard_aggressive,
+        "ws_fallback_rest": ws_fallback_rest,
+        "leverage": leverage,
+        "verbose": verbose,
+        "exit_order_type": exit_order_type,
+        "exit_tif": exit_tif,
+        "exit_reprice_ticks": exit_reprice_ticks,
+        "exit_max_retries": exit_max_retries,
+        "use_trading_stop_tp": use_trading_stop_tp,
+        "min_fill_probability": min_fill_probability,
+        "exit_max_aggressive_ticks": exit_max_aggressive_ticks,
+        "fill_horizon_sec": fill_horizon_sec,
+    }
+
+    if args.get("loop", False):
+        signal.signal(signal.SIGINT, _handle_signal)
+        signal.signal(signal.SIGTERM, _handle_signal)
+        run_daemon(normalized)
+        return
+
+    urls = base_urls(testnet)
+    tick_cache: Dict[str, float] = {}
+    run_one_cycle(
+        normalized,
+        urls,
+        tick_cache,
+        {"iteration": 0, "last_order_ts": 0.0},
+        None,
+        emit,
+    )
+
+if __name__ == "__main__":
+    main(parse_argv(sys.argv[1:]))

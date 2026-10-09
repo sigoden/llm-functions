@@ -1,0 +1,895 @@
+{
+  "tools": {
+    "bybit_market.py": {
+      "description": "Bybit Market Data Tools - Public endpoints (no auth required)",
+      "category": "market",
+      "functions": {
+        "bybit_get_orderbook": {
+          "description": "Fetch L2 orderbook with specified depth",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair (e.g., BTCUSDT)",
+              "required": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Depth limit (default: 50)",
+              "default": 50
+            }
+          }
+        },
+        "bybit_get_ticker": {
+          "description": "Get 24h ticker information for a symbol",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair (e.g., BTCUSDT)",
+              "required": true
+            }
+          }
+        },
+        "bybit_get_klines": {
+          "description": "Get historical kline/candlestick data",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "interval": {
+              "type": "string",
+              "description": "Interval (1,5,15,60,120,240,D,W,M)",
+              "required": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of klines",
+              "default": 100
+            }
+          }
+        },
+        "bybit_get_instrument": {
+          "description": "Get instrument specifications (tick size, lot size, etc.)",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            }
+          }
+        },
+        "bybit_get_funding_rate": {
+          "description": "Get current funding rate for a symbol",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            }
+          }
+        },
+        "bybit_get_risk_limit": {
+          "description": "Get risk limit for a symbol",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            }
+          }
+        }
+      }
+    },
+    "bybit_account.py": {
+      "description": "Bybit Account & Position Tools - Requires API_KEY and API_SECRET",
+      "category": "account",
+      "functions": {
+        "bybit_get_balance": {
+          "description": "Get wallet balance for specified coin or all coins (Tor-ready)",
+          "auth_required": true,
+          "parameters": {
+            "coin": {
+              "type": "string",
+              "description": "Coin name (e.g., USDT)",
+              "required": false
+            },
+            "account_type": {
+              "type": "string",
+              "description": "Account type (UNIFIED/CONTRACT/SPOT)",
+              "default": "UNIFIED"
+            },
+            "testnet": {
+              "type": "boolean",
+              "description": "Use testnet",
+              "default": false
+            },
+            "use_tor": {
+              "type": "boolean",
+              "description": "Route traffic through Tor network",
+              "default": false
+            }
+          }
+        },
+        "bybit_get_positions": {
+          "description": "Get open positions for a symbol or all symbols",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type (linear/inverse)",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_get_open_orders": {
+          "description": "Get all open orders for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_get_closed_pnl": {
+          "description": "Get closed PnL history",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of records",
+              "default": 50
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_get_order_history": {
+          "description": "Get historical orders (filled/cancelled)",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of records",
+              "default": 50
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_get_account_info": {
+          "description": "Get account information (margin, leverage, etc.)",
+          "auth_required": true,
+          "parameters": {
+            "account_type": {
+              "type": "string",
+              "description": "Account type",
+              "default": "UNIFIED"
+            }
+          }
+        },
+        "bybit_get_fee_rate": {
+          "description": "Get trading fee rate for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_get_leverage": {
+          "description": "Get current leverage for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            }
+          }
+        },
+        "bybit_get_settlement_coin": {
+          "description": "Get settlement coin information",
+          "auth_required": true,
+          "parameters": {
+            "coin": {
+              "type": "string",
+              "description": "Coin name",
+              "required": false
+            }
+          }
+        }
+      }
+    },
+    "bybit_trade.py": {
+      "description": "Bybit Execution & Trade Tools - Requires API_KEY and API_SECRET",
+      "category": "trade",
+      "functions": {
+        "bybit_place_order": {
+          "description": "Place a new order (Market or Limit)",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "side": {
+              "type": "string",
+              "description": "Side (Buy/Sell)",
+              "required": true
+            },
+            "order_type": {
+              "type": "string",
+              "description": "Type (Market/Limit)",
+              "required": true
+            },
+            "qty": {
+              "type": "number",
+              "description": "Quantity",
+              "required": true
+            },
+            "price": {
+              "type": "number",
+              "description": "Price for limit orders",
+              "required": false
+            },
+            "time_in_force": {
+              "type": "string",
+              "description": "Time in force (GTC/IOC/FOK/PostOnly)",
+              "default": "GTC"
+            },
+            "reduce_only": {
+              "type": "boolean",
+              "description": "Reduce only position",
+              "default": false
+            },
+            "close_on_trigger": {
+              "type": "boolean",
+              "description": "Close on trigger",
+              "default": false
+            }
+          }
+        },
+        "bybit_cancel_order": {
+          "description": "Cancel a specific order by order ID",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "order_id": {
+              "type": "string",
+              "description": "Order ID",
+              "required": false
+            },
+            "order_link_id": {
+              "type": "string",
+              "description": "Custom order link ID",
+              "required": false
+            }
+          }
+        },
+        "bybit_cancel_all_orders": {
+          "description": "Cancel all open orders for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "category": {
+              "type": "string",
+              "description": "Product type",
+              "default": "linear"
+            }
+          }
+        },
+        "bybit_set_leverage": {
+          "description": "Set leverage for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "leverage": {
+              "type": "integer",
+              "description": "Leverage value (1-100)",
+              "required": false
+            },
+            "buy_leverage": {
+              "type": "integer",
+              "description": "Buy side leverage",
+              "required": false
+            },
+            "sell_leverage": {
+              "type": "integer",
+              "description": "Sell side leverage",
+              "required": false
+            }
+          }
+        },
+        "bybit_set_trading_stop": {
+          "description": "Set take profit and stop loss for open position",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "tp": {
+              "type": "number",
+              "description": "Take profit price",
+              "required": false
+            },
+            "sl": {
+              "type": "number",
+              "description": "Stop loss price",
+              "required": false
+            },
+            "tp_trigger": {
+              "type": "string",
+              "description": "TP trigger type",
+              "required": false
+            },
+            "sl_trigger": {
+              "type": "string",
+              "description": "SL trigger type",
+              "required": false
+            }
+          }
+        },
+        "bybit_amend_order": {
+          "description": "Amend an existing order",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "order_id": {
+              "type": "string",
+              "description": "Order ID",
+              "required": false
+            },
+            "order_link_id": {
+              "type": "string",
+              "description": "Custom order link ID",
+              "required": false
+            },
+            "qty": {
+              "type": "number",
+              "description": "New quantity",
+              "required": false
+            },
+            "price": {
+              "type": "number",
+              "description": "New price",
+              "required": false
+            }
+          }
+        },
+        "bybit_set_position_mode": {
+          "description": "Set position mode (One-Way or Hedge)",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "mode": {
+              "type": "integer",
+              "description": "Mode (0=One-Way, 3=Hedge)",
+              "required": true
+            }
+          }
+        },
+        "bybit_set_risk_limit": {
+          "description": "Set risk limit for a symbol",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "risk_id": {
+              "type": "integer",
+              "description": "Risk ID",
+              "required": true
+            }
+          }
+        },
+        "bybit_get_executions": {
+          "description": "Get execution history",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": false
+            },
+            "order_id": {
+              "type": "string",
+              "description": "Order ID",
+              "required": false
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of records",
+              "default": 50
+            }
+          }
+        },
+        "bybit_get_borrow_history": {
+          "description": "Get borrow history",
+          "auth_required": true,
+          "parameters": {
+            "coin": {
+              "type": "string",
+              "description": "Coin name",
+              "required": false
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of records",
+              "default": 50
+            }
+          }
+        },
+        "bybit_get_collateral_info": {
+          "description": "Get collateral information",
+          "auth_required": true,
+          "parameters": {}
+        }
+      }
+    },
+    "bybit_analysis.py": {
+      "description": "Bybit Advanced Analysis Tools - Technical indicators and orderbook analysis",
+      "category": "analysis",
+      "functions": {
+        "bybit_get_indicators": {
+          "description": "Calculate RSI, EMA, ATR, MACD, Bollinger Bands indicators",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "interval": {
+              "type": "string",
+              "description": "Interval (1,5,15,60,120,240,D,W,M)",
+              "required": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of klines",
+              "default": 100
+            }
+          }
+        },
+        "bybit_analyze_symbol": {
+          "description": "Analyze symbol across multiple timeframes",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "timeframes": {
+              "type": "string",
+              "description": "Comma-separated timeframes",
+              "default": "15,60,240,D"
+            }
+          }
+        },
+        "bybit_analyze_orderbook": {
+          "description": "Analyze orderbook depth, imbalance, and walls",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Depth level",
+              "default": 25
+            }
+          }
+        },
+        "bybit_get_depth": {
+          "description": "Get full orderbook depth with aggregated prices",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Depth level",
+              "default": 50
+            }
+          }
+        },
+        "bybit_get_volume_profile": {
+          "description": "Calculate volume profile and VWAP",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "interval": {
+              "type": "string",
+              "description": "Interval",
+              "default": "60"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of klines",
+              "default": 100
+            }
+          }
+        },
+        "bybit_get_support_resistance": {
+          "description": "Calculate support and resistance levels",
+          "auth_required": false,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "interval": {
+              "type": "string",
+              "description": "Interval",
+              "default": "60"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Number of klines",
+              "default": 100
+            }
+          }
+        }
+      }
+    },
+    "bybit_pro_suite.py": {
+      "description": "Bybit Pro Suite - Unified Trading Toolset with advanced features",
+      "category": "pro",
+      "functions": {
+        "bybit_smart_order": {
+          "description": "Smart order with automatic position sizing and risk management",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "side": {
+              "type": "string",
+              "description": "Side (Buy/Sell)",
+              "required": true
+            },
+            "risk_pct": {
+              "type": "number",
+              "description": "Risk percentage",
+              "default": 1.0
+            },
+            "sl_dist": {
+              "type": "number",
+              "description": "Stop loss distance",
+              "required": false
+            },
+            "sl_price": {
+              "type": "number",
+              "description": "Absolute stop loss price",
+              "required": false
+            },
+            "tp_price": {
+              "type": "number",
+              "description": "Absolute take profit price",
+              "required": false
+            }
+          }
+        },
+        "bybit_trading_dashboard": {
+          "description": "Unified Trading Dashboard: balance, positions, market watch with RSI (Tor-ready)",
+          "auth_required": true,
+          "parameters": {
+            "symbols": {
+              "type": "string",
+              "description": "Comma-separated symbols to watch",
+              "default": "BTCUSDT,ETHUSDT,TRUMPUSDT"
+            },
+            "testnet": {
+              "type": "boolean",
+              "description": "Use testnet",
+              "default": false
+            },
+            "use_tor": {
+              "type": "boolean",
+              "description": "Route traffic through Tor network",
+              "default": false
+            }
+          }
+        },
+        "bybit_position_manager": {
+          "description": "Manage open positions: Move to Break-Even or Close if profit threshold reached",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "action": {
+              "type": "string",
+              "description": "Action (be|close)",
+              "required": true
+            },
+            "profit_usdt": {
+              "type": "integer",
+              "description": "Profit threshold in USDT",
+              "required": false
+            }
+          }
+        },
+        "bybit_set_position_mode": {
+          "description": "Toggle between Hedge and One-Way mode",
+          "auth_required": true,
+          "parameters": {
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair",
+              "required": true
+            },
+            "mode": {
+              "type": "integer",
+              "description": "Position mode (0=One-Way, 3=Hedge)",
+              "required": true
+            }
+          }
+        }
+      }
+    },
+    "bybit_terminal.py": {
+      "description": "Unified Bybit V5 Trading Terminal. Supports 150+ actions including Market Data, Trading, Account Management, and Advanced Analysis.",
+      "category": "trading",
+      "functions": {
+        "run": {
+          "description": "Unified entry point for all Bybit V5 actions. Supports health_check, get_wallet_balance, get_positions, place_order, set_leverage, calculate_pnl, list_actions, and more.",
+          "parameters": {
+            "action": {
+              "type": "string",
+              "description": "The action to perform (e.g., get_wallet_balance, place_order, list_actions)",
+              "required": true
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Trading pair (e.g., BTCUSDT)"
+            },
+            "side": {
+              "type": "string",
+              "description": "buy, sell (or long, short)"
+            },
+            "qty": {
+              "type": "number",
+              "description": "Order quantity"
+            },
+            "price": {
+              "type": "number",
+              "description": "Order price"
+            },
+            "category": {
+              "type": "string",
+              "description": "linear, spot, inverse (default: linear)"
+            },
+            "interval": {
+              "type": "string",
+              "description": "Kline interval: 1, 5, 15, 60, 240, D"
+            },
+            "stop_loss": {
+              "type": "number",
+              "description": "Stop loss price"
+            },
+            "take_profit": {
+              "type": "number",
+              "description": "Take profit price"
+            },
+            "leverage": {
+              "type": "integer",
+              "description": "Leverage value"
+            },
+            "reduce_only": {
+              "type": "boolean",
+              "description": "Reduce-only flag"
+            }
+          }
+        }
+      }
+    }
+  },
+  "environment": {
+    "BYBIT_API_KEY": {
+      "description": "Your Bybit API Key",
+      "required_for": "private_endpoints"
+    },
+    "BYBIT_API_SECRET": {
+      "description": "Your Bybit API Secret",
+      "required_for": "private_endpoints"
+    },
+    "BYBIT_TESTNET": {
+      "description": "Use testnet (true/false)",
+      "default": "false"
+    },
+    "USE_TOR": {
+      "description": "Use Tor proxy (true/false)",
+      "default": "false"
+    },
+    "TOR_PROXY": {
+      "description": "Tor proxy URL",
+      "default": "socks5h://127.0.0.1:9050"
+    }
+  },
+  "usage_examples": {
+    "market_data": [
+      "argc bybit_market.py bybit_get_orderbook --symbol BTCUSDT",
+      "argc bybit_market.py bybit_get_ticker --symbol BTCUSDT",
+      "argc bybit_market.py bybit_get_klines --symbol BTCUSDT --interval 60"
+    ],
+    "account_data": [
+      "argc bybit_account.py bybit_get_balance --coin USDT",
+      "argc bybit_account.py bybit_get_positions --symbol BTCUSDT"
+    ],
+    "trading": [
+      "argc bybit_trade.py bybit_place_order --symbol BTCUSDT --side Buy --order-type Limit --qty 0.001 --price 50000 --time-in-force PostOnly",
+      "argc bybit_trade.py bybit_set_leverage --symbol BTCUSDT --leverage 10",
+      "argc bybit_trade.py bybit_set_trading_stop --symbol BTCUSDT --tp 55000 --sl 48000"
+    ],
+    "analysis": [
+      "argc bybit_analysis.py bybit_get_indicators --symbol BTCUSDT --interval 60",
+      "argc bybit_analysis.py bybit_analyze_orderbook --symbol BTCUSDT",
+      "argc bybit_analysis.py bybit_get_support_resistance --symbol BTCUSDT"
+    ]
+  }
+}
+
+  {
+    "name": "bybit_smart_order",
+    "description": "Place a smart order with automatic position sizing and risk management.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Trading pair (e.g., BTCUSDT)."
+        },
+        "side": {
+          "type": "string",
+          "description": "Buy or Sell."
+        },
+        "order_type": {
+          "type": "string",
+          "description": "Market or Limit (default: Market).",
+          "default": "Market"
+        },
+        "risk_pct": {
+          "type": "number",
+          "description": "% of balance to risk (default: 1.0).",
+          "default": 1.0
+        },
+        "sl_dist": {
+          "type": "number",
+          "description": "Stop loss distance in price."
+        },
+        "sl_price": {
+          "type": "number",
+          "description": "Absolute Stop Loss price."
+        },
+        "tp_price": {
+          "type": "number",
+          "description": "Absolute Take Profit price."
+        },
+        "sl_usdt": {
+          "type": "number",
+          "description": "Maximum Risk in absolute USDT value (overrides --risk-pct)."
+        },
+        "tp_usdt": {
+          "type": "number",
+          "description": "Target Take Profit in absolute USDT value (calculates exact exit price)."
+        },
+        "time_in_force": {
+          "type": "string",
+          "description": "Time in force: GTC, IOC, FOK, PostOnly (default: GTC).",
+          "default": "GTC"
+        },
+        "reduce_only": {
+          "type": "boolean",
+          "description": "Submit order as reduce-only (close position only).",
+          "default": false
+        },
+        "margin_mode": {
+          "type": "string",
+          "description": "Margin mode: isolated or cross (default: cross).",
+          "default": "cross"
+        },
+        "position_idx": {
+          "type": "integer",
+          "description": "Position index: 0=One-Way, 1=Buy hedge, 2=Sell hedge (default: 0).",
+          "default": 0
+        },
+        "order_link_id": {
+          "type": "string",
+          "description": "Custom order link ID (max 36 chars) for idempotency."
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Calculate everything and return the order payload without submitting.",
+          "default": false
+        },
+        "max_position_usdt": {
+          "type": "number",
+          "description": "Safety cap: refuse if notional > this USDT value."
+        }
+      },
+      "required": ["symbol", "side"]
+    }
+  },

@@ -1,0 +1,7 @@
+#!/data/data/com.termux/files/usr/bin/bash
+TARGET_PATH="${1:-.}"
+if [ ! -d "$TARGET_PATH" ]; then
+    echo "Error: Directory not found: $TARGET_PATH" >&2
+    exit 1
+fi
+ls -lah "$TARGET_PATH"

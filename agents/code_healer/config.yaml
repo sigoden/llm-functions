@@ -1,0 +1,14 @@
+# ==============================================================================
+# Code Healer Ultra — Runtime Config
+# ==============================================================================
+model: nvidia:nvidia/nvidia-nemotron-nano-9b-v2
+temperature: 0.1
+top_p: 0.9
+
+use_tools: "fs,code_healer"
+agent_prelude: "healer_session"
+
+variables:
+  target_runtime: "python3.12"
+  safe_mode: "true"
+  backup_dir: ".code_healer_backups"

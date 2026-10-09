@@ -1,0 +1,100 @@
+33:+  - All prior v2.0 indicators retained and intact
+101:+class OrderbookIntelligence:
+136:+    def __init__(self, symbol: str, base_url: str = "https://api.bybit.com") -> None:
+177:+    def _get(self, endpoint: str, params: Dict) -> Dict:
+402:+        def sf(v) -> float:
+410:+        def si(v) -> int:
+689:+    def _calc_slippage(
+728:+    def _price_impact_pct(
+755:+    def _find_absorption_level(
+792:+        total_vol  = float(df["size"].sum())
+793:+        buy_vol    = float(df.loc[df["is_buy"],  "size"].sum())
+794:+        sell_vol   = float(df.loc[~df["is_buy"], "size"].sum())
+806:+        size_mean  = df["size"].mean()
+807:+        size_std   = df["size"].std()
+826:+        largest_trade  = float(df["size"].max())
+1159:+    Pure mathematical derivation of 35+ technical indicators.
+1167:+    def __init__(self, symbol: str, interval: str) -> None:
+1184:+                    self.config = full_config.get("indicator_settings", {})
+1235:+                    df[col] = pd.to_numeric(df[col], errors="coerce")
+1261:+        h,l,c = df["high"], df["low"], df["close"]
+1353:+    def _calculate_kama(self, s: pd.Series, p:int=10, fast:int=2, slow:int=30) -> pd.Series:
+1366:+    def _calculate_rsi(self, s: pd.Series, p:int=14) -> pd.Series:
+1371:+    def _calculate_roc(self, s: pd.Series, p:int=12) -> pd.Series:
+1374:+    def _calculate_dpo(self, s: pd.Series, p:int=20) -> pd.Series:
+1377:+    def _calculate_trix(self, s: pd.Series, p:int=15) -> pd.Series:
+1381:+    def _calculate_cmo(self, s: pd.Series, p:int=14) -> pd.Series:
+1386:+    def _calculate_coppock(self, s: pd.Series, w:int=10, r1:int=14, r2:int=11) -> pd.Series:
+1389:+    def _calculate_keltner(self, df, ep:int=20, ap:int=10, mult:float=2.0):
+1390:+        atr=self._rma(self._true_range(df),ap); mid=self._ema(df["close"],ep)
+1393:+    def _calculate_ulcer(self, s: pd.Series, p:int=14) -> pd.Series:
+1397:+    def _calculate_sar(self, df, step:float=0.02, maxstep:float=0.20):
+1398:+        h=df["high"].to_numpy(dtype=float); l=df["low"].to_numpy(dtype=float)
+1501:+    def _calculate_adx(self, df, p:int=14):
+1502:+        h,l=df["high"],df["low"]; atr=self._rma(self._true_range(df),p)
+1510:+    def _calculate_supertrend(self, df, p:int=10, mult:float=3.0):
+1511:+        atr=self._rma(self._true_range(df),p); hl2=(df["high"]+df["low"])/2.0
+1512:+        c=df["close"].to_numpy(dtype=float); n=len(c)
+1525:+    def _calculate_vortex(self, df, p:int=14):
+1527:+        vp=(df["high"]-df["low"].shift()).abs().rolling(p).sum()
+1528:+        vm=(df["low"]-df["high"].shift()).abs().rolling(p).sum()
+1531:+    def _calculate_aroon(self, df, p:int=25):
+1532:+        au=df["high"].rolling(p+1).apply(lambda x:(np.argmax(x)/p)*100,raw=True)
+1533:+        ad=df["low"].rolling(p+1).apply(lambda x:(np.argmin(x)/p)*100,raw=True)
+1539:+    def _calculate_elder_ray(self, df, p:int=13):
+1540:+        e=self._ema(df["close"],p)
+1541:+        return df["high"]-e, df["low"]-e
+1546:+        tp=(df["high"]+df["low"]+df["close"])/3.0
+1547:+        return (tp*df["volume"]).cumsum()/df["volume"].cumsum().replace(0.0,np.nan)
+1557:+    def _calculate_pivots(self, df: pd.DataFrame) -> Dict[str,float]:
+1577:+    def _classify_regime(adx,pdi,mdi,rsi,close,ema20) -> str:
+1608:+    def _confluence_score(data: Dict) -> Tuple[int,int,str]:
+1770:+    def build_indicators(self, df: pd.DataFrame) -> Dict[str,Any]:
+1771:+        close=df["close"]; high=df["high"]; low=df["low"]; volume=df["volume"]
+1829:+        df["SMA_20"]=close.rolling(sma_p).mean()
+1830:+        df["EMA_20"]=self._ema(close,ema_p)
+1831:+        df["HMA_20"]=self._calculate_hma(close,hma_p)
+1832:+        df["KAMA_10"]=self._calculate_kama(close,kama_p,kama_f,kama_s)
+1833:+        df["DEMA_20"]=self._calculate_dema(close,dema_p)
+1834:+        df["TEMA_20"]=self._calculate_tema(close,tema_p)
+1835:+        df["Tenkan"]=(high.rolling(tenkan_p).max()+low.rolling(tenkan_p).min())/2.0
+1836:+        df["Kijun"]=(high.rolling(kijun_p).max()+low.rolling(kijun_p).min())/2.0
+1837:+        df["Senkou_A"]=((df["Tenkan"]+df["Kijun"])/2.0).shift(chikou_offset)
+1838:+        df["Senkou_B"]=((high.rolling(senkou_b_p).max()+low.rolling(senkou_b_p).min())/2.0).shift(chikou_offset)
+1839:+        df["VWAP"]=self._calculate_vwap(df)
+1841:+        df["RSI_14"]=self._calculate_rsi(close,rsi_p)
+1842:+        rm=df["RSI_14"].rolling(stoch_rsi_p).min(); rx=df["RSI_14"].rolling(stoch_rsi_p).max()
+1843:+        df["StochRSI_K"]=100.0*((df["RSI_14"]-rm)/(rx-rm).replace(0.0,np.nan)).fillna(0.0)
+1844:+        df["StochRSI_D"]=df["StochRSI_K"].rolling(stoch_d_p).mean()
+1847:+        df["MACD_Line"]=ef-es
+1848:+        df["MACD_Signal"]=self._ema(df["MACD_Line"],macd_sig)
+1849:+        df["MACD_Hist"]=df["MACD_Line"]-df["MACD_Signal"]
+1853:+        df["CCI_20"]=(tp-stp)/(0.015*mad.replace(0.0,np.nan))
+1856:+        df["WillR_14"]=-100.0*((hh-close)/(hh-ll).replace(0.0,np.nan)).fillna(0.0)
+1857:+        df["ROC_12"]=self._calculate_roc(close,roc_p)
+1858:+        df["DPO_20"]=self._calculate_dpo(close,dpo_p)
+1859:+        df["TRIX_15"]=self._calculate_trix(close,trix_p)
+1860:+        df["CMO_14"]=self._calculate_cmo(close,cmo_p)
+1861:+        df["Coppock"]=self._calculate_coppock(close)
+1864:+        df["Stoch_K"]=sk_r.rolling(stoch_k_p).mean()
+1865:+        df["Stoch_D"]=df["Stoch_K"].rolling(stoch_d_p).mean()
+1868:+        df["BB_Upper"]=df["EMA_20"]+bb_std*bbs
+1869:+        df["BB_Lower"]=df["EMA_20"]-bb_std*bbs
+1870:+        df["BB_Width"]=(df["BB_Upper"]-df["BB_Lower"])/df["EMA_20"].replace(0.0,np.nan)*100.0
+1872:+        tr=self._true_range(df); df["ATR_14"]=self._rma(tr,atr_p)
+1873:+        df["Donchian_U"]=high.rolling(donchian_p).max(); df["Donchian_L"]=low.rolling(donchian_p).min()
+1874:+        df["KC_Upper"],df["KC_Mid"],df["KC_Lower"]=self._calculate_keltner(df, kc_p, atr_p, kc_mult)
+1875:+        df["Ulcer_14"]=self._calculate_ulcer(close,ulcer_p)
+1876:+        df["SAR"],df["SAR_Dir"]=self._calculate_sar(df, sar_step, sar_max)
+1879:+        df["OBV"]=(obv_d*volume).cumsum()
+1884:+        df["MFI_14"]=100.0-(100.0/(1.0+mfr.fillna(0.0)))
+1900:+        bv=volume.where(close>df["open"],0.0); sv=volume.where(close<=df["open"],0.0)
+1901:+        df["Vol_Delta"]=bv-sv
+1906:+        df["ADX"],df["PlusDI"],df["MinusDI"]=self._calculate_adx(df,adx_p)
+1907:+        df["SuperTrend"],df["SuperTrend_Dir"]=self._calculate_supertrend(df,st_p,st_mult)
+1908:+        df["VI_Plus"],df["VI_Minus"]=self._calculate_vortex(df,vortex_p)
+1909:+        df["Aroon_Up"],df["Aroon_Down"]=self._calculate_aroon(df,aroon_p)
+1910:+        df["Bull_Power"],df["Bear_Power"]=self._calculate_elder_ray(df,elder_p)
+1963:+    Renders technical indicators + full L2 orderbook intelligence panels.
+1981:+    def _col_thresh(val: float, lo: float, hi: float, inv: bool=False) -> str:
+2720:+    def __init__(self, symbol: str, interval: str, delay: int) -> None:
